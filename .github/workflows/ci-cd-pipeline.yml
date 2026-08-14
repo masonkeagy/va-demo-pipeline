@@ -1,0 +1,366 @@
+# Full CI/CD Pipeline Skeleton
+# Ready for real tools to be plugged in
+
+name: VA Demo CI/CD Pipeline
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main]
+
+# Global Settings
+env:
+  PIPELINE_NAME: "VA Demo CI/CD Pipeline"
+  APP_NAME: "placeholder-for-team"
+  REGISTRY: "placeholder-for-team"
+
+
+# Stage 1: Pull Request Validation
+jobs:
+  
+  pr_validation:
+    name: "Stage 1 - PR Validation"
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Validate PR Has Description
+        run: |
+          echo "Stage 1: Pull Request Validation"
+          echo "PR Author:  ${{ github.actor }}"
+          echo "PR Branch:  ${{ github.head_ref }}"
+          echo "Target:     ${{ github.base_ref }}"
+          echo "Commit SHA: ${{ github.sha }}"
+          echo "PR Number:  ${{ github.event.pull_request.number }}"
+          echo "PR validation passed"
+
+# Stage 2: Unit Testing
+  unit-tests:
+    name: "Stage 2 - Unit Tests"
+    runs-on: ubuntu-latest
+    needs: pr_validation
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Unit Test Stage
+        run: |
+          echo "Stage 2: Unit Testing"
+          echo "Currently a complete placeholder for this stage, would need actual code/tests in order to deem a pass"
+          echo "Unit Test Placeholder Passed"
+
+      - name: Publish Test Results
+        if: always()
+        run: |
+          echo "Test Results: "
+          echo "Coverage: "
+          echo "Tests Passed: "
+          echo "Tests Failed: "
+          echo "More placeholders, I believe these are all the categories"
+
+#Stage 3: Security Scanning (CodeQL?)
+  security-scanning:
+    name: "Stage 3 - Security Scanning"
+    runs-on: ubuntu-latest
+    needs: unit-tests
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: javascript #for now so we can run this stage placholder
+        continue-on-error: true #remove later
+
+      - name: CodeQL Autobuild
+        uses: github/codeql-action/autobuild@v3
+        continue-on-error: true #remove later
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        continue-on-error: true # remove later
+
+      - name: Dependency Review
+        uses: actions/dependency-review-action@v4
+        if: github.event_name == 'pull_request'
+        continue-on-error: true #remove later
+
+      - name: Security Scan Summary
+        run: |
+          echo "Stage 3: Security Scanning Complete"
+          echo "CodeQL SAST Configured"
+          echo "Secret Scanning: Github Native (always on)"
+          echo "Dependency Scanning Configured"
+          echo "Results location: GitHub Security Tab"
+
+# Stage 4: Build + Artifact Signing
+  build-and-sign:
+    name: "Stage 4 - Build and Artifact Signing"
+    runs-on: ubuntu-latest
+    needs: security-scanning
+    outputs:
+      artifact-tag: ${{ steps.set-tag.outputs.tag }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set Artifact Tag 
+        id: set-tag
+        run: |
+          TAG="${{ github.sha }}"
+          echo "tag=${TAG} >> $GITHUB_OUTPUT"
+          echo "Artifact tag set to: ${TAG}"
+
+      - name: Build Application
+        run: |
+          echo "Stage 4: Build + Artifact Signing"
+          echo "Build tool:       [Pending... Dockerfile/pom.xml/package.json]"
+          echo "Artifact tag:     ${{ github.sha }}"
+          echo "Registry:         [To be configured]"
+          echo "Placeholder: real build command goes here later"
+
+      - name: Sign Artifact
+        run: |
+          echo "Artifact Signing Tool: Cosign / Azure Key Vault"
+          echo "Signing Status:        [PENDING REGISTRY SETUP]"
+          echo "Placeholder - cosign sign will execute here"
+
+      - name: Build Summary
+        run: |
+          echo "Build Stage Complete"
+          echo "Artifact: ${{ env.APP_NAME }}:${{ github.sha }}"
+          echo "Signed and Pushed both pending"
+
+
+# Deploy to Dev
+  deploy-dev:
+    name: "Stage 5 - Deploy to Dev"
+    runs-on: ubuntu-latest
+    needs: build-and-sign
+    environment:
+      name: dev    #will be created in GitHub repo settings
+      url: https://fakeurl.com # updated later
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Deploy to Dev environment
+        run: |
+          echo "Stage 5: Deploy to Dev"
+          echo "Environment: Dev"
+          echo "Artifact:    ${{ env.APP_NAME }}:${{ github.sha }}"
+          echo "Deploy tool and Target both pending"
+          echo "Placeholder Deploy command will go here"
+
+      - name: Health Check Dev
+        run: |
+          echo "Health Check [Pending]"
+          echo "Expected: HTTP 200 from /health endpoint"
+          echo "DEV Deploy stage complete (placeholder)"
+
+# Integration + Performance Tests
+  integration-performance-tests:
+    name: "Stage 6 - Integration and Performance Tests"
+    runs-on: ubuntu-latest
+    needs: deploy-dev
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Integration Tests
+        run: |
+          echo "Stage 6: Integration + Performance Tests"
+          echo "Integration Tool: Pending"
+          echo "Test Collection: Pending"
+          echo "Environment: DEV"
+          echo "Placeholder -> Integration Tests will run here"
+
+      - name: Performance Tests
+        run: |
+          echo "Performance Tool: Pending"
+          echo "Load Scenario: Pending"
+          echo "Thresholds:"
+          echo "-> p95 response time < 500ms"
+          echo "-> Error rate < 1%"
+          echo "-> Min througput > 100 rps"
+          echo "Placeholder: k6 run load-test.js will go here"
+          echo "Integration + Performance stage complete"
+
+# Deploy to TEST/UAT
+  deploy-uat:
+    name: "Stage 7 - Deploy to TEST/UAT"
+    runs-on: ubuntu-latest
+    needs: integration-performance-tests
+    environment:
+      name: uat
+      url: https://uat.placeholder.com
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Deploy to UAT Environment
+        run: |
+          echo "Stage 7: Deploy to TEST/UAT"
+          echo "Environment: TEST/UAT"
+          echo "Artifact: ${{ env.APP_NAME }}:${{ github.sha }}"
+          echo "Gate: Manual approval required"
+          echo "Deploy tool: Pending"
+          echo "UAT Deploy stage complete"
+
+# Stage 8: Regression Testing
+  regression-tests:
+    name: "Stage 8 - Regression Testing"
+    runs-on: ubuntu-latest
+    needs: deploy-uat
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+      - name: Run Regression Tests
+        run: |
+          echo "Stage 8:      Regression Testing"
+          echo "Test Tool:    Pending"
+          echo "Test Suite:   Pending"
+          echo "Environment:  UAT"
+          echo "Browser:      Pending"
+          echo "Placeholder -> Full regression suite runs here"
+          echo "Regression stage complete"
+
+# Stage 9: Deploy to PreProd
+
+  deploy-preprod:
+    name: "Stage 9a - Deploy to PreProd"
+    runs-on: ubuntu-latest
+    needs: regression-tests
+    environment:
+      name: preprod
+      url: https://preprod.placeholder.com
+    steps:
+      - name: Deploy to PreProd
+        run: |
+          echo "Stage 9a: Deploy to PreProd"
+          echo "Environment:  Preprod"
+          echo "Strategy:     Pending"
+          echo "Gate:         Senior Approval Required"
+          echo " Placeholder -> preprod deployment here"
+          echo "PreProd deploy complete"
+  
+  deploy-prod:
+    name: Stage 9b - Deploy to Prod
+    runs-on: ubuntu-latest
+    needs: deploy-preprod
+    environment:
+      name: production
+      url: https://placeholder.com
+    steps:
+      - name: Deploy to Production
+        run: |
+          echo "Stage 9b: Deploy to Production"
+          echo "Environment: Production"
+          echo "Artifact: ${{ env.APP_NAME }}:${{ github.sha }}"
+          echo "Strategy: Pending"
+          echo "Rollback plan: Helm rollback / Slot swap"
+          echo "Placeholder -> Production deployment here"
+          echo "Production deploy complete"
+
+# Stage 10: Smoke Tests + Automated Rollback
+  smoke-tests:
+    name: "Stage 10 - Smoke Tests and Rollback"
+    runs-on: ubuntu-latest
+    needs: deploy-prod
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Run Smoke Tests
+        id: smoke
+        run: |
+          echo "Stage 10: Smoke Tests"
+          echo "Smoke tool: Pending"
+          echo "Environment: Production"
+          echo "Tests:"
+          echo "App loads successfully.. pending"
+          echo "Login works.. pending"
+          echo "Core feature accessible.. pending"
+          echo "API repsonds.. pending"
+          echo "DB connection healthy.. pending"
+          echo "Placeholder: Smoke test suite runs here"
+          echo "smoke_passed=true" >> $GITHUB_OUTPUT
+
+      - name: Automated Rollback if Smoke Fails
+        if: failure() || steps.smoke.outputs.smoke_passed == 'false'
+        run: |
+          echo "Smoke Tests Failed - Initiating Rollback"
+          echo "Rollback tool -- still pending"
+          echo "Rollback steps:"
+          echo "  1. Trigger: helm rollback ${{ env.App_NAME }}"
+          echo "  2. Verify:  Health check previous version"
+          echo "  3. Notify:  Alert team via Slack/Teams"
+          echo "  4. Log:     Record rollback event"
+          echo "Placeholder: Rollback commands go here"
+
+      - name: Notify Team on Rollback
+        if: failure()
+        run: |
+          echo "Notification: pending.. slack/teams webhook?"
+          echo "Message: Production rollback triggered for"
+          echo "         ${{ env.APP_NAME }} at ${{ github.sha }}"
+
+      - name: Smoke Test Summary
+        if: always()
+        run: |
+          echo "Smoke Test Stage Complete"
+          echo "Result: Check steps above"
+          echo "Rollback: Automated if failure detected"
+
+# Stage 11: Monitoring Notification
+  monitoring-summary:
+    name: "Stage 11 - Monitoring Active (Azure App Insights)"
+    runs-on: ubuntu-latest
+    needs: smoke-tests
+    if: always()
+    steps:
+      - name: Monitoring Status
+        run: |
+          echo "Stage 11: Azure Application Insights"
+          echo "Metrics Monitoring:"
+          echo "  Response times"
+          echo "  Throughput (req/sec)"
+          echo "  CPU / Memory usage"
+          echo "   Dependency call durations"
+          echo ""
+          echo "Log Monitoring:"
+          echo "   Application traces"
+          echo "   Exception details"
+          echo "   Custom events"
+          echo "   Pipeline deployment events"
+          echo ""
+          echo "Alerts Configured:"
+          echo "   Availability < 99.9%"
+          echo "   Error rate spike"
+          echo "   Response time degradation"
+          echo "   Security anomalies"
+          echo ""
+          echo "Security Events:"
+          echo "   Microsoft Sentinel integration"
+          echo "   Defender for Cloud alerts"
+          echo "   Failed authentication attempts"
+          echo ""
+          echo "Dashboard: Pending"
+          echo "Alerts to: Pending"
+          echo "Pipeline Complete - All stages executed"
+          echo "   SHA:    ${{ github.sha }}"
+          echo "   Actor:  ${{ github.actor }}"
+          echo "   Branch: ${{ github.ref_name }}"
+
+
+
+
+           
