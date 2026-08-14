@@ -8,6 +8,7 @@ on:
     branches: [main, develop]
   push:
     branches: [main]
+  workflow_dispatch:
 
 # Global Settings
 env:
@@ -22,7 +23,7 @@ jobs:
   pr_validation:
     name: "Stage 1 - PR Validation"
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -38,7 +39,7 @@ jobs:
           echo "PR validation passed"
 
 # Stage 2: Unit Testing
-  unit-tests:
+  unit_tests:
     name: "Stage 2 - Unit Tests"
     runs-on: ubuntu-latest
     needs: pr_validation
@@ -62,10 +63,10 @@ jobs:
           echo "More placeholders, I believe these are all the categories"
 
 #Stage 3: Security Scanning (CodeQL?)
-  security-scanning:
+  security_scanning:
     name: "Stage 3 - Security Scanning"
     runs-on: ubuntu-latest
-    needs: unit-tests
+    needs: unit_tests
     permissions:
       actions: read
       contents: read
@@ -102,10 +103,10 @@ jobs:
           echo "Results location: GitHub Security Tab"
 
 # Stage 4: Build + Artifact Signing
-  build-and-sign:
+  build_and_sign:
     name: "Stage 4 - Build and Artifact Signing"
     runs-on: ubuntu-latest
-    needs: security-scanning
+    needs: security_scanning
     outputs:
       artifact-tag: ${{ steps.set-tag.outputs.tag }}
     steps:
@@ -141,10 +142,10 @@ jobs:
 
 
 # Deploy to Dev
-  deploy-dev:
+  deploy_dev:
     name: "Stage 5 - Deploy to Dev"
     runs-on: ubuntu-latest
-    needs: build-and-sign
+    needs: build_and_sign
     environment:
       name: dev    #will be created in GitHub repo settings
       url: https://fakeurl.com # updated later
@@ -167,10 +168,10 @@ jobs:
           echo "DEV Deploy stage complete (placeholder)"
 
 # Integration + Performance Tests
-  integration-performance-tests:
+  integration_performance_tests:
     name: "Stage 6 - Integration and Performance Tests"
     runs-on: ubuntu-latest
-    needs: deploy-dev
+    needs: deploy_dev
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -195,10 +196,10 @@ jobs:
           echo "Integration + Performance stage complete"
 
 # Deploy to TEST/UAT
-  deploy-uat:
+  deploy_uat:
     name: "Stage 7 - Deploy to TEST/UAT"
     runs-on: ubuntu-latest
-    needs: integration-performance-tests
+    needs: integration_performance_tests
     environment:
       name: uat
       url: https://uat.placeholder.com
@@ -216,10 +217,10 @@ jobs:
           echo "UAT Deploy stage complete"
 
 # Stage 8: Regression Testing
-  regression-tests:
+  regression_tests:
     name: "Stage 8 - Regression Testing"
     runs-on: ubuntu-latest
-    needs: deploy-uat
+    needs: deploy_uat
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -235,10 +236,10 @@ jobs:
 
 # Stage 9: Deploy to PreProd
 
-  deploy-preprod:
+  deploy_preprod:
     name: "Stage 9a - Deploy to PreProd"
     runs-on: ubuntu-latest
-    needs: regression-tests
+    needs: regression_tests
     environment:
       name: preprod
       url: https://preprod.placeholder.com
@@ -252,10 +253,10 @@ jobs:
           echo " Placeholder -> preprod deployment here"
           echo "PreProd deploy complete"
   
-  deploy-prod:
+  deploy_prod:
     name: Stage 9b - Deploy to Prod
     runs-on: ubuntu-latest
-    needs: deploy-preprod
+    needs: deploy_preprod
     environment:
       name: production
       url: https://placeholder.com
@@ -271,10 +272,10 @@ jobs:
           echo "Production deploy complete"
 
 # Stage 10: Smoke Tests + Automated Rollback
-  smoke-tests:
+  smoke_tests:
     name: "Stage 10 - Smoke Tests and Rollback"
     runs-on: ubuntu-latest
-    needs: deploy-prod
+    needs: deploy_prod
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -321,10 +322,10 @@ jobs:
           echo "Rollback: Automated if failure detected"
 
 # Stage 11: Monitoring Notification
-  monitoring-summary:
+  monitoring_summary:
     name: "Stage 11 - Monitoring Active (Azure App Insights)"
     runs-on: ubuntu-latest
-    needs: smoke-tests
+    needs: smoke_tests
     if: always()
     steps:
       - name: Monitoring Status
