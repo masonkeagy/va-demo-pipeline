@@ -79,7 +79,7 @@ jobs:
         uses: github/codeql-action/init@v3
         with:
           languages: javascript #for now so we can run this stage placholder
-        continue-on-error: true #remove later
+        continue-on-error: true #remove later (Just so build doesnt fail for now)
 
       - name: CodeQL Autobuild
         uses: github/codeql-action/autobuild@v3
