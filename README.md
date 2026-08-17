@@ -13,8 +13,6 @@ The goal of this repo is to provide a **starting structure** for the pipeline ev
 - environment configuration
 - monitoring configuration
 
-Rather than wait for all implementation details, this scaffold establishes the **workflow shape, stage ordering, and promotion flow** so the team can plug in project-specific commands later.
-
 ---
 
 ## Pipeline Flow Modeled
@@ -49,22 +47,6 @@ The scaffold follows this sample flow:
 - Approval gate structure for higher environments
 - Smoke test and rollback placeholders
 - Monitoring/observability placeholder stage for Azure Application Insights
-
----
-
-## What Is Not Included Yet
-
-Because no application-specific implementation details were available yet, this repo does **not** include:
-
-- real application code
-- real unit tests
-- integration/performance/regression test suites
-- Dockerfile or build scripts
-- artifact signing configuration
-- real deployment commands
-- real infrastructure/environment variables
-- Azure credentials or cloud resources
-- Application Insights instrumentation
 
 ---
 
