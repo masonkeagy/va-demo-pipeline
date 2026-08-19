@@ -27,20 +27,29 @@ jobs:
   pr_validation:
     name: "Stage 1 - PR Validation"
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Validate PR Has Description
+      - name: Validate PR
         run: |
           echo "Stage 1: Pull Request Validation"
-          echo "PR Author:  ${{ github.actor }}"
-          echo "PR Branch:  ${{ github.head_ref }}"
-          echo "Target:     ${{ github.base_ref }}"
+          echo "Event Type: ${{ github.event_name }}"
           echo "Commit SHA: ${{ github.sha }}"
-          echo "PR Number:  ${{ github.event.pull_request.number }}"
-          echo "PR validation passed"
+          echo "Actor:      ${{ github.actor }}"
+          if [ "${{ github.event_name }}" == "pull_request" ]; then
+            echo ""
+            echo "PR-Specific Details:"
+            echo "PR Author:  ${{ github.actor }}"
+            echo "PR Branch:  ${{ github.head_ref }}"
+            echo "Target:     ${{ github.base_ref }}"
+            echo "PR Number:  ${{ github.event.pull_request.number }}"
+          else
+            echo ""
+            echo "Push/Workflow Dispatch event - PR details not available"
+          fi
+          echo ""
+          echo "Validation passed"
 
 # Stage 2: Unit Testing
   unit_tests:
