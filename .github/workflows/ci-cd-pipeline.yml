@@ -171,7 +171,7 @@ jobs:
         id: set_tag
         run: |
           TAG="${{ github.sha }}"
-          echo "tag=${TAG}"" >> $GITHUB_OUTPUT
+          echo "tag=${TAG}" >> $GITHUB_OUTPUT
           echo "Artifact tag set to: ${TAG}"
 
       - name: Build Application
