@@ -171,7 +171,7 @@ jobs:
         id: set_tag
         run: |
           TAG="${{ github.sha }}"
-          echo "tag=${TAG} >> $GITHUB_OUTPUT"
+          echo "tag=${TAG}"" >> $GITHUB_OUTPUT
           echo "Artifact tag set to: ${TAG}"
 
       - name: Build Application
@@ -229,7 +229,7 @@ jobs:
           echo "Pushed: Pending"
 
 
-# Deploy to Dev
+# Stage 5: Deploy to Dev
   deploy_dev:
     name: "Stage 5 - Deploy to Dev"
     runs-on: ubuntu-latest
@@ -274,7 +274,7 @@ jobs:
           echo "Placeholder: ./scripts/deploy.sh dev"
           #./scripts/deploy.sh dev
 
-# Integration + Performance Tests
+# Stage 6: Integration + Performance Tests
   integration_performance_tests:
     name: "Stage 6 - Integration and Performance Tests"
     runs-on: ubuntu-latest
@@ -317,7 +317,7 @@ jobs:
           echo "Placeholder: ./scripts/performance-tests.sh"
           # ./scripts/performance-tests.sh
 
-# Deploy to TEST/UAT
+# Stage 7: Deploy to TEST/UAT
   deploy_uat:
     name: "Stage 7 - Deploy to TEST/UAT"
     runs-on: ubuntu-latest
