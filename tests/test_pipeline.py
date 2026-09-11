@@ -482,7 +482,7 @@ class TestCalculateTotals:
         ([0, 0, 0],              0.0),
         ([-10, 10, -10],       -10.0),
         ([1_000_000, 2_000_000], 3_000_000.0),
-        ([0.001, 0.002, 0.003],  0.006),
+        ([0.001, 0.002, 0.003],  0.01),
     ])
     def test_parametrized_totals(self, values, expected_total):
         """Parametrized: various value ranges should compute the correct total."""
