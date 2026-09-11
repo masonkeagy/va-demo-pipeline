@@ -109,8 +109,9 @@ jobs:
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
 
-      - name: Dependency Review
+      - name: Dependency Review (PR only)
         uses: actions/dependency-review-action@v4
+        if: github.event_name == 'pull_request'
 
       # Software Composition Analysis — real pip-audit scan
       - name: Set Up Python for Security Tools
@@ -172,9 +173,7 @@ jobs:
           echo "Infrastructure as Code Security Scan"
           echo "Tool: Placeholder - Checkov / KICS"
           echo "Will check: Terraform, Bicep, ARM templates"
-          echo "Placeholder: ./scripts/iac-scan.sh"
           echo "============================================"
-          # ./scripts/iac-scan.sh
 
       # Upload all scan results as artifacts
       - name: Upload Security Scan Results
@@ -192,15 +191,16 @@ jobs:
           echo "============================================"
           echo "Stage 3: Security Scanning Complete"
           echo "============================================"
-          echo "CodeQL SAST:              Configured (Python)"
+          echo "CodeQL SAST:              ✓ Executed"
           echo "Bandit SAST:              ✓ Real scan executed"
           echo "Secret Detection:         ✓ Trufflehog executed"
           echo "Dependency SCA:           ✓ pip-audit executed"
+          echo "Dependency Review:        ✓ Configured (PR only)"
           echo "IaC Security:             Placeholder"
           echo "--------------------------------------------"
           echo "Artifacts:                security-scan-results"
           echo "Results location:         GitHub Security Tab"
-          echo "Scan target:              requirements-full-scan.txt"
+          echo "Scan target:             requirements-full-scan.txt"
           echo "============================================"
 
 # Stage 4: Build + Artifact Signing
