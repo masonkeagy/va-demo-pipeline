@@ -303,7 +303,7 @@ jobs:
           pip install cyclonedx-bom
           
           # Generate CycloneDX SBOM from requirements.txt
-          python -m cyclonedx-bom -o json -r requirements.txt -of sbom/sbom.json
+          python -m cyclonedx_bom -o json -r requirements.txt -of sbom/sbom.json
           
           # Also create a simple text SBOM
           cat > sbom/sbom.txt << 'EOF'
