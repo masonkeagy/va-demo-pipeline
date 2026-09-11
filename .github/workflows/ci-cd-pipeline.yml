@@ -214,70 +214,186 @@ jobs:
       id-token: write
     outputs:
       artifact-tag: ${{ steps.set_tag.outputs.tag }}
+      artifact-version: ${{ steps.version.outputs.version }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Set Artifact Tag 
+      - name: Set Up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Set Artifact Tag
         id: set_tag
         run: |
           TAG="${{ github.sha }}"
           echo "tag=${TAG}" >> $GITHUB_OUTPUT
           echo "Artifact tag set to: ${TAG}"
 
+      - name: Set Version
+        id: version
+        run: |
+          VERSION="1.0.0-$(date +%Y%m%d-%H%M%S)"
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "Version: ${VERSION}"
+
+      - name: Create Build Directory
+        run: |
+          mkdir -p dist
+          mkdir -p sbom
+          echo "Build directories created"
+
       - name: Build Application
         run: |
+          echo "============================================"
           echo "Stage 4: Build Application"
-          echo "Build tool:       [Pending... Dockerfile/pom.xml/package.json]"
-          echo "Artifact tag:     ${{ github.sha }}"
-          echo "Placeholder: ./scripts/build.sh"
-          #./scripts/build.sh
+          echo "============================================"
+          echo "Build tool:       Python Package Builder"
+          echo "Artifact tag:     ${{ steps.set_tag.outputs.tag }}"
+          echo "Version:          ${{ steps.version.outputs.version }}"
+          echo ""
+          
+          # Create a mock application package
+          mkdir -p dist/va-demo-pipeline
+          
+          # Copy source files
+          cp read_data.py dist/va-demo-pipeline/
+          cp requirements.txt dist/va-demo-pipeline/
+          
+          # Create a setup.py (mock build file)
+          cat > dist/va-demo-pipeline/setup.py << 'EOF'
+          from setuptools import setup, find_packages
+          
+          setup(
+              name='va-demo-pipeline',
+              version='${{ steps.version.outputs.version }}',
+              description='VA Demo CI/CD Pipeline Application',
+              author='Mason Keagy',
+              py_modules=['read_data'],
+              install_requires=[
+                  'pandas>=2.2.0',
+                  'numpy>=1.26.0',
+                  'openpyxl>=3.1.0',
+              ],
+              python_requires='>=3.10',
+          )
+          EOF
+          
+          # Create a manifest file
+          cat > dist/MANIFEST.txt << 'EOF'
+          Application: va-demo-pipeline
+          Version: ${{ steps.version.outputs.version }}
+          Build Tag: ${{ steps.set_tag.outputs.tag }}
+          Build Date: $(date -u +'%Y-%m-%dT%H:%M:%SZ')
+          Build Status: SUCCESS
+          Python Version: 3.11
+          EOF
+          
+          echo "✓ Build complete"
+          ls -la dist/
 
       # SBOM Generation
       - name: Generate SBOM
         run: |
+          echo "============================================"
           echo "Generating Software Bill of Materials (SBOM)"
-          echo "Tool: Placeholder - Syft / Anchore"
-          echo "Output: sbom/ directory"
-          echo "Placeholder: ./scripts/generate-sbom.sh"
-          #./scripts/generate-sbom.sh
-        continue-on-error: true #remove later
+          echo "============================================"
+          
+          pip install cyclonedx-bom
+          
+          # Generate CycloneDX SBOM from requirements.txt
+          cyclonedx-bom -o json -r requirements.txt -of sbom/sbom.json
+          
+          # Also create a simple text SBOM
+          cat > sbom/sbom.txt << 'EOF'
+          Software Bill of Materials (SBOM)
+          ====================================
+          Application: va-demo-pipeline
+          Version: ${{ steps.version.outputs.version }}
+          Build Date: $(date -u +'%Y-%m-%dT%H:%M:%SZ')
+          
+          Dependencies:
+          EOF
+          
+          pip freeze >> sbom/sbom.txt
+          
+          echo "✓ SBOM generated"
+          ls -la sbom/
 
       - name: Package Application
         run: |
+          echo "============================================"
           echo "Packaging Application"
-          echo "Placeholder: ./scripts/package.sh"
-          #./scripts/package.sh
+          echo "============================================"
+          
+          # Create a tarball of the build
+          cd dist
+          tar -czf va-demo-pipeline-${{ steps.version.outputs.version }}.tar.gz va-demo-pipeline/
+          
+          # Create a checksum
+          sha256sum va-demo-pipeline-${{ steps.version.outputs.version }}.tar.gz > va-demo-pipeline-${{ steps.version.outputs.version }}.sha256
+          
+          echo "✓ Packaging complete"
+          ls -lah
+          cd ..
 
-      - name: Sign Artifact
+      - name: Sign Artifact (Mock)
         run: |
-          echo "Artifact Signing Tool: Cosign / Azure Key Vault"
-          echo "Signing Status:        Pending registry setup"
-          echo "Placeholder - cosign sign will execute here"
+          echo "============================================"
+          echo "Artifact Signing"
+          echo "============================================"
+          echo "Tool:          Cosign / Azure Key Vault (Pending)"
+          echo "Status:        Mock signature generated"
+          
+          # Create a mock signature file
+          cat > dist/SIGNATURE.txt << 'EOF'
+          -----BEGIN SIGNATURE-----
+          MockSignature_${{ github.sha }}_${{ steps.version.outputs.version }}
+          SignedBy: GitHub Actions
+          Timestamp: $(date -u +'%Y-%m-%dT%H:%M:%SZ')
+          Algorithm: SHA256withRSA (Mock)
+          -----END SIGNATURE-----
+          EOF
+          
+          echo "✓ Mock signature created"
+          cat dist/SIGNATURE.txt
 
       # Upload Artifacts
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v4
         with:
           name: application-artifact
-          path: ./dist/
-        continue-on-error: true #remove later
+          path: dist/
+          retention-days: 5
 
-      #Upload SBOM
+      # Upload SBOM
       - name: Upload SBOM Artifact
         uses: actions/upload-artifact@v4
         with:
           name: sbom
-          path: ./sbom/
-        continue-on-error: true #remove later
+          path: sbom/
+          retention-days: 5
 
       - name: Build Summary
         run: |
-          echo "Build Stage Complete"
-          echo "Artifact: ${{ env.APP_NAME }}:${{ github.sha }}"
-          echo "SBOM: Generated (placeholder)"
-          echo "Signed: Pending"
-          echo "Pushed: Pending"
+          echo "============================================"
+          echo "Stage 4: Build Complete"
+          echo "============================================"
+          echo "Artifact Name:   va-demo-pipeline"
+          echo "Artifact Tag:    ${{ steps.set_tag.outputs.tag }}"
+          echo "Version:         ${{ steps.version.outputs.version }}"
+          echo "Build Status:    ✓ SUCCESS"
+          echo ""
+          echo "Artifacts Generated:"
+          echo "  • Application package: dist/"
+          echo "  • SBOM (CycloneDX):   sbom/sbom.json"
+          echo "  • SBOM (Text):        sbom/sbom.txt"
+          echo "  • Checksum:           dist/*.sha256"
+          echo "  • Signature (Mock):   dist/SIGNATURE.txt"
+          echo ""
+          echo "Artifact Upload Status: ✓ Uploaded"
+          echo "============================================"
 
 
 # Stage 5: Deploy to Dev
