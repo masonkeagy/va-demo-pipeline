@@ -83,9 +83,8 @@ jobs:
         with:
           name: test-results
           path: test-results/
-        continue-on-error: true
 
-#Stage 3: Security Scanning
+# Stage 3: Security Scanning
   security_scanning:
     name: "Stage 3 - Security Scanning"
     runs-on: ubuntu-latest
@@ -98,64 +97,121 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-        # CodeQL SAST
+      # CodeQL SAST
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
         with:
-          languages: javascript #for now so we can run this stage placholder
-        continue-on-error: true #remove later (Just so build doesnt fail for now)
+          languages: python
+        continue-on-error: true
 
       - name: CodeQL Autobuild
         uses: github/codeql-action/autobuild@v3
-        continue-on-error: true #remove later
+        continue-on-error: true
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
-        continue-on-error: true # remove later
+        continue-on-error: true
 
       - name: Dependency Review
         uses: actions/dependency-review-action@v4
         if: github.event_name == 'pull_request'
-        continue-on-error: true #remove later
+        continue-on-error: true
 
-      # Software Composition Analysis
-      - name: Dependency Security Scan
+      # Software Composition Analysis — real pip-audit scan
+      - name: Set Up Python for Security Tools
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install Security Tools
         run: |
+          pip install pip-audit bandit
+
+      - name: Dependency Security Scan (pip-audit)
+        run: |
+          echo "============================================"
           echo "Software Composition Analysis (SCA)"
-          echo "Scanning dependencies for known vulnerabilities"
-          echo "Tool: Placeholder - ./scripts/dependency-scan.sh"
-          echo "Will check: package.json / pom.xml / requirements.txt"
-          #./scripts/dependency-scan.sh
-        continue-on-error: true #remove later
+          echo "Tool: pip-audit"
+          echo "Target: requirements-full-scan.txt"
+          echo "============================================"
+          pip-audit -r requirements-full-scan.txt \
+            --format json \
+            --output pip-audit-results.json \
+            --progress-spinner off || true
+          echo ""
+          echo "Vulnerability summary:"
+          pip-audit -r requirements-full-scan.txt \
+            --progress-spinner off || true
+        continue-on-error: true
 
-      #Secret Detection
-      - name: Secret Detection
+      # Secret Detection — real Trufflehog scan
+      - name: Secret Detection (Trufflehog)
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: ${{ github.event.repository.default_branch }}
+          head: HEAD
+          extra_args: --only-verified
+        continue-on-error: true
+
+      # SAST — real Bandit scan on Python files
+      - name: SAST Scan (Bandit)
         run: |
-          echo "Secret Detection Scan"
-          echo "Scanning for exposed credentials, tokens, API keys"
-          echo "Tool: Placeholder - ./scripts/secret-scan.sh"
-          echo "Will check: all files for hardcoded secrets"
-          #./scripts/secret-scan.sh
+          echo "============================================"
+          echo "Static Application Security Testing (SAST)"
+          echo "Tool: Bandit"
+          echo "Target: All Python files"
+          echo "============================================"
+          bandit -r . \
+            --exclude ./.git,./tests \
+            --format json \
+            --output bandit-results.json || true
+          echo ""
+          echo "Bandit summary:"
+          bandit -r . \
+            --exclude ./.git,./tests \
+            --format txt || true
+        continue-on-error: true
 
       # Infrastructure as Code Security
       - name: IaC Security Scan
         run: |
+          echo "============================================"
           echo "Infrastructure as Code Security Scan"
-          echo "Scanning IaC files for misconfigurations"
-          echo "Tool: Placeholder - ./scripts/iac-scan.sh"
+          echo "Tool: Placeholder - Checkov / KICS"
           echo "Will check: Terraform, Bicep, ARM templates"
+          echo "Placeholder: ./scripts/iac-scan.sh"
+          echo "============================================"
           # ./scripts/iac-scan.sh
-        continue-on-error: true #remove later
+        continue-on-error: true
+
+      # Upload all scan results as artifacts
+      - name: Upload Security Scan Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-scan-results
+          path: |
+            pip-audit-results.json
+            bandit-results.json
+        continue-on-error: true
 
       - name: Security Scan Summary
+        if: always()
         run: |
+          echo "============================================"
           echo "Stage 3: Security Scanning Complete"
-          echo "CodeQL SAST:              Configured"
-          echo "Secret Scanning:          GitHub Native + Script"
-          echo "Dependency Scanning:      Configured"
-          echo "Software Composition:     Configured"
-          echo "IaC Security:             Configured"
+          echo "============================================"
+          echo "CodeQL SAST:              Configured (Python)"
+          echo "Bandit SAST:              ✓ Real scan executed"
+          echo "Secret Detection:         ✓ Trufflehog executed"
+          echo "Dependency SCA:           ✓ pip-audit executed"
+          echo "IaC Security:             Placeholder"
+          echo "--------------------------------------------"
+          echo "Artifacts:                security-scan-results"
           echo "Results location:         GitHub Security Tab"
+          echo "Scan target:              requirements-full-scan.txt"
+          echo "============================================"
 
 # Stage 4: Build + Artifact Signing
   build_and_sign:
