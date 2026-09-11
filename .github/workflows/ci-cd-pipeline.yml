@@ -102,20 +102,15 @@ jobs:
         uses: github/codeql-action/init@v3
         with:
           languages: python
-        continue-on-error: true
 
       - name: CodeQL Autobuild
         uses: github/codeql-action/autobuild@v3
-        continue-on-error: true
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
-        continue-on-error: true
 
       - name: Dependency Review
         uses: actions/dependency-review-action@v4
-        if: github.event_name == 'pull_request'
-        continue-on-error: true
 
       # Software Composition Analysis — real pip-audit scan
       - name: Set Up Python for Security Tools
@@ -142,7 +137,6 @@ jobs:
           echo "Vulnerability summary:"
           pip-audit -r requirements-full-scan.txt \
             --progress-spinner off || true
-        continue-on-error: true
 
       # Secret Detection — real Trufflehog scan
       - name: Secret Detection (Trufflehog)
@@ -152,7 +146,6 @@ jobs:
           base: ${{ github.event.repository.default_branch }}
           head: HEAD
           extra_args: --only-verified
-        continue-on-error: true
 
       # SAST — real Bandit scan on Python files
       - name: SAST Scan (Bandit)
@@ -171,7 +164,6 @@ jobs:
           bandit -r . \
             --exclude ./.git,./tests \
             --format txt || true
-        continue-on-error: true
 
       # Infrastructure as Code Security
       - name: IaC Security Scan
@@ -183,7 +175,6 @@ jobs:
           echo "Placeholder: ./scripts/iac-scan.sh"
           echo "============================================"
           # ./scripts/iac-scan.sh
-        continue-on-error: true
 
       # Upload all scan results as artifacts
       - name: Upload Security Scan Results
@@ -194,7 +185,6 @@ jobs:
           path: |
             pip-audit-results.json
             bandit-results.json
-        continue-on-error: true
 
       - name: Security Scan Summary
         if: always()
