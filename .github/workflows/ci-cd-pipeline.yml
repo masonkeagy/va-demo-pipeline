@@ -300,26 +300,29 @@ jobs:
           echo "Generating Software Bill of Materials (SBOM)"
           echo "============================================"
           
-          pip install cyclonedx-bom
-          
-          # Generate CycloneDX SBOM from requirements.txt
-          python -m cyclonedx_bom -o json -r requirements.txt -of sbom/sbom.json
-          
-          # Also create a simple text SBOM
-          cat > sbom/sbom.txt << 'EOF'
+          pip install pip-licenses
+
+          # Generate JSON SBOM
+          pip-licenses --format=json --output-file=sbom/sbom.json
+
+          # Generate readable text SBOM
+          pip-licenses --format=plain-vertical --output-file=sbom/sbom.txt
+
+          # Create manifest header
+          cat > sbom/sbom-manifest.txt << EOF
+          ========================================
           Software Bill of Materials (SBOM)
-          ====================================
-          Application: va-demo-pipeline
-          Version: ${{ steps.version.outputs.version }}
-          Build Date: $(date -u +'%Y-%m-%dT%H:%M:%SZ')
-          
-          Dependencies:
+          ========================================
+          Application:  va-demo-pipeline
+          Version:      ${{ steps.version.outputs.version }}
+          Build Tag:    ${{ steps.set_tag.outputs.tag }}
+          Build Date:   $(date -u +'%Y-%m-%dT%H:%M:%SZ')
+          ========================================
           EOF
-          
-          pip freeze >> sbom/sbom.txt
-          
+
           echo "✓ SBOM generated"
-          ls -la sbom/
+          pip-licenses --format=plain-vertical
+          ls -la sbom/       
 
       - name: Package Application
         run: |
