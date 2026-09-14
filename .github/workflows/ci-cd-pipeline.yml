@@ -1055,7 +1055,7 @@ jobs:
           Environment: UAT
           Application: va-demo-pipeline
           Version: ${{ needs.build_and_sign.outputs.artifact-version }}
-          Execution Time: $(date -u +'%Y-%m-%dT%H:%M:%SZ Time: $(date -u +'%Y-%m-%dT%H:%M:%SZ')
+          Execution Time: $(date -u +'%Y-%m-%dT%H:%M:%SZ')
           ========================================
           Test Areas:
           - Homepage availability
@@ -1091,13 +1091,9 @@ jobs:
           echo "Framework:          Playwright"
           echo ""
           echo "Validation Areas:"
-          echo "  • UI rendering"
-          echo "  • UI rendering"
           echo "  • Page availability"
           echo "  • HTTP response validation"
-          echo ""
-          echo "Artifacts:"
-          echo "  • playwright-report/"
+          echo "  • Core UI rendering"
           echo ""
           echo "Artifacts:"
           echo "  • playwright-report/"
