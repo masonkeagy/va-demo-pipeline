@@ -35,13 +35,14 @@ mkdir -p smoke-results
 # Python Smoke Tests
 # ============================================
 echo "[1/2] Installing dependencies..."
-pip install requests
+pip install requests --quiet
 echo "✓ Dependencies installed"
 echo ""
 
 echo "[2/2] Running smoke tests..."
 
-cat > scripts/smoke_test.py << 'EOF'
+# Create the smoke test script in current directory (NOT scripts/ subdirectory)
+cat > smoke_test.py << 'EOF'
 import json
 import time
 
@@ -78,11 +79,14 @@ with open("smoke-results.json", "w") as f:
 print(json.dumps(results, indent=2))
 EOF
 
-python scripts/smoke_test.py
+# Run it from current directory
+python smoke_test.py
 echo "✓ Smoke tests completed"
 echo ""
 
-# Validation
+# ============================================
+# Production Validation
+# ============================================
 cat > production-validation.json << 'EOF'
 {
   "environment": "production",
@@ -93,7 +97,8 @@ cat > production-validation.json << 'EOF'
     "cache": "UP",
     "authentication": "UP",
     "external_dependencies": "UP"
-  }
+  },
+  "timestamp": "$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
 }
 EOF
 
