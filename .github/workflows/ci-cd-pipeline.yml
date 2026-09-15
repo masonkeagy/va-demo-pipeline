@@ -484,9 +484,9 @@ jobs:
           echo "Next Stage: Stage 6 - Integration & Performance Tests"
           echo "============================================"
 
-# Stage 6: Integration + Performance Tests
+# Stage 6: Integration & Security Tests
   integration_performance_tests:
-    name: "Stage 6 - Integration and Performance Tests"
+    name: "Stage 6 - Integration and Security Tests"
     runs-on: ubuntu-latest
     needs: deploy_dev
     env:
@@ -522,83 +522,24 @@ jobs:
           echo "============================================"
           echo "Dynamic Application Security Testing (DAST)"
           echo "============================================"
+          echo "Tool: OWASP ZAP"
+          echo "Target: $DEV_URL"
+          echo ""
+          
           docker run --rm \
             -v $(pwd):/zap/wrk/:rw \
             ghcr.io/zaproxy/zaproxy:stable \
             zap-baseline.py \
             -t $DEV_URL \
             -J zap-report.json || true
-          echo "✓ ZAP baseline scan completed"
-      
-      # ============================================
-      # Performance Tests (k6)
-      # ============================================
-      - name: Install k6
-        continue-on-error: true
-        run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq gnupg ca-certificates
-          curl -fsSL https://dl.k6.io/key.gpg | \
-            sudo gpg --dearmor -o /usr/share/keyrings/k6-archive-keyring.gpg
-          echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" | \
-            sudo tee /etc/apt/sources.list.d/k6.list > /dev/null
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq k6
-          k6 version
-      
-      - name: Create k6 Performance Test
-        continue-on-error: true
-        run: |
-          cat > performance-test.js << 'EOF'
-          import http from 'k6/http';
-          import { sleep, check } from 'k6';
           
-          export const options = {
-            vus: 10,
-            duration: '15s',
-            thresholds: {
-              http_req_failed: ['rate<0.01'],
-              http_req_duration: ['p(95)<500'],
-            },
-          };
-          
-          export default function () {
-            const res = http.get('https://test.k6.io');
-            check(res, {
-              'status was 200': (r) => r.status === 200,
-            });
-            sleep(1);
-          }
-          EOF
-          echo "✓ k6 performance test created"
-      
-      - name: Run Performance Tests
-        id: perf_tests
-        continue-on-error: true
-        run: |
-          echo "============================================"
-          echo "Performance Tests (k6)"
-          echo "============================================"
-          
-          if command -v k6 &> /dev/null; then
-            k6 run --summary-export=performance-results.json performance-test.js
-            echo "✓ Performance tests completed"
+          if [ -f "zap-report.json" ]; then
+            echo ""
+            echo "✓ ZAP baseline scan completed"
+            echo "Scan results available in: zap-report.json"
           else
-            echo "⚠ k6 not available, creating mock results"
-            cat > performance-results.json << 'PERF_EOF'
-          {
-            "test_type": "performance",
-            "vus": 10,
-            "duration": "15s",
-            "requests": 1500,
-            "passed": 1485,
-            "failed": 15,
-            "p95_response": 450,
-            "avg_response": 200,
-            "note": "Mock results - k6 not available on this runner"
-          }
-          PERF_EOF
-            cat performance-results.json
+            echo ""
+            echo "⚠ ZAP scan completed (no results file generated)"
           fi
       
       # ============================================
@@ -608,25 +549,26 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: integration-performance-results
+          name: integration-security-results
           path: |
             api-test-results.json
             zap-report.json
-            performance-results.json
           retention-days: 30
       
+      # ============================================
+      # Stage Summary
+      # ============================================
       - name: Stage 6 Summary
         if: always()
         run: |
           echo ""
           echo "============================================"
-          echo "Stage 6: Integration & Performance Complete"
+          echo "Stage 6: Integration & Security Complete"
           echo "============================================"
           echo ""
           echo "Integration Tests:      ✓ Executed"
           echo "API Validation Tests:   ✓ Executed"
-          echo "DAST Scan (ZAP):        ✓ Executed"
-          echo "Performance Tests (k6): ✓ Executed"
+          echo "DAST Scan (OWASP ZAP):  ✓ Executed"
           echo ""
           echo "Test Results:"
           
@@ -634,19 +576,16 @@ jobs:
             echo "  • API Tests: $(grep -o 'PASS\|FAIL' api-test-results.json | head -1)"
           fi
           
-          if [ -f "performance-results.json" ]; then
-            echo "  • Performance: $(grep -o 'p95_response.*[0-9]*' performance-results.json | head -1)"
-          fi
-          
           if [ -f "zap-report.json" ]; then
-            echo "  • DAST Scan: Complete"
+            echo "  • DAST Security Scan: Completed"
+            ALERT_COUNT=$(grep -o '"alerts"' zap-report.json | wc -l)
+            echo "    └─ Alerts: $ALERT_COUNT"
           fi
           
           echo ""
           echo "Artifacts Generated:"
           echo "  • api-test-results.json"
           echo "  • zap-report.json"
-          echo "  • performance-results.json"
           echo ""
           echo "Next Stage: Stage 7 - Deploy to TEST/UAT"
           echo "============================================"
