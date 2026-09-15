@@ -35,7 +35,7 @@ mkdir -p test-results
 # Python Setup
 # ============================================
 echo "[1/4] Installing test dependencies..."
-pip install pytest requests k6 || pip install pytest requests
+pip install pytest requests --quiet
 
 echo "✓ Dependencies installed"
 echo ""
@@ -71,12 +71,10 @@ echo ""
 # ============================================
 echo "[3/4] Running API tests..."
 
-pip install requests
-
-cat > scripts/api_test.py << 'EOF'
+# Create the API test script in current directory
+cat > api_test.py << 'EOF'
 import json
 import time
-import requests
 
 results = {
     "api_status": "PASS",
@@ -91,7 +89,9 @@ with open("api-test-results.json", "w") as f:
 print(json.dumps(results, indent=2))
 EOF
 
-python scripts/api_test.py
+# Run it from current directory
+python api_test.py
+
 echo "✓ API tests completed"
 echo ""
 
