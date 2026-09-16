@@ -343,13 +343,29 @@ def plot_sheet_comparison(summary_df: pd.DataFrame, output_path: str = "chart_sh
         ax2.text(0.5, 0.5, 'No Data Available', 
                   horizontalalignment='center', verticalalignment='center',
                   fontsize=14, transform=ax2.transAxes)
+        ax1.set_title('Row Count by Sheet')
+        ax2.set_title('Column Count by Sheet')
     else:
         # Chart 1: Row counts per sheet
         ax1.bar(summary_df['Sheet Name'], summary_df['Rows'], color='steelblue')
         ax1.set_title('Row Count by Sheet')
         ax1.set_ylabel('Number of Rows')
         ax1.set_xlabel('Sheet Name')
-        ax1.tick_params
+        ax1.tick_params(axis='x', rotation=45)
+        
+        # Chart 2: Column counts per sheet
+        ax2.bar(summary_df['Sheet Name'], summary_df['Columns'], color='mediumseagreen')
+        ax2.set_title('Column Count by Sheet')
+        ax2.set_ylabel('Number of Columns')
+        ax2.set_xlabel('Sheet Name')
+        ax2.tick_params(axis='x', rotation=45)
+    
+    plt.suptitle('Excel File - Sheet Comparison Overview')
+    plt.tight_layout()
+    plt.savefig(output_path, dpi=100)
+    plt.close()
+    
+    return output_path
 
 
 def generate_all_visualizations(sheets: Dict[str, pd.DataFrame], output_dir: str = ".") -> List[str]:

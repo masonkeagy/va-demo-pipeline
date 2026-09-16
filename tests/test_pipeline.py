@@ -175,8 +175,9 @@ class TestDataCleaning:
 
     def test_clean_data_drop_strategy_removes_null_rows(self, sample_dataframe_with_nulls):
         cleaned = clean_data(sample_dataframe_with_nulls, strategy="drop")
-        assert len(cleaned) == 2  # Only rows with NO nulls survive
+        assert len(cleaned) == 1  # Only Alice's row has NO nulls
         assert cleaned.isnull().sum().sum() == 0
+        assert cleaned.iloc[0]['Name'] == 'Alice'  # Verify correct row survived
 
     def test_clean_data_fill_strategy_replaces_nulls_with_zero(self, sample_dataframe_with_nulls):
         cleaned = clean_data(sample_dataframe_with_nulls, strategy="fill")
