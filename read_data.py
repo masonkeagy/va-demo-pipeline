@@ -295,11 +295,18 @@ def plot_numeric_distribution(df: pd.DataFrame, sheet_name: str = "Sheet", outpu
         output_path = f"chart_distribution_{safe_name}.png"
     
     num_plots = len(numeric_cols)
-    fig, axes = plt.subplots(nrows=(num_plots + 1) // 2, ncols=2, figsize=(12, 4 * ((num_plots + 1) // 2)))
-    axes = axes.flatten() if num_plots > 1 else [axes]
+    ncols = 2 if num_plots > 1 else 1
+    nrows = (num_plots + ncols - 1) // ncols
+    
+    # squeeze=False guarantees axes is ALWAYS a 2D array, regardless of subplot count
+    fig, axes = plt.subplots(nrows=nrows, ncols=ncols, 
+                               figsize=(6 * ncols, 4 * nrows), 
+                               squeeze=False)
+    axes = axes.flatten()
     
     for idx, col in enumerate(numeric_cols):
-        df[col].dropna().plot(kind='hist', ax=axes[idx], bins=20, color='steelblue', edgecolor='black')
+        df[col].dropna().plot(kind='hist', ax=axes[idx], bins=20, 
+                                color='steelblue', edgecolor='black')
         axes[idx].set_title(f'{col}')
         axes[idx].set_xlabel(col)
     
@@ -328,26 +335,21 @@ def plot_sheet_comparison(summary_df: pd.DataFrame, output_path: str = "chart_sh
     """
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
     
-    # Chart 1: Row counts per sheet
-    ax1.bar(summary_df['Sheet Name'], summary_df['Rows'], color='steelblue')
-    ax1.set_title('Row Count by Sheet')
-    ax1.set_ylabel('Number of Rows')
-    ax1.set_xlabel('Sheet Name')
-    ax1.tick_params(axis='x', rotation=45)
-    
-    # Chart 2: Column counts per sheet
-    ax2.bar(summary_df['Sheet Name'], summary_df['Columns'], color='mediumseagreen')
-    ax2.set_title('Column Count by Sheet')
-    ax2.set_ylabel('Number of Columns')
-    ax2.set_xlabel('Sheet Name')
-    ax2.tick_params(axis='x', rotation=45)
-    
-    plt.suptitle('Excel File - Sheet Comparison Overview')
-    plt.tight_layout()
-    plt.savefig(output_path, dpi=100)
-    plt.close()
-    
-    return output_path
+    if summary_df.empty or 'Sheet Name' not in summary_df.columns:
+        # Handle empty/no-data case gracefully
+        ax1.text(0.5, 0.5, 'No Data Available', 
+                  horizontalalignment='center', verticalalignment='center',
+                  fontsize=14, transform=ax1.transAxes)
+        ax2.text(0.5, 0.5, 'No Data Available', 
+                  horizontalalignment='center', verticalalignment='center',
+                  fontsize=14, transform=ax2.transAxes)
+    else:
+        # Chart 1: Row counts per sheet
+        ax1.bar(summary_df['Sheet Name'], summary_df['Rows'], color='steelblue')
+        ax1.set_title('Row Count by Sheet')
+        ax1.set_ylabel('Number of Rows')
+        ax1.set_xlabel('Sheet Name')
+        ax1.tick_params
 
 
 def generate_all_visualizations(sheets: Dict[str, pd.DataFrame], output_dir: str = ".") -> List[str]:
