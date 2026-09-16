@@ -1,544 +1,614 @@
-# test_data_processing.py
-# Run all tests
-# pytest test_data_processing.py -v
-
-# Run with coverage
-# pytest test_data_processing.py -v --tb=short --cov=. --cov-report=term-missing
-
-# Run a single class
-# pytest test_data_processing.py::TestCleanNulls -v
-
-# Run only parametrized tests
-# pytest test_data_processing.py -v -k "parametrized"
 """
-Unit tests for basic data processing functions:
-- Reading data
-- Cleaning nulls
-- Calculating totals
-Uses: pytest
+Test suite for VA Demo Pipeline - Data Processing Module
+Tests multi-sheet reading, cleaning, calculations, and visualization functions
 """
 
 import pytest
 import pandas as pd
-import numpy as np
-from unittest.mock import patch, mock_open, MagicMock
-import io
-import json
+import os
+from pathlib import Path
+
+from read_data import (
+    get_sheet_names,
+    read_excel_file,
+    read_all_sheets,
+    clean_data,
+    clean_all_sheets,
+    calculate_totals,
+    get_numeric_columns,
+    preview_sheet,
+    preview_all_sheets,
+    summarize_sheets,
+    plot_null_summary,
+    plot_numeric_distribution,
+    plot_sheet_comparison,
+    generate_all_visualizations,
+)
 
 
-# ============================================================
-# SOURCE FUNCTIONS UNDER TEST (data_processing.py simulation)
-# ============================================================
-
-def read_data(filepath: str) -> pd.DataFrame:
-    """Read CSV data from a given filepath."""
-    if not filepath.endswith(".csv"):
-        raise ValueError(f"Unsupported file format: {filepath}")
-    return pd.read_csv(filepath)
-
-
-def read_data_from_dict(data: dict) -> pd.DataFrame:
-    """Create a DataFrame directly from a dictionary."""
-    if not isinstance(data, dict):
-        raise TypeError("Input must be a dictionary.")
-    if not data:
-        raise ValueError("Input dictionary cannot be empty.")
-    return pd.DataFrame(data)
-
-
-def clean_nulls(df: pd.DataFrame, strategy: str = "drop", fill_value=0) -> pd.DataFrame:
-    """
-    Clean null values from a DataFrame.
-    strategy:
-        'drop'  → drop rows with any null
-        'fill'  → fill nulls with fill_value
-        'mean'  → fill numeric nulls with column mean
-    """
-    if not isinstance(df, pd.DataFrame):
-        raise TypeError("Input must be a pandas DataFrame.")
-    if df.empty:
-        return df
-    if strategy == "drop":
-        return df.dropna().reset_index(drop=True)
-    elif strategy == "fill":
-        return df.fillna(fill_value)
-    elif strategy == "mean":
-        return df.fillna(df.mean(numeric_only=True))
-    else:
-        raise ValueError(f"Unknown strategy: '{strategy}'. Choose 'drop', 'fill', or 'mean'.")
-
-
-def calculate_totals(df: pd.DataFrame, columns: list) -> dict:
-    """
-    Calculate the sum of specified numeric columns.
-    Returns a dict: {column_name: total}
-    """
-    if not isinstance(df, pd.DataFrame):
-        raise TypeError("Input must be a pandas DataFrame.")
-    if df.empty:
-        return {col: 0 for col in columns}
-    missing = [col for col in columns if col not in df.columns]
-    if missing:
-        raise KeyError(f"Columns not found in DataFrame: {missing}")
-    non_numeric = [col for col in columns if not pd.api.types.is_numeric_dtype(df[col])]
-    if non_numeric:
-        raise TypeError(f"Non-numeric columns cannot be summed: {non_numeric}")
-    return {col: round(df[col].sum(), 2) for col in columns}
-
-
-# ============================================================
+# ============================================
 # FIXTURES
-# ============================================================
+# ============================================
 
 @pytest.fixture
-def sample_df():
-    """A clean DataFrame with no nulls."""
+def sample_dataframe():
+    """Basic single-sheet DataFrame for simple tests."""
     return pd.DataFrame({
-        "id":       [1,    2,    3,    4,    5   ],
-        "name":     ["Alice","Bob","Carol","Dave","Eve"],
-        "sales":    [200.0, 150.0, 300.0, 100.0, 250.0],
-        "expenses": [80.0,  60.0,  120.0, 40.0,  90.0 ],
-        "units":    [10,    8,     15,    5,     12   ],
+        'Name': ['Alice', 'Bob', 'Charlie', 'Dave'],
+        'Sales': [100, 200, 300, 400],
+        'Revenue': [10.5, 20.5, 30.5, 40.5],
     })
 
 
 @pytest.fixture
-def dirty_df():
-    """A DataFrame that contains null values."""
+def sample_dataframe_with_nulls():
+    """DataFrame containing null values for cleaning tests."""
     return pd.DataFrame({
-        "id":       [1,    2,    3,    None, 5   ],
-        "name":     ["Alice", None, "Carol", "Dave", "Eve"],
-        "sales":    [200.0, None, 300.0, 100.0, None ],
-        "expenses": [80.0,  60.0, None,  40.0,  90.0 ],
-        "units":    [10,    8,    15,    None,  12   ],
+        'Name': ['Alice', 'Bob', None, 'Dave'],
+        'Sales': [100, None, 300, 400],
+        'Revenue': [10.5, 20.5, 30.5, None],
     })
 
 
 @pytest.fixture
-def single_row_df():
-    """A single-row DataFrame."""
-    return pd.DataFrame({
-        "sales":    [500.0],
-        "expenses": [200.0],
-        "units":    [25],
+def multi_sheet_excel_file(tmp_path):
+    """
+    Creates a temporary multi-sheet Excel file for testing.
+    Returns the filepath as a string.
+    """
+    filepath = tmp_path / "test_data.xlsx"
+    
+    sheet1 = pd.DataFrame({
+        'Requirement ID': ['REQ-001', 'REQ-002', 'REQ-003'],
+        'Status': ['Pass', 'Fail', 'Pass'],
+        'Score': [95, 60, 88],
     })
+    
+    sheet2 = pd.DataFrame({
+        'Test ID': ['T-001', 'T-002'],
+        'Duration': [12.5, 8.3],
+        'Result': ['Pass', 'Pass'],
+    })
+    
+    with pd.ExcelWriter(filepath, engine='openpyxl') as writer:
+        sheet1.to_excel(writer, sheet_name='Requirements', index=False)
+        sheet2.to_excel(writer, sheet_name='TestCases', index=False)
+    
+    return str(filepath)
 
 
 @pytest.fixture
-def empty_df():
-    """An empty DataFrame."""
-    return pd.DataFrame({"sales": [], "expenses": [], "units": []})
+def single_sheet_excel_file(tmp_path):
+    """Creates a temporary single-sheet Excel file for basic tests."""
+    filepath = tmp_path / "single_sheet.xlsx"
+    
+    df = pd.DataFrame({
+        'Name': ['Alice', 'Bob'],
+        'Value': [1, 2],
+    })
+    
+    df.to_excel(filepath, index=False)
+    return str(filepath)
 
 
 @pytest.fixture
-def large_df():
-    """A large DataFrame for performance/edge-case tests."""
-    rng = np.random.default_rng(seed=42)
-    n = 10_000
-    data = {
-        "id":       np.arange(1, n + 1),
-        "sales":    rng.uniform(50, 5000, n).round(2),
-        "expenses": rng.uniform(10, 2000, n).round(2),
-        "units":    rng.integers(1, 500, n),
+def sample_sheets_dict():
+    """Dictionary of sheet_name -> DataFrame, mimicking read_all_sheets() output."""
+    return {
+        'Requirements': pd.DataFrame({
+            'ID': ['R1', 'R2', 'R3'],
+            'Score': [95, 60, 88],
+        }),
+        'TestCases': pd.DataFrame({
+            'Test': ['T1', 'T2'],
+            'Duration': [12.5, 8.3],
+        }),
     }
-    return pd.DataFrame(data)
 
 
-# ============================================================
-# TESTS — read_data()
-# ============================================================
+# ============================================
+# FILE READING TESTS
+# ============================================
 
-class TestReadData:
-    """Tests for the read_data() function."""
+class TestFileReading:
 
-    def test_read_valid_csv(self, sample_df, tmp_path):
-        """Should successfully read a valid CSV file."""
-        csv_file = tmp_path / "test.csv"
-        sample_df.to_csv(csv_file, index=False)
+    def test_get_sheet_names_returns_correct_sheets(self, multi_sheet_excel_file):
+        sheets = get_sheet_names(multi_sheet_excel_file)
+        assert sheets == ['Requirements', 'TestCases']
 
-        result = read_data(str(csv_file))
-
-        assert isinstance(result, pd.DataFrame)
-        assert not result.empty
-
-    def test_read_csv_row_count(self, sample_df, tmp_path):
-        """Row count should match the original DataFrame."""
-        csv_file = tmp_path / "test.csv"
-        sample_df.to_csv(csv_file, index=False)
-
-        result = read_data(str(csv_file))
-
-        assert len(result) == len(sample_df)
-
-    def test_read_csv_column_names(self, sample_df, tmp_path):
-        """Column names should be preserved after reading."""
-        csv_file = tmp_path / "test.csv"
-        sample_df.to_csv(csv_file, index=False)
-
-        result = read_data(str(csv_file))
-
-        assert list(result.columns) == list(sample_df.columns)
-
-    def test_read_csv_data_integrity(self, sample_df, tmp_path):
-        """Data values should be identical to the original."""
-        csv_file = tmp_path / "test.csv"
-        sample_df.to_csv(csv_file, index=False)
-
-        result = read_data(str(csv_file))
-
-        pd.testing.assert_frame_equal(result, sample_df)
-
-    def test_read_unsupported_format_raises_value_error(self):
-        """Reading a non-CSV file should raise ValueError."""
-        with pytest.raises(ValueError, match="Unsupported file format"):
-            read_data("data.xlsx")
-
-    def test_read_missing_file_raises_error(self):
-        """Reading a non-existent file should raise FileNotFoundError."""
+    def test_get_sheet_names_raises_on_missing_file(self):
         with pytest.raises(FileNotFoundError):
-            read_data("non_existent_file.csv")
+            get_sheet_names("nonexistent_file.xlsx")
 
-    def test_read_empty_csv(self, tmp_path):
-        """An empty CSV (headers only) should return an empty DataFrame."""
-        csv_file = tmp_path / "empty.csv"
-        csv_file.write_text("sales,expenses,units\n")
+    def test_get_sheet_names_raises_on_invalid_extension(self, tmp_path):
+        bad_file = tmp_path / "data.txt"
+        bad_file.write_text("not an excel file")
+        with pytest.raises(ValueError):
+            get_sheet_names(str(bad_file))
 
-        result = read_data(str(csv_file))
+    def test_read_excel_file_reads_first_sheet_by_default(self, multi_sheet_excel_file):
+        df = read_excel_file(multi_sheet_excel_file)
+        assert 'Requirement ID' in df.columns
+        assert len(df) == 3
 
-        assert isinstance(result, pd.DataFrame)
-        assert result.empty
-        assert list(result.columns) == ["sales", "expenses", "units"]
+    def test_read_excel_file_reads_specific_sheet(self, multi_sheet_excel_file):
+        df = read_excel_file(multi_sheet_excel_file, sheet_name='TestCases')
+        assert 'Test ID' in df.columns
+        assert len(df) == 2
 
+    def test_read_excel_file_raises_on_missing_file(self):
+        with pytest.raises(FileNotFoundError):
+            read_excel_file("does_not_exist.xlsx")
 
-class TestReadDataFromDict:
-    """Tests for the read_data_from_dict() function."""
+    def test_read_excel_file_raises_on_invalid_extension(self, tmp_path):
+        bad_file = tmp_path / "data.csv"
+        bad_file.write_text("a,b,c")
+        with pytest.raises(ValueError):
+            read_excel_file(str(bad_file))
 
-    def test_valid_dict_returns_dataframe(self):
-        """A valid dict should return a DataFrame."""
-        data = {"a": [1, 2, 3], "b": [4, 5, 6]}
-        result = read_data_from_dict(data)
-        assert isinstance(result, pd.DataFrame)
+    def test_read_all_sheets_returns_dict(self, multi_sheet_excel_file):
+        sheets = read_all_sheets(multi_sheet_excel_file)
+        assert isinstance(sheets, dict)
+        assert set(sheets.keys()) == {'Requirements', 'TestCases'}
 
-    def test_dict_shape_matches(self):
-        """DataFrame shape should match the input dict dimensions."""
-        data = {"x": [10, 20], "y": [30, 40], "z": [50, 60]}
-        result = read_data_from_dict(data)
-        assert result.shape == (2, 3)
+    def test_read_all_sheets_content_is_correct(self, multi_sheet_excel_file):
+        sheets = read_all_sheets(multi_sheet_excel_file)
+        assert len(sheets['Requirements']) == 3
+        assert len(sheets['TestCases']) == 2
+        assert 'Score' in sheets['Requirements'].columns
 
-    def test_dict_column_names_preserved(self):
-        """Column names should match dict keys."""
-        data = {"col1": [1], "col2": [2], "col3": [3]}
-        result = read_data_from_dict(data)
-        assert list(result.columns) == ["col1", "col2", "col3"]
+    def test_read_all_sheets_raises_on_missing_file(self):
+        with pytest.raises(FileNotFoundError):
+            read_all_sheets("missing.xlsx")
 
-    def test_non_dict_raises_type_error(self):
-        """Passing a non-dict should raise TypeError."""
-        with pytest.raises(TypeError, match="Input must be a dictionary"):
-            read_data_from_dict([1, 2, 3])
-
-    def test_empty_dict_raises_value_error(self):
-        """Passing an empty dict should raise ValueError."""
-        with pytest.raises(ValueError, match="cannot be empty"):
-            read_data_from_dict({})
-
-    def test_dict_with_none_values(self):
-        """Dict with None values should create a DataFrame with NaN."""
-        data = {"a": [1, None, 3], "b": [None, 5, 6]}
-        result = read_data_from_dict(data)
-        assert result.isnull().values.any()
-
-    @pytest.mark.parametrize("input_data, expected_shape", [
-        ({"a": [1]},                        (1, 1)),
-        ({"a": [1, 2], "b": [3, 4]},        (2, 2)),
-        ({"x": list(range(100))},           (100, 1)),
-    ])
-    def test_various_dict_shapes(self, input_data, expected_shape):
-        """Parametrized: various shapes should produce correct DataFrames."""
-        result = read_data_from_dict(input_data)
-        assert result.shape == expected_shape
+    def test_single_sheet_file_reads_correctly(self, single_sheet_excel_file):
+        sheets = read_all_sheets(single_sheet_excel_file)
+        assert len(sheets) == 1
+        assert 'Sheet1' in sheets
 
 
-# ============================================================
-# TESTS — clean_nulls()
-# ============================================================
+# ============================================
+# DATA CLEANING TESTS
+# ============================================
 
-class TestCleanNulls:
-    """Tests for the clean_nulls() function."""
+class TestDataCleaning:
 
-    # --- strategy: drop ---
+    def test_clean_data_drop_strategy_removes_null_rows(self, sample_dataframe_with_nulls):
+        cleaned = clean_data(sample_dataframe_with_nulls, strategy="drop")
+        assert len(cleaned) == 2  # Only rows with NO nulls survive
+        assert cleaned.isnull().sum().sum() == 0
 
-    def test_drop_removes_null_rows(self, dirty_df):
-        """Drop strategy should remove every row that has at least one null."""
-        result = clean_nulls(dirty_df, strategy="drop")
-        assert result.isnull().sum().sum() == 0
+    def test_clean_data_fill_strategy_replaces_nulls_with_zero(self, sample_dataframe_with_nulls):
+        cleaned = clean_data(sample_dataframe_with_nulls, strategy="fill")
+        assert cleaned.isnull().sum().sum() == 0
+        assert len(cleaned) == 4  # No rows removed
 
-    def test_drop_reduces_row_count(self, dirty_df):
-        """Drop strategy should yield fewer rows than the dirty DataFrame."""
-        result = clean_nulls(dirty_df, strategy="drop")
-        assert len(result) < len(dirty_df)
+    def test_clean_data_invalid_strategy_returns_original(self, sample_dataframe_with_nulls):
+        result = clean_data(sample_dataframe_with_nulls, strategy="invalid")
+        assert result.equals(sample_dataframe_with_nulls)
 
-    def test_drop_keeps_clean_rows_intact(self, dirty_df):
-        """Rows without nulls should survive the drop strategy."""
-        result = clean_nulls(dirty_df, strategy="drop")
-        assert len(result) > 0
+    def test_clean_data_resets_index_after_drop(self, sample_dataframe_with_nulls):
+        cleaned = clean_data(sample_dataframe_with_nulls, strategy="drop")
+        assert list(cleaned.index) == list(range(len(cleaned)))
 
-    def test_drop_on_clean_df_unchanged(self, sample_df):
-        """Applying drop on a clean DataFrame should return it unchanged."""
-        result = clean_nulls(sample_df, strategy="drop")
-        pd.testing.assert_frame_equal(result.reset_index(drop=True),
-                                      sample_df.reset_index(drop=True))
-
-    # --- strategy: fill ---
-
-    def test_fill_zero_removes_all_nulls(self, dirty_df):
-        """Fill-zero strategy should leave no nulls."""
-        result = clean_nulls(dirty_df, strategy="fill", fill_value=0)
-        assert result.isnull().sum().sum() == 0
-
-    def test_fill_preserves_row_count(self, dirty_df):
-        """Fill strategy must NOT remove rows."""
-        result = clean_nulls(dirty_df, strategy="fill", fill_value=0)
-        assert len(result) == len(dirty_df)
-
-    def test_fill_custom_value(self, dirty_df):
-        """Fill strategy should replace nulls with the provided fill_value."""
-        result = clean_nulls(dirty_df, strategy="fill", fill_value=-1)
-        assert result.isnull().sum().sum() == 0
-        # Numeric cells that were NaN should now hold -1
-        assert (result["sales"] == -1).any()
-
-    def test_fill_string_value(self):
-        """Fill strategy should work with a string fill value for object cols."""
-        df = pd.DataFrame({"name": ["Alice", None, "Carol"],
-                           "score": [90, None, 85]})
-        result = clean_nulls(df, strategy="fill", fill_value="UNKNOWN")
-        assert "UNKNOWN" in result["name"].values
-
-    # --- strategy: mean ---
-
-    def test_mean_fill_removes_numeric_nulls(self, dirty_df):
-        """Mean strategy should remove nulls in numeric columns."""
-        result = clean_nulls(dirty_df, strategy="mean")
-        numeric_cols = dirty_df.select_dtypes(include="number").columns
-        assert result[numeric_cols].isnull().sum().sum() == 0
-
-    def test_mean_fill_preserves_row_count(self, dirty_df):
-        """Mean strategy must NOT drop rows."""
-        result = clean_nulls(dirty_df, strategy="mean")
-        assert len(result) == len(dirty_df)
-
-    def test_mean_fill_correct_value(self):
-        """Mean-filled values should exactly equal the column mean."""
-        df = pd.DataFrame({"sales": [100.0, None, 200.0]})
-        result = clean_nulls(df, strategy="mean")
-        expected_mean = 150.0
-        assert result.loc[1, "sales"] == pytest.approx(expected_mean)
-
-    # --- edge cases ---
-
-    def test_empty_df_returns_empty(self, empty_df):
-        """Cleaning an empty DataFrame should return an empty DataFrame."""
-        result = clean_nulls(empty_df, strategy="drop")
+    def test_clean_data_on_empty_dataframe(self):
+        empty_df = pd.DataFrame()
+        result = clean_data(empty_df, strategy="drop")
         assert result.empty
 
-    def test_invalid_strategy_raises_value_error(self, sample_df):
-        """An unknown strategy should raise ValueError."""
-        with pytest.raises(ValueError, match="Unknown strategy"):
-            clean_nulls(sample_df, strategy="interpolate")
+    def test_clean_all_sheets_applies_to_every_sheet(self, sample_sheets_dict):
+        # Add nulls to test cleaning
+        sample_sheets_dict['Requirements'].loc[0, 'Score'] = None
+        cleaned = clean_all_sheets(sample_sheets_dict, strategy="drop")
+        
+        assert len(cleaned) == 2  # Same number of sheets
+        assert cleaned['Requirements'].isnull().sum().sum() == 0
 
-    def test_non_dataframe_raises_type_error(self):
-        """Passing a non-DataFrame should raise TypeError."""
-        with pytest.raises(TypeError, match="pandas DataFrame"):
-            clean_nulls({"a": [1, None]}, strategy="drop")
-
-    @pytest.mark.parametrize("strategy,fill_value", [
-        ("drop",  0),
-        ("fill",  0),
-        ("fill", -999),
-        ("mean",  0),
-    ])
-    def test_no_nulls_after_cleaning(self, dirty_df, strategy, fill_value):
-        """Parametrized: all strategies should eliminate nulls (numeric)."""
-        result = clean_nulls(dirty_df, strategy=strategy, fill_value=fill_value)
-        numeric_cols = dirty_df.select_dtypes(include="number").columns
-        assert result[numeric_cols].isnull().sum().sum() == 0
+    def test_clean_all_sheets_fill_strategy(self, sample_sheets_dict):
+        sample_sheets_dict['TestCases'].loc[0, 'Duration'] = None
+        cleaned = clean_all_sheets(sample_sheets_dict, strategy="fill")
+        
+        assert cleaned['TestCases'].isnull().sum().sum() == 0
+        assert len(cleaned['TestCases']) == 2  # No rows removed
 
 
-# ============================================================
-# TESTS — calculate_totals()
-# ============================================================
+# ============================================
+# CALCULATION TESTS
+# ============================================
 
-class TestCalculateTotals:
-    """Tests for the calculate_totals() function."""
+class TestCalculations:
 
-    # --- basic correctness ---
+    def test_calculate_totals_sums_correctly(self, sample_dataframe):
+        totals = calculate_totals(sample_dataframe, ['Sales', 'Revenue'])
+        assert totals['Sales'] == 1000
+        assert totals['Revenue'] == 102.0
 
-    def test_returns_dict(self, sample_df):
-        """calculate_totals should return a dictionary."""
-        result = calculate_totals(sample_df, ["sales"])
-        assert isinstance(result, dict)
+    def test_calculate_totals_on_empty_dataframe(self):
+        empty_df = pd.DataFrame()
+        totals = calculate_totals(empty_df, ['Sales', 'Revenue'])
+        assert totals == {'Sales': 0, 'Revenue': 0}
 
-    def test_single_column_total(self, sample_df):
-        """Total of 'sales' should equal the manual sum."""
-        result = calculate_totals(sample_df, ["sales"])
-        expected = round(sample_df["sales"].sum(), 2)
-        assert result["sales"] == pytest.approx(expected)
+    def test_calculate_totals_handles_missing_column(self, sample_dataframe):
+        totals = calculate_totals(sample_dataframe, ['Sales', 'NonExistentColumn'])
+        assert totals['Sales'] == 1000
+        assert totals['NonExistentColumn'] is None
 
-    def test_multiple_columns_totals(self, sample_df):
-        """Totals for multiple columns should all be correct."""
-        cols = ["sales", "expenses", "units"]
-        result = calculate_totals(sample_df, cols)
+    def test_calculate_totals_rounds_to_two_decimals(self):
+        df = pd.DataFrame({'Value': [1.23456, 2.34567]})
+        totals = calculate_totals(df, ['Value'])
+        assert totals['Value'] == round(1.23456 + 2.34567, 2)
 
-        assert result["sales"]    == pytest.approx(round(sample_df["sales"].sum(),    2))
-        assert result["expenses"] == pytest.approx(round(sample_df["expenses"].sum(), 2))
-        assert result["units"]    == pytest.approx(round(sample_df["units"].sum(),    2))
+    def test_calculate_totals_empty_column_list(self, sample_dataframe):
+        totals = calculate_totals(sample_dataframe, [])
+        assert totals == {}
 
-    def test_result_keys_match_requested_columns(self, sample_df):
-        """The result dict should have exactly the requested column keys."""
-        cols = ["sales", "expenses"]
-        result = calculate_totals(sample_df, cols)
-        assert set(result.keys()) == set(cols)
+    def test_get_numeric_columns_identifies_correctly(self, sample_dataframe):
+        numeric_cols = get_numeric_columns(sample_dataframe)
+        assert 'Sales' in numeric_cols
+        assert 'Revenue' in numeric_cols
+        assert 'Name' not in numeric_cols
 
-    def test_single_row_total(self, single_row_df):
-        """Single-row DataFrame total should equal the single value."""
-        result = calculate_totals(single_row_df, ["sales"])
-        assert result["sales"] == pytest.approx(500.0)
+    def test_get_numeric_columns_returns_empty_for_no_numeric_data(self):
+        df = pd.DataFrame({'Name': ['Alice', 'Bob'], 'City': ['NY', 'LA']})
+        numeric_cols = get_numeric_columns(df)
+        assert numeric_cols == []
 
-    def test_empty_df_returns_zeros(self, empty_df):
-        """An empty DataFrame should return 0 for every requested column."""
-        result = calculate_totals(empty_df, ["sales", "expenses"])
-        assert result == {"sales": 0, "expenses": 0}
-
-    # --- numerical precision ---
-
-    def test_result_is_rounded_to_two_decimals(self):
-        """Totals should be rounded to 2 decimal places."""
-        df = pd.DataFrame({"price": [1.005, 2.005, 3.005]})
-        result = calculate_totals(df, ["price"])
-        # verify it's a float with at most 2 decimal places
-        assert result["price"] == round(result["price"], 2)
-
-    def test_total_with_large_dataset(self, large_df):
-        """Totals on a 10k-row dataset should match pandas sum."""
-        cols = ["sales", "expenses", "units"]
-        result = calculate_totals(large_df, cols)
-        for col in cols:
-            assert result[col] == pytest.approx(round(large_df[col].sum(), 2), rel=1e-5)
-
-    def test_total_with_negative_values(self):
-        """Totals should handle negative numbers correctly."""
-        df = pd.DataFrame({"profit": [100.0, -50.0, -30.0, 20.0]})
-        result = calculate_totals(df, ["profit"])
-        assert result["profit"] == pytest.approx(40.0)
-
-    def test_total_with_zeros(self):
-        """Totals should handle all-zero columns."""
-        df = pd.DataFrame({"sales": [0, 0, 0, 0]})
-        result = calculate_totals(df, ["sales"])
-        assert result["sales"] == pytest.approx(0.0)
-
-    def test_total_with_float_precision(self):
-        """Floating-point sums should be correct within tolerance."""
-        df = pd.DataFrame({"amount": [0.1, 0.2, 0.3]})
-        result = calculate_totals(df, ["amount"])
-        assert result["amount"] == pytest.approx(0.6, abs=1e-9)
-
-    # --- error handling ---
-
-    def test_missing_column_raises_key_error(self, sample_df):
-        """Requesting a non-existent column should raise KeyError."""
-        with pytest.raises(KeyError, match="Columns not found"):
-            calculate_totals(sample_df, ["nonexistent_col"])
-
-    def test_non_numeric_column_raises_type_error(self, sample_df):
-        """Requesting a non-numeric column should raise TypeError."""
-        with pytest.raises(TypeError, match="Non-numeric columns"):
-            calculate_totals(sample_df, ["name"])
-
-    def test_non_dataframe_input_raises_type_error(self):
-        """Passing a non-DataFrame should raise TypeError."""
-        with pytest.raises(TypeError, match="pandas DataFrame"):
-            calculate_totals({"sales": [100, 200]}, ["sales"])
-
-    # --- integration-style (pipeline) ---
-
-    def test_pipeline_clean_then_total(self, dirty_df):
-        """Full pipeline: clean nulls → calculate totals should work end-to-end."""
-        cleaned  = clean_nulls(dirty_df, strategy="fill", fill_value=0)
-        result   = calculate_totals(cleaned, ["sales", "expenses"])
-        assert isinstance(result, dict)
-        assert result["sales"]    >= 0
-        assert result["expenses"] >= 0
-
-    def test_pipeline_drop_then_total_matches_manual(self, dirty_df):
-        """After drop-cleaning, the manual sum should equal calculate_totals."""
-        cleaned  = clean_nulls(dirty_df, strategy="drop")
-        result   = calculate_totals(cleaned, ["sales"])
-        expected = round(cleaned["sales"].sum(), 2)
-        assert result["sales"] == pytest.approx(expected)
-
-    @pytest.mark.parametrize("values,expected_total", [
-        ([10, 20, 30],          60.0),
-        ([0, 0, 0],              0.0),
-        ([-10, 10, -10],       -10.0),
-        ([1_000_000, 2_000_000], 3_000_000.0),
-        ([0.001, 0.002, 0.003],  0.01),
-    ])
-    def test_parametrized_totals(self, values, expected_total):
-        """Parametrized: various value ranges should compute the correct total."""
-        df     = pd.DataFrame({"amount": values})
-        result = calculate_totals(df, ["amount"])
-        assert result["amount"] == pytest.approx(expected_total, rel=1e-6)
+    def test_get_numeric_columns_on_empty_dataframe(self):
+        empty_df = pd.DataFrame()
+        numeric_cols = get_numeric_columns(empty_df)
+        assert numeric_cols == []
 
 
-# ============================================================
-# TESTS — Integration (Read → Clean → Total)
-# ============================================================
+# ============================================
+# PREVIEW / SUMMARY TESTS
+# ============================================
 
-class TestFullPipeline:
-    """End-to-end tests simulating a real data processing pipeline."""
+class TestPreviewAndSummary:
 
-    def test_full_pipeline_csv_to_totals(self, dirty_df, tmp_path):
+    def test_preview_sheet_runs_without_error(self, sample_dataframe, capsys):
+        preview_sheet(sample_dataframe, sheet_name="TestSheet", rows=2)
+        captured = capsys.readouterr()
+        assert "TestSheet" in captured.out
+        assert "Shape:" in captured.out
+        assert "Columns:" in captured.out
+
+    def test_preview_sheet_shows_correct_row_count(self, sample_dataframe, capsys):
+        preview_sheet(sample_dataframe, sheet_name="Sheet1", rows=5)
+        captured = capsys.readouterr()
+        assert "4 rows x 3 columns" in captured.out
+
+    def test_preview_sheet_shows_null_counts(self, sample_dataframe_with_nulls, capsys):
+        preview_sheet(sample_dataframe_with_nulls, sheet_name="NullSheet")
+        captured = capsys.readouterr()
+        assert "Null counts per column" in captured.out
+
+    def test_preview_all_sheets_runs_for_every_sheet(self, sample_sheets_dict, capsys):
+        preview_all_sheets(sample_sheets_dict, rows=2)
+        captured = capsys.readouterr()
+        assert "Requirements" in captured.out
+        assert "TestCases" in captured.out
+        assert "2 sheet(s) found" in captured.out
+
+    def test_summarize_sheets_returns_dataframe(self, sample_sheets_dict):
+        summary = summarize_sheets(sample_sheets_dict)
+        assert isinstance(summary, pd.DataFrame)
+        assert len(summary) == 2
+
+    def test_summarize_sheets_has_correct_columns(self, sample_sheets_dict):
+        summary = summarize_sheets(sample_sheets_dict)
+        expected_cols = ['Sheet Name', 'Rows', 'Columns', 'Total Nulls', 
+                          'Numeric Columns', 'Column Names']
+        assert list(summary.columns) == expected_cols
+
+    def test_summarize_sheets_reports_correct_row_counts(self, sample_sheets_dict):
+        summary = summarize_sheets(sample_sheets_dict)
+        req_row = summary[summary['Sheet Name'] == 'Requirements'].iloc[0]
+        assert req_row['Rows'] == 3
+        assert req_row['Columns'] == 2
+
+    def test_summarize_sheets_counts_numeric_columns_correctly(self, sample_sheets_dict):
+        summary = summarize_sheets(sample_sheets_dict)
+        req_row = summary[summary['Sheet Name'] == 'Requirements'].iloc[0]
+        assert req_row['Numeric Columns'] == 1  # Only 'Score' is numeric
+
+    def test_summarize_sheets_detects_nulls(self, sample_sheets_dict):
+        sample_sheets_dict['Requirements'].loc[0, 'Score'] = None
+        summary = summarize_sheets(sample_sheets_dict)
+        req_row = summary[summary['Sheet Name'] == 'Requirements'].iloc[0]
+        assert req_row['Total Nulls'] == 1
+
+    def test_summarize_sheets_on_empty_dict(self):
+        summary = summarize_sheets({})
+        assert summary.empty
+
+
+# ============================================
+# VISUALIZATION TESTS
+# ============================================
+
+class TestVisualizations:
+
+    def test_plot_null_summary_creates_file(self, sample_dataframe_with_nulls, tmp_path):
+        output_path = str(tmp_path / "test_nulls.png")
+        result = plot_null_summary(sample_dataframe_with_nulls, "TestSheet", output_path)
+        
+        assert result == output_path
+        assert Path(output_path).exists()
+        assert Path(output_path).stat().st_size > 0  # File is not empty
+
+    def test_plot_null_summary_handles_no_nulls(self, sample_dataframe, tmp_path):
+        output_path = str(tmp_path / "test_no_nulls.png")
+        result = plot_null_summary(sample_dataframe, "CleanSheet", output_path)
+        
+        assert result == output_path
+        assert Path(output_path).exists()
+
+    def test_plot_null_summary_auto_generates_filename(self, sample_dataframe_with_nulls, tmp_path, monkeypatch):
+        monkeypatch.chdir(tmp_path)
+        result = plot_null_summary(sample_dataframe_with_nulls, "My Sheet Name")
+        
+        assert "chart_nulls_My_Sheet_Name.png" in result
+        assert Path(result).exists()
+
+    def test_plot_numeric_distribution_creates_file(self, sample_dataframe, tmp_path):
+        output_path = str(tmp_path / "test_distribution.png")
+        result = plot_numeric_distribution(sample_dataframe, "TestSheet", output_path)
+        
+        assert result == output_path
+        assert Path(output_path).exists()
+        assert Path(output_path).stat().st_size > 0
+
+    def test_plot_numeric_distribution_returns_none_for_no_numeric_data(self, tmp_path):
+        df = pd.DataFrame({'Name': ['Alice', 'Bob'], 'City': ['NY', 'LA']})
+        output_path = str(tmp_path / "test_no_numeric.png")
+        result = plot_numeric_distribution(df, "NoNumericSheet", output_path)
+        
+        assert result is None
+        assert not Path(output_path).exists()
+
+    def test_plot_numeric_distribution_handles_single_numeric_column(self, tmp_path):
+        df = pd.DataFrame({'Name': ['A', 'B', 'C'], 'Value': [1, 2, 3]})
+        output_path = str(tmp_path / "test_single_col.png")
+        result = plot_numeric_distribution(df, "SingleColSheet", output_path)
+        
+        assert result == output_path
+        assert Path(output_path).exists()
+
+    def test_plot_sheet_comparison_creates_file(self, sample_sheets_dict, tmp_path):
+        summary = summarize_sheets(sample_sheets_dict)
+        output_path = str(tmp_path / "test_comparison.png")
+        result = plot_sheet_comparison(summary, output_path)
+        
+        assert result == output_path
+        assert Path(output_path).exists()
+        assert Path(output_path).stat().st_size > 0
+
+    def test_plot_sheet_comparison_default_filename(self, sample_sheets_dict, tmp_path, monkeypatch):
+        monkeypatch.chdir(tmp_path)
+        summary = summarize_sheets(sample_sheets_dict)
+        result = plot_sheet_comparison(summary)
+        
+        assert result == "chart_sheet_comparison.png"
+        assert Path(result).exists()
+
+    def test_generate_all_visualizations_creates_output_directory(self, sample_sheets_dict, tmp_path):
+        output_dir = str(tmp_path / "charts_output")
+        generate_all_visualizations(sample_sheets_dict, output_dir=output_dir)
+        
+        assert Path(output_dir).exists()
+        assert Path(output_dir).is_dir()
+
+    def test_generate_all_visualizations_creates_multiple_files(self, sample_sheets_dict, tmp_path):
+        output_dir = str(tmp_path / "charts_output")
+        chart_files = generate_all_visualizations(sample_sheets_dict, output_dir=output_dir)
+        
+        assert len(chart_files) > 0
+        for chart_path in chart_files:
+            assert Path(chart_path).exists()
+
+    def test_generate_all_visualizations_includes_comparison_chart(self, sample_sheets_dict, tmp_path):
+        output_dir = str(tmp_path / "charts_output")
+        chart_files = generate_all_visualizations(sample_sheets_dict, output_dir=output_dir)
+        
+        comparison_charts = [f for f in chart_files if 'comparison' in f]
+        assert len(comparison_charts) == 1
+
+    def test_generate_all_visualizations_includes_null_charts_for_each_sheet(self, sample_sheets_dict, tmp_path):
+        output_dir = str(tmp_path / "charts_output")
+        chart_files = generate_all_visualizations(sample_sheets_dict, output_dir=output_dir)
+        
+        null_charts = [f for f in chart_files if 'nulls' in f]
+        assert len(null_charts) == len(sample_sheets_dict)  # One per sheet
+
+    def test_generate_all_visualizations_skips_distribution_for_no_numeric_sheets(self, tmp_path):
+        sheets_no_numeric = {
+            'TextOnly': pd.DataFrame({'Name': ['A', 'B'], 'City': ['NY', 'LA']})
+        }
+        output_dir = str(tmp_path / "charts_output")
+        chart_files = generate_all_visualizations(sheets_no_numeric, output_dir=output_dir)
+        
+        distribution_charts = [f for f in chart_files if 'distribution' in f]
+        assert len(distribution_charts) == 0
+
+    def test_generate_all_visualizations_handles_empty_sheets_dict(self, tmp_path):
+        output_dir = str(tmp_path / "charts_output")
+        chart_files = generate_all_visualizations({}, output_dir=output_dir)
+        
+        # Should still generate the comparison chart (even if empty)
+        assert isinstance(chart_files, list)
+
+
+# ============================================
+# INTEGRATION TESTS (End-to-End Workflow)
+# ============================================
+
+class TestIntegrationWorkflow:
+
+    def test_full_workflow_read_clean_calculate(self, multi_sheet_excel_file):
+        """Test the complete pipeline: read -> clean -> calculate."""
+        sheets = read_all_sheets(multi_sheet_excel_file)
+        cleaned_sheets = clean_all_sheets(sheets, strategy="drop")
+        
+        totals = calculate_totals(cleaned_sheets['Requirements'], ['Score'])
+        assert totals['Score'] > 0
+
+    def test_full_workflow_with_visualizations(self, multi_sheet_excel_file, tmp_path):
+        """Test the complete pipeline including chart generation."""
+        sheets = read_all_sheets(multi_sheet_excel_file)
+        output_dir = str(tmp_path / "output")
+        
+        chart_files = generate_all_visualizations(sheets, output_dir=output_dir)
+        
+        assert len(chart_files) > 0
+        for chart in chart_files:
+            assert Path(chart).exists()
+
+    def test_full_workflow_summary_matches_actual_data(self, multi_sheet_excel_file):
+        """Test that summary statistics match the actual underlying data."""
+        sheets = read_all_sheets(multi_sheet_excel_file)
+        summary = summarize_sheets(sheets)
+        
+        # Verify Requirements sheet stats match actual DataFrame
+        req_summary = summary[summary['Sheet Name'] == 'Requirements'].iloc[0]
+        req_actual = sheets['Requirements']
+        
+        assert req_summary['Rows'] == req_actual.shape[0]
+        assert req_summary['Columns'] == req_actual.shape[1]
+        assert req_summary['Total Nulls'] == req_actual.isnull().sum().sum()
+
+        # Verify TestCases sheet stats match actual DataFrame
+        test_summary = summary[summary['Sheet Name'] == 'TestCases'].iloc[0]
+        test_actual = sheets['TestCases']
+        
+        assert test_summary['Rows'] == test_actual.shape[0]
+        assert test_summary['Columns'] == test_actual.shape[1]
+
+    def test_full_workflow_sheet_names_match_across_functions(self, multi_sheet_excel_file):
+        """Test that get_sheet_names() and read_all_sheets() return consistent sheet names."""
+        names_from_get_sheet_names = set(get_sheet_names(multi_sheet_excel_file))
+        names_from_read_all_sheets = set(read_all_sheets(multi_sheet_excel_file).keys())
+        
+        assert names_from_get_sheet_names == names_from_read_all_sheets
+
+    def test_full_workflow_end_to_end_pipeline(self, multi_sheet_excel_file, tmp_path):
         """
-        Simulate a real pipeline:
-          1. Write dirty data to CSV
-          2. Read it back
-          3. Clean nulls (fill strategy)
-          4. Calculate totals
+        Complete end-to-end test simulating the main() execution flow:
+        read -> preview -> summarize -> clean -> calculate -> visualize
         """
-        csv_file = tmp_path / "pipeline.csv"
-        dirty_df.to_csv(csv_file, index=False)
+        # Step 1: Discover sheets
+        sheet_names = get_sheet_names(multi_sheet_excel_file)
+        assert len(sheet_names) == 2
 
-        df       = read_data(str(csv_file))
-        cleaned  = clean_nulls(df, strategy="fill", fill_value=0)
-        result   = calculate_totals(cleaned, ["sales", "expenses"])
+        # Step 2: Load all sheets
+        all_sheets = read_all_sheets(multi_sheet_excel_file)
+        assert len(all_sheets) == 2
 
-        assert "sales"    in result
-        assert "expenses" in result
-        assert result["sales"]    >= 0
-        assert result["expenses"] >= 0
+        # Step 3: Summarize
+        summary = summarize_sheets(all_sheets)
+        assert len(summary) == 2
 
-    def test_pipeline_preserves_clean_data(self, sample_df, tmp_path):
-        """Clean data should be unchanged through the full pipeline."""
-        csv_file = tmp_path / "clean.csv"
-        sample_df.to_csv(csv_file, index=False)
+        # Step 4: Clean
+        cleaned_sheets = clean_all_sheets(all_sheets, strategy="drop")
+        assert len(cleaned_sheets) == len(all_sheets)
 
-        df      = read_data(str(csv_file))
-        cleaned = clean_nulls(df, strategy="drop")
-        result  = calculate_totals(cleaned, ["sales", "expenses", "units"])
+        # Step 5: Calculate totals
+        for sheet_name, df in all_sheets.items():
+            numeric_cols = get_numeric_columns(df)
+            if numeric_cols:
+                totals = calculate_totals(df, numeric_cols)
+                assert isinstance(totals, dict)
+                assert len(totals) == len(numeric_cols)
 
-        assert result["sales"]    == pytest.approx(sample_df["sales"].sum(),    rel=1e-5)
-        assert result["expenses"] == pytest.approx(sample_df["expenses"].sum(), rel=1e-5)
-        assert result["units"]    == pytest.approx(sample_df["units"].sum(),    rel=1e-5)
+        # Step 6: Generate visualizations
+        output_dir = str(tmp_path / "final_output")
+        chart_files = generate_all_visualizations(all_sheets, output_dir=output_dir)
+        assert len(chart_files) > 0
+        
+        # Verify all chart files actually exist on disk
+        for chart_path in chart_files:
+            assert Path(chart_path).exists()
+            assert Path(chart_path).stat().st_size > 0
 
-    def test_pipeline_multiple_clean_strategies_produce_valid_totals(self, dirty_df, tmp_path):
-        """All cleaning strategies should lead to valid (non-null) totals."""
-        csv_file = tmp_path / "multi.csv"
-        dirty_df.to_csv(csv_file, index=False)
-        df = read_data(str(csv_file))
 
-        for strategy in ("drop", "fill", "mean"):
-            cleaned = clean_nulls(df, strategy=strategy, fill_value=0)
-            result  = calculate_totals(cleaned, ["sales", "expenses"])
-            assert result["sales"]    is not None
-            assert result["expenses"] is not None
+# ============================================
+# EDGE CASE TESTS
+# ============================================
+
+class TestEdgeCases:
+
+    def test_excel_file_with_single_row(self, tmp_path):
+        """Test handling of a sheet with only one row of data."""
+        filepath = tmp_path / "single_row.xlsx"
+        df = pd.DataFrame({'Name': ['Alice'], 'Value': [100]})
+        df.to_excel(filepath, index=False)
+        
+        sheets = read_all_sheets(str(filepath))
+        assert len(sheets['Sheet1']) == 1
+
+    def test_excel_file_with_all_null_column(self, tmp_path):
+        """Test handling of a column that is entirely null."""
+        filepath = tmp_path / "all_null.xlsx"
+        df = pd.DataFrame({
+            'Name': ['Alice', 'Bob'],
+            'EmptyCol': [None, None]
+        })
+        df.to_excel(filepath, index=False)
+        
+        sheets = read_all_sheets(str(filepath))
+        cleaned = clean_data(sheets['Sheet1'], strategy="drop")
+        assert cleaned.empty  # All rows removed since EmptyCol is always null
+
+    def test_excel_file_with_special_characters_in_sheet_name(self, tmp_path):
+        """Test handling of sheet names with spaces and special characters."""
+        filepath = tmp_path / "special_names.xlsx"
+        df = pd.DataFrame({'A': [1, 2]})
+        
+        with pd.ExcelWriter(filepath, engine='openpyxl') as writer:
+            df.to_excel(writer, sheet_name='My Sheet (2024)', index=False)
+        
+        sheets = read_all_sheets(str(filepath))
+        assert 'My Sheet (2024)' in sheets
+
+    def test_visualization_with_special_characters_in_sheet_name(self, tmp_path):
+        """Test that chart generation handles special characters in sheet names safely."""
+        df = pd.DataFrame({'Value': [1, 2, 3, None]})
+        output_dir = str(tmp_path / "charts")
+        
+        sheets = {'My Sheet (2024)/Test': df}
+        chart_files = generate_all_visualizations(sheets, output_dir=output_dir)
+        
+        assert len(chart_files) > 0
+        for chart_path in chart_files:
+            assert Path(chart_path).exists()
+
+    def test_large_number_of_sheets(self, tmp_path):
+        """Test handling of an Excel file with many sheets (stress test)."""
+        filepath = tmp_path / "many_sheets.xlsx"
+        
+        with pd.ExcelWriter(filepath, engine='openpyxl') as writer:
+            for i in range(10):
+                df = pd.DataFrame({'Col': [i, i+1, i+2]})
+                df.to_excel(writer, sheet_name=f'Sheet{i}', index=False)
+        
+        sheets = read_all_sheets(str(filepath))
+        assert len(sheets) == 10
+
+    def test_calculate_totals_with_negative_numbers(self):
+        """Test that totals calculation handles negative values correctly."""
+        df = pd.DataFrame({'Value': [-10, 20, -5, 15]})
+        totals = calculate_totals(df, ['Value'])
+        assert totals['Value'] == 20
+
+    def test_clean_data_preserves_correct_dtypes_after_fill(self):
+        """Test that fill strategy doesn't corrupt numeric column dtypes."""
+        df = pd.DataFrame({'Value': [1.5, None, 3.5]})
+        cleaned = clean_data(df, strategy="fill")
+        assert cleaned['Value'].dtype in ['float64', 'int64']
+
+
+# ============================================
+# PYTEST CONFIGURATION
+# ============================================
+
+if __name__ == "__main__":
+    pytest.main([__file__, "-v", "--tb=short"])
