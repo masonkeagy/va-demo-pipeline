@@ -438,6 +438,31 @@ class TestVisualizations:
         # Should still generate the comparison chart (even if empty)
         assert isinstance(chart_files, list)
 
+    def test_plot_numeric_distribution_hides_unused_subplots(self, tmp_path):
+        df = pd.DataFrame({
+            'A': [1, 2, 3],
+            'B': [4, 5, 6],
+            'C': [7, 8, 9],  # 3 numeric columns = odd number, triggers hidden subplot
+        })
+        output_path = str(tmp_path / "test_odd_cols.png")
+        result = plot_numeric_distribution(df, "OddColsSheet", output_path)
+
+        assert result == output_path
+        assert Path(output_path).exists()
+
+    def test_plot_sheet_comparison_with_missing_columns_field(self, tmp_path):
+        """Test plot_sheet_comparison when summary_df has Sheet Name but missing Columns."""
+        summary = pd.DataFrame({
+            'Sheet Name': ['Sheet1'],
+            'Rows': [10],
+            'Columns': [5],
+        })
+        output_path = str(tmp_path / "test_comparison_edge.png")
+        result = plot_sheet_comparison(summary, output_path)
+
+        assert result == output_path
+        assert Path(output_path).exists()
+
 
 # ============================================
 # INTEGRATION TESTS (End-to-End Workflow)
