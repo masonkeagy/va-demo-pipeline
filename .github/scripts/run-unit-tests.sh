@@ -37,7 +37,7 @@ echo ""
 
 # Install dependencies
 echo "[1/3] Installing dependencies..."
-pip install pytest pandas numpy pytest-cov
+pip install pytest pandas numpy pytest-cov matplotlib openpyxl --quiet
 echo "✓ Dependencies installed"
 echo ""
 
@@ -53,7 +53,7 @@ echo "[3/3] Running coverage analysis..."
 pytest tests/test_pipeline.py \
   -v \
   --tb=short \
-  --cov=. \
+  --cov=read_data \
   --cov-report=term-missing \
   --cov-report=html \
   --cov-fail-under=$MIN_COVERAGE
