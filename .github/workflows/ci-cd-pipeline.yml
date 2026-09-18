@@ -73,8 +73,8 @@ jobs:
       - name: Run Unit Tests
         id: tests
         run: |
-          chmod +x .github/scripts/run-unit-tests.sh
-          bash .github/scripts/run-unit-tests.sh \
+          chmod +x scripts/run-unit-tests.sh
+          bash scripts/run-unit-tests.sh \
             --min-coverage 80
 
       - name: Upload Coverage Report
@@ -500,8 +500,8 @@ jobs:
         id: integration
         continue-on-error: true
         run: |
-          chmod +x .github/scripts/run-integration-tests.sh
-          bash .github/scripts/run-integration-tests.sh \
+          chmod +x scripts/run-integration-tests.sh
+          bash scripts/run-integration-tests.sh \
             --url "$DEV_URL"
       
       # ============================================
@@ -850,8 +850,8 @@ jobs:
       - name: Run Regression Tests
         id: regression
         run: |
-          chmod +x .github/scripts/run-regression-tests.sh
-          bash .github/scripts/run-regression-tests.sh \
+          chmod +x scripts/run-regression-tests.sh
+          bash scripts/run-regression-tests.sh \
             --framework auto \
             --uat-url "$UAT_URL" \
             --app-type "${{ steps.app_type.outputs.is_vrm == 'true' && 'VRM' || 'STANDARD' }}"
@@ -1396,8 +1396,8 @@ jobs:
         id: smoke
         continue-on-error: true
         run: |
-          chmod +x .github/scripts/run-smoke-tests.sh
-          bash .github/scripts/run-smoke-tests.sh \
+          chmod +x scripts/run-smoke-tests.sh
+          bash scripts/run-smoke-tests.sh \
             --prod-url "$PROD_URL"
           
           if [ -f "smoke-results.json" ]; then
@@ -1613,8 +1613,8 @@ jobs:
         env:
           JIRA_KEY: ${{ steps.jira.outputs.jira_key }}
         run: |
-          chmod +x .github/scripts/monitoring.sh
-          bash .github/scripts/monitoring.sh \
+          chmod +x scripts/monitoring.sh
+          bash scripts/monitoring.sh \
             --app "va-demo-pipeline" \
             --version "${{ needs.build_and_sign.outputs.artifact-version }}" \
             --sha "${{ github.sha }}" \
