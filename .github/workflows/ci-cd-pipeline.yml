@@ -59,39 +59,42 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
-      
-      - name: Set Up Python
-        uses: actions/setup-python@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
         with:
-          python-version: '3.11'
-          cache: 'pip'
-      
+          dotnet-version: '8.0.x'
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
       - name: Run Unit Tests
         id: tests
         run: |
           chmod +x .github/scripts/run-unit-tests.sh
           bash .github/scripts/run-unit-tests.sh \
-            --python-version 3.11 \
             --min-coverage 80
-      
+
       - name: Upload Coverage Report
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report
-          path: htmlcov/
+          path: |
+            test-results/
+            **/coverage/
           retention-days: 30
-      
+
       - name: Upload Test Results
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: unit-test-results
-          path: |
-            test-results/
-            .coverage
+          path: test-results/
           retention-days: 30
-      
+
       - name: Test Summary
         if: always()
         run: |
@@ -100,9 +103,9 @@ jobs:
           echo "Stage 2: Unit Tests Complete"
           echo "============================================"
           echo ""
-          echo "Test Status:      ✓ SUCCESS"
-          echo "Framework:        Pytest"
-          echo "Min Coverage:     80%"
+          echo "Test Suites:"
+          echo "  • C# Plugin Tests (dotnet test)"
+          echo "  • TypeScript WebResource Tests (Jest)"
           echo ""
           echo "Artifacts:"
           echo "  • coverage-report/"
