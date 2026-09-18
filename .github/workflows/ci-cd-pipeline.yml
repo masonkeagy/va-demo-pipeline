@@ -946,14 +946,20 @@ jobs:
           echo "Artifact Validation"
           echo "============================================"
           ls -lah dist/
-          TAR_FILE=$(find dist -name "*.tar.gz" | head -1)
+          PACKAGE_FILE=$(find dist -type f \( -name "*.zip" -o -name "*.tar.gz" \) | head -1)
           SIG_FILE=$(find dist -name "SIGNATURE.txt" | head -1)
-          if [ -z "$TAR_FILE" ]; then
+          CHECKSUM_FILE=$(find dist -type f -name "*.sha256" | head -1)
+
+          if [ -z "$PACKAGE_FILE" ]; then
             echo "ERROR: Deployment package missing"
             exit 1
           fi
           if [ -z "$SIG_FILE" ]; then
             echo "ERROR: Signature file missing"
+            exit 1
+          fi
+          if [ -z "$CHECKSUM_FILE" ]; then
+            echo "ERROR: Checksum file missing"
             exit 1
           fi
           echo ""
@@ -1159,14 +1165,19 @@ jobs:
           echo "Production Artifact Validation"
           echo "============================================"
           ls -lah dist/
-          TAR_FILE=$(find dist -name "*.tar.gz" | head -1)
-          CHECKSUM_FILE=$(find dist -name "*.sha256" | head -1)
-          if [ -z "$TAR_FILE" ]; then
+          PACKAGE_FILE=$(find dist -type f \( -name "*.zip" -o -name "*.tar.gz" \) | head -1)
+          CHECKSUM_FILE=$(find dist -type f -name "*.sha256" | head -1)
+          SIG_FILE=$(find dist -type f -name "SIGNATURE.txt" | head -1)
+          if [ -z "$PACKAGE_FILE" ]; then
             echo "ERROR: Deployment artifact missing"
             exit 1
           fi
           if [ -z "$CHECKSUM_FILE" ]; then
             echo "ERROR: Checksum file missing"
+            exit 1
+          fi
+          if [ -z "$SIG_FILE" ]; then
+            echo "ERROR: Signature file missing"
             exit 1
           fi
           echo ""
