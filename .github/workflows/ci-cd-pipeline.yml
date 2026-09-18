@@ -616,18 +616,20 @@ jobs:
           echo "Validating Deployment Artifact"
           echo "============================================"
           ls -lah dist/
-          TAR_FILE=$(find dist -name "*.tar.gz" | head -1)
-          if [ -z "$TAR_FILE" ]; then
+          PACKAGE=$(find dist -name "*.zip" -o -name "*.tar.gz" | head -1)
+          if [ -z "$PACKAGE" ]; then
             echo "ERROR: No deployment package found"
             exit 1
           fi
-          echo "Deployment package found:"
-          echo "$TAR_FILE"
+          echo "Deployment package found: $PACKAGE"
           echo ""
           echo "Checksum files:"
-          find dist -name "*.sha256"
+          find dist -name "*.sha256" || echo "  No checksum files found"
           echo ""
           echo "✓ Artifact validation passed"
+
+          # Export for next step
+          echo "PACKAGE_FILE=$PACKAGE" >> $GITHUB_ENV
       
       # ============================================
       # Extract Artifact
@@ -638,8 +640,12 @@ jobs:
           echo "Extracting Deployment Package"
           echo "============================================"
           mkdir -p extracted
-          TAR_FILE=$(find dist -name "*.tar.gz" | head -1)
-          tar -xzf "$TAR_FILE" -C extracted
+          PACKAGE_FILE=$(find dist -name "*.zip" -o -name "*.tar.gz" | head -1)
+          if [[ $PACKAGE_FILE == *.tar.gz ]]; then
+            tar -xzf "$PACKAGE_FILE" -C extracted
+          else
+            unzip "$PACKAGE_FILE" -d extracted
+          fi
           echo "Package extracted successfully"
           find extracted -type f
       
