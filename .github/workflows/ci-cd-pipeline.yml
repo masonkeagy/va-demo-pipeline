@@ -197,7 +197,7 @@ jobs:
 # Stage 4: Build + Artifact Signing
   build_and_sign:
     name: "Stage 4 - Build and Artifact Signing"
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     needs: security_scanning
     permissions:
       contents: read
@@ -208,80 +208,69 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
-      
-      - name: Set Up Python
-        uses: actions/setup-python@v4
+
+      - name: Set Up .NET
+        uses: actions/setup-dotnet@v4
         with:
-          python-version: '3.11'
-          cache: 'pip'
-      
-      # ============================================
-      # Generate Version & Tag
-      # ============================================
+          dotnet-version: '8.0.x'
+
+      - name: Set Up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Power Platform CLI
+        shell: pwsh
+        run: dotnet tool install --global Microsoft.PowerApps.CLI.Tool
+
       - name: Generate Version and Tag
         id: build
+        shell: pwsh
         run: |
-          VERSION="1.0.0-$(date +%Y%m%d-%H%M%S)"
-          TAG="${{ github.sha }}"
-          
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "tag=$TAG" >> $GITHUB_OUTPUT
-          
-          echo "Version: $VERSION"
-          echo "Tag: $TAG"
-      
-      # ============================================
-      # Run Build and Sign Script
-      # ============================================
-      - name: Build and Sign Application
-        id: build_script
+          $VERSION = "1.0.0-$(Get-Date -Format 'yyyyMMdd-HHmmss')"
+          $TAG = "${{ github.sha }}"
+          echo "version=$VERSION" >> $env:GITHUB_OUTPUT
+          echo "tag=$TAG" >> $env:GITHUB_OUTPUT
+
+      - name: Build Application
+        shell: pwsh
+        run: ./scripts/build.ps1 -Configuration Release
+
+      - name: Package Solution and Artifacts
+        shell: pwsh
+        run: ./scripts/package.ps1 -SolutionName CustomerServiceDemo -OutputDir ./dist
+
+      - name: Generate SBOM and Sign Artifact
+        shell: pwsh
         run: |
-          chmod +x .github/scripts/build-and-sign.sh
-          bash .github/scripts/build-and-sign.sh \
-            --version "${{ steps.build.outputs.version }}" \
-            --tag "${{ steps.build.outputs.tag }}" \
-            --python-version 3.11
-      
-      # ============================================
-      # Upload Build Artifacts
-      # ============================================
+          ./scripts/sign.ps1 `
+            -Version "${{ steps.build.outputs.version }}" `
+            -Tag "${{ steps.build.outputs.tag }}"
+
       - name: Upload Application Artifact
         uses: actions/upload-artifact@v4
         with:
           name: application-artifact
           path: dist/
           retention-days: 5
-      
+
       - name: Upload SBOM Artifact
         uses: actions/upload-artifact@v4
         with:
           name: sbom
           path: sbom/
           retention-days: 5
-      
+
       - name: Build Summary
+        shell: pwsh
         run: |
-          echo ""
-          echo "============================================"
-          echo "Stage 4: Build Complete"
-          echo "============================================"
-          echo ""
-          echo "Artifact Name:   va-demo-pipeline"
-          echo "Artifact Tag:    ${{ steps.build.outputs.tag }}"
-          echo "Version:         ${{ steps.build.outputs.version }}"
-          echo "Build Status:    ✓ SUCCESS"
-          echo ""
-          echo "Artifacts Generated:"
-          echo "  • Application package: dist/"
-          echo "  • SBOM (JSON):        sbom/sbom.json"
-          echo "  • SBOM (Text):        sbom/sbom.txt"
-          echo "  • Checksum:           dist/*.sha256"
-          echo "  • Signature:          dist/SIGNATURE.txt"
-          echo ""
-          echo "Artifact Upload Status: ✓ Uploaded"
-          echo ""
-          echo "Next Stage: Stage 5 - Deploy to Dev"
-          echo "============================================"
+          Write-Host "============================================"
+          Write-Host "Stage 4: Build Complete"
+          Write-Host "============================================"
+          Write-Host "Version: ${{ steps.build.outputs.version }}"
+          Write-Host "Tag:     ${{ steps.build.outputs.tag }}"
+          Write-Host "Next Stage: Stage 5 - Deploy to Dev"
+          Write-Host "============================================"
 
 
 # Stage 5: Deploy to Dev

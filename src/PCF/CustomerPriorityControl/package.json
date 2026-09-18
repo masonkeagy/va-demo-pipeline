@@ -1,0 +1,35 @@
+{
+  "name": "customer-priority-control",
+  "version": "1.0.0",
+  "description": "PCF control that visually flags VIP customer cases with high-priority styling.",
+  "scripts": {
+    "build": "pcf-scripts build",
+    "clean": "pcf-scripts clean",
+    "rebuild": "pcf-scripts rebuild",
+    "start": "pcf-scripts start",
+    "start:watch": "pcf-scripts start watch",
+    "refreshTypes": "pcf-scripts refreshTypes",
+    "lint": "eslint ./**/*.ts",
+    "lint:fix": "eslint ./**/*.ts --fix",
+    "test": "jest --config jest.config.js"
+  },
+  "dependencies": {
+    "react": "^16.14.0",
+    "react-dom": "^16.14.0"
+  },
+  "devDependencies": {
+    "@types/node": "^18.11.9",
+    "@types/react": "^16.14.34",
+    "@types/react-dom": "^16.9.19",
+    "@typescript-eslint/eslint-plugin": "^5.44.0",
+    "@typescript-eslint/parser": "^5.44.0",
+    "eslint": "^8.28.0",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-promise": "^6.1.1",
+    "jest": "^29.3.1",
+    "pcf-scripts": "^1.0.0",
+    "pcf-start": "^1.0.0",
+    "ts-jest": "^29.0.3",
+    "typescript": "^4.8.4"
+  }
+}

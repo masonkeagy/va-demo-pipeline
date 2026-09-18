@@ -1,0 +1,27 @@
+{
+  "environment": "prod",
+  "environmentUrl": "https://va-demo-prod.crm.dynamics.com",
+  "environmentId": "00000000-0000-0000-0000-000000000003",
+  "solutionName": "CustomerServiceDemo",
+  "solutionVersion": "1.0.0.0",
+  "authentication": {
+    "method": "ClientSecret",
+    "tenantIdSecretName": "AZURE_TENANT_ID",
+    "clientIdSecretName": "AZURE_CLIENT_ID",
+    "clientSecretSecretName": "AZURE_CLIENT_SECRET"
+  },
+  "deploymentSettings": {
+    "publishAfterImport": true,
+    "overwriteUnmanagedCustomizations": false,
+    "skipProductUpdateDependencies": true,
+    "holdingSolution": true
+  },
+  "environmentVariables": {
+    "cs_ApiBaseUrl": "https://api.va-demo.example.gov",
+    "cs_LoggingLevel": "Warning",
+    "cs_EnableVipRouting": "true"
+  },
+  "connectionReferences": {
+    "cs_CustomerSyncConnection": "placeholder-connection-id-prod"
+  }
+}

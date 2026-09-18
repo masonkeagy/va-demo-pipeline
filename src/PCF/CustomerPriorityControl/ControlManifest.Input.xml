@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest>
+  <control namespace="VADemo.CustomerService"
+            constructor="CustomerPriorityControl"
+            version="1.0.0"
+            display-name-key="CustomerPriorityControl_Display_Key"
+            description-key="CustomerPriorityControl_Desc_Key"
+            control-type="standard">
+
+    <!-- ============================================
+         PROPERTIES
+         ============================================
+         Bound property: reads/writes the case's priority
+         OptionSet value. Bound to 'prioritycode' on the
+         incident form when configured in Dataverse.
+    -->
+    <property name="priorityValue"
+              display-name-key="PriorityValue_Display_Key"
+              description-key="PriorityValue_Desc_Key"
+              of-type="OptionSet"
+              usage="bound"
+              required="true" />
+
+    <!-- Input property: the customer type, used to determine
+         whether the VIP badge/styling should render -->
+    <property name="customerType"
+              display-name-key="CustomerType_Display_Key"
+              description-key="CustomerType_Desc_Key"
+              of-type="SingleLine.Text"
+              usage="bound"
+              required="false" />
+
+    <!-- ============================================
+         RESOURCES
+         ============================================ -->
+    <resources>
+      <code path="index.ts" order="1" />
+      <css path="css/CustomerPriorityControl.css" order="1" />
+      <resx path="strings/CustomerPriorityControl.1033.resx" version="1.0.0" />
+    </resources>
+
+    <!-- Enables the control to work in both model-driven
+         and canvas apps -->
+    <type-group name="cds-dataset-standard">
+      <type>OptionSet</type>
+    </type-group>
+
+    <feature-usage>
+      <uses-feature name="Device.captureAudio" required="false" />
+    </feature-usage>
+
+  </control>
+</manifest>
