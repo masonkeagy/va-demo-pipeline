@@ -1,12 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net462</TargetFramework>
+    <NoWarn>MSB3277</NoWarn>
+    <TargetFramework>net8.0</TargetFramework>
     <IsPackable>false</IsPackable>
     <RootNamespace>D365CustomerService.Tests</RootNamespace>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
 
-  <!-- xUnit -->
   <ItemGroup>
     <PackageReference Include="xunit" Version="2.9.0" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2">
@@ -15,15 +16,10 @@
     </PackageReference>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.9.0" />
     <PackageReference Include="coverlet.collector" Version="6.0.2" />
-  </ItemGroup>
-
-  <!-- D365 SDK -->
-  <ItemGroup>
     <PackageReference Include="Microsoft.CrmSdk.CoreAssemblies" Version="9.0.2.52" />
     <PackageReference Include="Moq" Version="4.20.70" />
   </ItemGroup>
 
-  <!-- Reference source plugins -->
   <ItemGroup>
     <ProjectReference Include="..\..\src\Plugins\Plugins.csproj" />
   </ItemGroup>

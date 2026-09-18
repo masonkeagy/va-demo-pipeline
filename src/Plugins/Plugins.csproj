@@ -1,9 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net462</TargetFramework>
+    <NoWarn>MSB3277</NoWarn>
+    <TargetFramework>net8.0</TargetFramework>
     <AssemblyName>D365CustomerService.Plugins</AssemblyName>
     <RootNamespace>D365CustomerService.Plugins</RootNamespace>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>
