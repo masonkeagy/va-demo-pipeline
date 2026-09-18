@@ -1,0 +1,21 @@
+{
+  "name": "webresource-tests",
+  "version": "1.0.0",
+  "description": "Unit tests for D365 WebResources",
+  "scripts": {
+    "test": "jest --coverage"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "jest-junit": "^16.0.0",
+    "@types/jest": "^29.5.12"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "coverageDirectory": "coverage",
+    "collectCoverageFrom": [
+      "../../src/WebResources/**/*.{js,ts}",
+      "!**/node_modules/**"
+    ]
+  }
+}
