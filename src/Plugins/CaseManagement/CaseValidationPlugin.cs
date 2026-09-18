@@ -40,7 +40,7 @@ namespace D365CustomerService.Plugins.CaseManagement
             ValidateCase(caseEntity, tracingService);
         }
 
-        public static void ValidateCase(Entity caseEntity, ITracingService tracingService = null)
+        public void ValidateCase(Entity caseEntity, ITracingService tracingService = null)
         {
             const string TitleField = "title";
             const string CustomerField = "customerid";
