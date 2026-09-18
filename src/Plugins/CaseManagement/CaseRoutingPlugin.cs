@@ -48,7 +48,7 @@ namespace D365CustomerService.Plugins.CaseManagement
         /// Exposed as internal-testable logic separate from Execute()
         /// so unit tests can call it directly without a full plugin context.
         /// </summary>
-        internal void ApplyVipPriorityRouting(Entity caseEntity, ITracingService tracingService = null)
+        public static void ApplyVipPriorityRouting(Entity caseEntity, ITracingService tracingService = null)
         {
             const string CustomerTypeField = "customer_type";
             const string PriorityField = "prioritycode";

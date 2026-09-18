@@ -41,7 +41,7 @@ namespace D365CustomerService.Plugins.Customer
             HandleCustomerTierChange(contactEntity, tracingService);
         }
 
-        internal bool HandleCustomerTierChange(Entity contactEntity, ITracingService tracingService = null)
+        public static bool HandleCustomerTierChange(Entity contactEntity, ITracingService tracingService = null)
         {
             const string CustomerTypeField = "customer_type";
             const string VipValue = "VIP";
