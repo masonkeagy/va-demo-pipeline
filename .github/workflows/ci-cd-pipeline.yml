@@ -161,8 +161,8 @@ jobs:
       - name: Run Security Scans
         id: security
         run: |
-          chmod +x .github/scripts/run-security-scan.sh
-          bash .github/scripts/run-security-scan.sh \
+          chmod +x scripts/run-security-scan.sh
+          bash scripts/run-security-scan.sh \
             --language python \
             --exclude "./.git,./tests"
       
