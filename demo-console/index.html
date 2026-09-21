@@ -5,6 +5,16 @@
 <title>VA Demo Pipeline - Real GitHub Integration</title>
 <style>
 :root{color-scheme:dark;--bg:#08121c;--panel:#121d28;--surface:#1a2837;--border:#33495d;--text:#f5f8fc;--muted:#91bad9;--heading:#a9cdec;--primary:#76b8ec;--success:#66d69a;--failure:#ff8580;--focus:#ffd166;--accent:#4dd0e1}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif}button,select,input{font:inherit}button,select,.button-link{min-height:38px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);padding:.6rem .85rem;font-weight:700;cursor:pointer;transition:all .2s}button:hover,select:hover,.button-link:hover{background:var(--primary);color:#07131e;border-color:var(--primary)}button.primary,a.button-link.primary{background:var(--primary)!important;color:#07131e!important;border-color:var(--primary)!important}.button-link{text-decoration:none;display:inline-flex;align-items:center;gap:8px}:focus-visible{outline:3px solid var(--focus);outline-offset:3px}.container{max-width:1600px;margin:auto;padding:16px}.header{text-align:center;margin-bottom:40px;padding:24px;border:2px solid var(--border);border-radius:12px;background:var(--panel)}.header h1{font:700 32px Georgia,serif;margin:0 0 12px;color:var(--heading)}.header p{color:var(--muted);margin:0;font-size:14px}.layout{display:grid;grid-template-columns:1fr 1.5fr;gap:24px;margin-bottom:40px}@media(max-width:1200px){.layout{grid-template-columns:1fr}}.panel{border:2px solid var(--border);border-radius:12px;padding:24px;background:var(--panel)}.panel h2{font:700 18px Georgia,serif;color:var(--heading);margin:0 0 20px;text-transform:uppercase;letter-spacing:.08em}.panel p{color:var(--muted);font-size:13px;margin:0 0 16px}.form-group{margin-bottom:16px}.form-group label{display:block;color:var(--heading);font-weight:700;margin-bottom:8px;font-size:12px;text-transform:uppercase;letter-spacing:.06em}.form-group input,.form-group select,.form-group textarea{width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);font:inherit}.form-group textarea{min-height:80px;resize:vertical}.form-actions{display:flex;gap:10px;flex-wrap:wrap}.form-actions button{flex:1}.status-badge{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px}.status-badge.idle{background:var(--muted)}.status-badge.running{background:var(--primary);animation:pulse 1.5s infinite}.status-badge.success{background:var(--success)}.status-badge.failure{background:var(--failure)}@keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}.pipeline-status{display:flex;align-items:center;gap:12px;margin-bottom:20px;font-weight:600}.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px}.stat-card{border:1px solid var(--border);border-radius:8px;padding:14px;background:var(--surface);text-align:center}.stat-value{font:800 28px Consolas,monospace;color:var(--accent)}.stat-label{font-size:11px;color:var(--muted);margin-top:6px;text-transform:uppercase;letter-spacing:.05em}.stages-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:20px}.stage-card{border:2px solid var(--border);border-radius:8px;padding:12px;background:var(--surface);text-align:center;transition:all .3s ease;min-height:90px;display:flex;flex-direction:column;justify-content:center}.stage-card.pending{border-color:var(--border);opacity:.6}.stage-card.in_progress{border-color:var(--accent);box-shadow:0 0 12px rgba(77,208,225,.3)}.stage-card.completed{border-color:var(--success);box-shadow:inset 0 -3px var(--success)}.stage-card.success{border-color:var(--success);box-shadow:inset 0 -3px var(--success)}.stage-card.failure{border-color:var(--failure);background:#481b1c;box-shadow:inset 0 -3px var(--failure)}.stage-name{font:700 10px Georgia,serif;color:var(--heading);margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em}.stage-status{font:800 11px Consolas,monospace;color:var(--muted)}.stage-card.in_progress .stage-status,.stage-card.in_progress .stage-name{color:var(--accent);animation:pulse 1.5s infinite}.stage-card.success .stage-status{color:var(--success)}.stage-card.failure .stage-status{color:var(--failure)}.log-viewer{border:1px solid var(--border);border-radius:8px;background:var(--surface);padding:14px;max-height:300px;overflow-y:auto;font-family:Consolas,monospace;font-size:11px;line-height:1.6}.log-entry{margin:4px 0}.log-entry.info{color:var(--primary)}.log-entry.success{color:var(--success)}.log-entry.error{color:var(--failure)}.log-entry.stage{color:var(--heading);font-weight:700;margin-top:8px}.pr-list{display:grid;gap:12px}.pr-card{border-left:4px solid var(--border);padding:14px;background:var(--surface);border-radius:4px;transition:all .3s;cursor:pointer}.pr-card:hover{background:rgba(118,184,236,.1)}.pr-card.active{border-left-color:var(--accent);background:rgba(77,208,225,.1)}.pr-card.success{border-left-color:var(--success)}.pr-card.failure{border-left-color:var(--failure)}.pr-header{display:flex;justify-content:space-between;align-items:start;margin-bottom:8px}.pr-number{font:600 12px Consolas,monospace;color:var(--accent)}.pr-title{font:600 13px;color:var(--heading)}.pr-meta{display:flex;gap:12px;margin-bottom:8px;font-size:11px}.pr-branch{color:var(--primary)}.pr-time{color:var(--muted)}.pr-status{font:700 11px;text-transform:uppercase;letter-spacing:.05em;display:inline-block;padding:2px 6px;border-radius:3px;background:var(--border)}.pr-status.success{background:rgba(102,214,154,.2);color:var(--success)}.pr-status.failure{background:rgba(255,133,128,.2);color:var(--failure)}.pr-status.running{background:rgba(118,184,236,.2);color:var(--primary);animation:pulse 1.5s infinite}.empty-state{text-align:center;padding:40px 20px;color:var(--muted)}.empty-state p{margin:0}.github-link{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);text-decoration:none;font-size:12px;margin-top:12px}.github-link:hover{background:var(--primary);color:#07131e}
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
 </style></head>
 <body>
 <main class="container">
@@ -277,7 +287,39 @@ function init() {
   refresh();
   
   // Auto-refresh every 10 seconds
-  setInterval(refresh, 10000);
+  setInterval(refresh, 2000);
+}
+
+function renderStages() {
+  const grid = $("stagesGrid");
+  
+  if (!statusCache || !statusCache.stages) {
+    grid.innerHTML = STAGES.map((id, idx) => `
+      <div class="stage-card pending">
+        <div class="stage-name">${id.replace(/_/g, " ")}</div>
+        <div class="stage-status">PENDING</div>
+      </div>
+    `).join("");
+    return;
+  }
+  
+  grid.innerHTML = statusCache.stages.map((stage, idx) => {
+    const result = String(stage.result || "").toLowerCase();
+    let status = "pending";
+    if (["success", "skipped"].includes(result)) status = "success";
+    else if (["failure", "cancelled", "timed_out"].includes(result)) status = "failure";
+    else if (["in_progress", "queued", "pending"].includes(result)) status = "in_progress";
+    
+    // Add staggered animation
+    const delay = idx * 100;
+    
+    return `
+      <div class="stage-card ${status}" style="animation-delay: ${delay}ms; animation: slideIn .4s ease forwards;">
+        <div class="stage-name">${(stage.name || stage.id).substring(0, 15)}</div>
+        <div class="stage-status">${result.replace(/_/g, " ").toUpperCase().substring(0, 10)}</div>
+      </div>
+    `;
+  }).join("");
 }
 
 init();
