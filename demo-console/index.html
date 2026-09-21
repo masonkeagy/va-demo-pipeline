@@ -573,6 +573,23 @@ pipelineState = "success";
 el("statusDot").className =
 `dot ${pipelineState}`;
 
+el("statusText").textContent =
+pipelineState.toUpperCase();
+
+}catch(e){
+
+console.error(e);
+
+el("statusDot").className =
+"dot failure";
+
+el("statusText").textContent =
+"GitHub API Error";
+
+}
+
+}
+
 async function refresh(){
 
 el("refreshBtn").disabled = true;
