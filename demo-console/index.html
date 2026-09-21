@@ -236,6 +236,10 @@ Repository:
 
 <div style="display:flex;gap:10px;flex-wrap:wrap;">
 
+<label for="githubActionSelect">
+GitHub Action
+</label>
+
 <select id="githubActionSelect"
 style="
 flex:1;
@@ -328,7 +332,13 @@ Loading run information...
 
 <br>
 
-<div class="log" id="logViewer"></div>
+<div
+class="log"
+id="activityFeed">
+
+Loading GitHub activity...
+
+</div>
 
 </div>
 
@@ -722,13 +732,141 @@ el("statusText").textContent =
 
 }
 
+async function loadActivityFeed(){
+
+try{
+
+const eventsResponse =
+await fetch(
+`${API}/events`
+);
+
+const events =
+await eventsResponse.json();
+
+const feed =
+events
+.slice(0,10)
+.map(event => {
+
+let description = "";
+
+switch(event.type){
+
+case "PullRequestEvent":
+
+description =
+`🔀 Pull Request ${event.payload.action}`;
+
+break;
+
+case "PullRequestReviewEvent":
+
+description =
+`✅ Pull Request Review Submitted`;
+
+break;
+
+case "IssueCommentEvent":
+
+description =
+`💬 Comment Added`;
+
+break;
+
+case "PushEvent":
+
+description =
+`🚀 Code Pushed`;
+
+break;
+
+case "IssuesEvent":
+
+description =
+`📋 Issue ${event.payload.action}`;
+
+break;
+
+default:
+
+description =
+`ℹ️ ${event.type}`;
+
+}
+
+return `
+<div style="
+padding:8px;
+margin-bottom:8px;
+border-bottom:1px solid #33495d;
+">
+
+<div style="font-weight:bold">
+${description}
+</div>
+
+<div style="
+font-size:11px;
+color:var(--muted);
+">
+
+${new Date(event.created_at)
+.toLocaleString()}
+
+</div>
+
+</div>
+`;
+
+})
+.join("");
+
+el("activityFeed").innerHTML =
+feed;
+
+}
+catch(e){
+
+el("activityFeed").innerHTML =
+
+`
+<div>
+
+✅ CodeQL Alerts:
+Pending
+
+<br><br>
+
+✅ Pull Request Reviews:
+Pending
+
+<br><br>
+
+✅ Deployment Approvals:
+Pending
+
+<br><br>
+
+⚠ GitHub Activity Feed
+Unavailable
+
+</div>
+`;
+
+}
+
+}
+
+
 async function refresh(){
 
 el("refreshBtn").disabled = true;
 
 await Promise.all([
 loadPRs(),
-loadPipeline()
+loadPipeline(),
+loadActivityFeed()
 ]);
 
 el("refreshBtn").disabled = false;
