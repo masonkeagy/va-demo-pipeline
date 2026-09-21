@@ -4,19 +4,32 @@ using Microsoft.Xrm.Sdk;
 namespace D365CustomerService.Plugins.CaseManagement
 {
     /// <summary>
-    /// CaseRoutingPlugin
-    /// ------------------
-    /// Fires on Create/Update of the "incident" (Case) entity.
-    /// Business Rule: VIP customers automatically receive high-priority
-    /// case routing so support agents triage them first.
+    /// AskVAInquiryRoutingPlugin
+    /// --------------------------
+    /// Fires on Create of the "incident" (Case) entity.
     ///
-    /// Registration (for reference):
-    ///   Message: Create, Update
+    /// Business Rule: Ask VA inquiries submitted by or on behalf of
+    /// a Veteran are routed to the Patient Advocate queue when the
+    /// inquiry category is patient advocacy related, keeping them
+    /// separate from general VHA queues.
+    ///
+    /// Registration:
+    ///   Message:        Create
     ///   Primary Entity: incident
-    ///   Stage: PreOperation
+    ///   Stage:          PreOperation
     /// </summary>
     public class CaseRoutingPlugin : IPlugin
     {
+        // Queue routing constants
+        private const string InquiryCategoryField  = "va_inquiry_category";
+        private const string QueueField            = "va_routing_queue";
+        private const string SourceField           = "va_inquiry_source";
+
+        private const string PatientAdvocacyCategory = "PatientAdvocacy";
+        private const string PatientAdvocateQueue    = "PatientAdvocate";
+        private const string GeneralVHAQueue         = "GeneralVHA";
+        private const string AskVASource             = "AskVA";
+
         public void Execute(IServiceProvider serviceProvider)
         {
             var context = (IPluginExecutionContext)
@@ -27,7 +40,7 @@ namespace D365CustomerService.Plugins.CaseManagement
 
             if (!context.InputParameters.Contains("Target"))
             {
-                tracingService.Trace("CaseRoutingPlugin: No Target found, exiting.");
+                tracingService?.Trace("AskVAInquiryRoutingPlugin: No Target found, exiting.");
                 return;
             }
 
@@ -35,35 +48,46 @@ namespace D365CustomerService.Plugins.CaseManagement
 
             if (caseEntity.LogicalName != "incident")
             {
-                tracingService.Trace(
-                    $"CaseRoutingPlugin: Target is '{caseEntity.LogicalName}', not 'incident'. Skipping.");
+                tracingService?.Trace(
+                    $"AskVAInquiryRoutingPlugin: Target is '{caseEntity.LogicalName}', not 'incident'. Skipping.");
                 return;
             }
 
-            ApplyVipPriorityRouting(caseEntity, tracingService);
+            RouteInquiry(caseEntity, tracingService);
         }
 
         /// <summary>
-        /// Applies the VIP priority business rule to a case entity.
-        /// Exposed as internal-testable logic separate from Execute()
-        /// so unit tests can call it directly without a full plugin context.
+        /// Routes an Ask VA inquiry to the appropriate queue based on
+        /// inquiry category. Patient advocacy cases are separated from
+        /// general VHA queues to ensure proper handling.
+        ///
+        /// Exposed as public for direct unit testing without a full
+        /// plugin execution context.
         /// </summary>
-        public void ApplyVipPriorityRouting(Entity caseEntity, ITracingService tracingService = null)
+        public void RouteInquiry(Entity caseEntity, ITracingService tracingService = null)
         {
-            const string CustomerTypeField = "customer_type";
-            const string PriorityField = "prioritycode";
-            const string VipValue = "VIP";
-            const int HighPriorityOptionSetValue = 1;
-
-            if (caseEntity.Contains(CustomerTypeField) &&
-                caseEntity[CustomerTypeField]?.ToString() == VipValue)
+            // Only route inquiries that came through Ask VA
+            if (!caseEntity.Contains(SourceField) ||
+                caseEntity[SourceField]?.ToString() != AskVASource)
             {
-                caseEntity[PriorityField] = new OptionSetValue(HighPriorityOptionSetValue);
-                tracingService?.Trace("CaseRoutingPlugin: VIP customer detected. Priority set to High (1).");
+                tracingService?.Trace(
+                    "AskVAInquiryRoutingPlugin: Inquiry source is not AskVA. No routing applied.");
+                return;
+            }
+
+            // Route patient advocacy cases to dedicated queue
+            if (caseEntity.Contains(InquiryCategoryField) &&
+                caseEntity[InquiryCategoryField]?.ToString() == PatientAdvocacyCategory)
+            {
+                caseEntity[QueueField] = PatientAdvocateQueue;
+                tracingService?.Trace(
+                    "AskVAInquiryRoutingPlugin: Patient advocacy inquiry routed to Patient Advocate queue.");
             }
             else
             {
-                tracingService?.Trace("CaseRoutingPlugin: Non-VIP customer. No priority override applied.");
+                caseEntity[QueueField] = GeneralVHAQueue;
+                tracingService?.Trace(
+                    "AskVAInquiryRoutingPlugin: Inquiry routed to General VHA queue.");
             }
         }
     }

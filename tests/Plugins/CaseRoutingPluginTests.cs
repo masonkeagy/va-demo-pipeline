@@ -7,54 +7,89 @@ namespace D365CustomerService.Tests.Plugins
     public class CaseRoutingPluginTests
     {
         [Fact]
-        public void VipCustomer_ShouldReceiveHighPriority()
+        public void PatientAdvocacyInquiry_ShouldRouteToPatientAdvocateQueue()
         {
             // Arrange
             var caseEntity = new Entity("incident");
-            caseEntity["customer_type"] = "VIP";
+            caseEntity["va_inquiry_source"]   = "AskVA";
+            caseEntity["va_inquiry_category"] = "PatientAdvocacy";
 
             var plugin = new CaseRoutingPlugin();
 
             // Act
-            plugin.ApplyVipPriorityRouting(caseEntity);
+            plugin.RouteInquiry(caseEntity);
 
             // Assert
-            Assert.True(caseEntity.Contains("prioritycode"));
-            Assert.Equal(
-                1,
-                ((OptionSetValue)caseEntity["prioritycode"]).Value);
+            Assert.True(caseEntity.Contains("va_routing_queue"));
+            Assert.Equal("PatientAdvocate", caseEntity["va_routing_queue"].ToString());
         }
 
         [Fact]
-        public void StandardCustomer_ShouldNotReceivePriorityOverride()
+        public void GeneralVHAInquiry_ShouldRouteToGeneralVHAQueue()
         {
             // Arrange
             var caseEntity = new Entity("incident");
-            caseEntity["customer_type"] = "Standard";
+            caseEntity["va_inquiry_source"]   = "AskVA";
+            caseEntity["va_inquiry_category"] = "BenefitsQuestion";
 
             var plugin = new CaseRoutingPlugin();
 
             // Act
-            plugin.ApplyVipPriorityRouting(caseEntity);
+            plugin.RouteInquiry(caseEntity);
 
             // Assert
-            Assert.False(caseEntity.Contains("prioritycode"));
+            Assert.True(caseEntity.Contains("va_routing_queue"));
+            Assert.Equal("GeneralVHA", caseEntity["va_routing_queue"].ToString());
         }
 
         [Fact]
-        public void MissingCustomerType_ShouldNotThrowAndShouldNotSetPriority()
+        public void NonAskVASource_ShouldNotApplyRouting()
         {
-            // Arrange
+            // Arrange - inquiry did not come through Ask VA
             var caseEntity = new Entity("incident");
-            // No customer_type field set at all
+            caseEntity["va_inquiry_source"]   = "PhoneCall";
+            caseEntity["va_inquiry_category"] = "PatientAdvocacy";
 
             var plugin = new CaseRoutingPlugin();
 
             // Act
-            plugin.ApplyVipPriorityRouting(caseEntity);
+            plugin.RouteInquiry(caseEntity);
+
+            // Assert - no routing applied for non-AskVA sources
+            Assert.False(caseEntity.Contains("va_routing_queue"));
+        }
+
+        [Fact]
+        public void MissingInquirySource_ShouldNotApplyRouting()
+        {
+            // Arrange - no source field set
+            var caseEntity = new Entity("incident");
+            caseEntity["va_inquiry_category"] = "PatientAdvocacy";
+
+            var plugin = new CaseRoutingPlugin();
+
+            // Act
+            plugin.RouteInquiry(caseEntity);
 
             // Assert
-            Assert.False(caseEntity.Contains("prioritycode"));
+            Assert.False(caseEntity.Contains("va_routing_queue"));
+        }
+
+        [Fact]
+        public void MissingCategory_ShouldDefaultToGeneralVHAQueue()
+        {
+            // Arrange - source is AskVA but no category set
+            var caseEntity = new Entity("incident");
+            caseEntity["va_inquiry_source"] = "AskVA";
+
+            var plugin = new CaseRoutingPlugin();
+
+            // Act
+            plugin.RouteInquiry(caseEntity);
+
+            // Assert - defaults to general queue when category unknown
+            Assert.True(caseEntity.Contains("va_routing_queue"));
+            Assert.Equal("GeneralVHA", caseEntity["va_routing_queue"].ToString());
         }
     }
 }
