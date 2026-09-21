@@ -339,7 +339,7 @@ log(`AI classified request: ${text}`);
 });
 
 async function loadPRs(){
-
+console.log("PRS", prs);
 try{
 
 const response =
@@ -380,20 +380,26 @@ await fetch(
 const runsData =
 await runsResponse.json();
 
+console.log("RUNS", runsData);
+
 /*
 LOOK FOR THE REAL PIPELINE
 NOT THE GITHUB PAGES WORKFLOW
 */
+console.log(runsData.workflow_runs);
+
 const run =
 runsData.workflow_runs.find(r =>
-    r.name === "VA Demo CI/CD Pipeline"
-);
-
-if(!run){
-    el("statusText").textContent =
-      "Pipeline not found";
-    return;
-}
+    r.path &&
+    r.path.includes("main.yml")
+)
+||
+runsData.workflow_runs.find(r =>
+    r.name &&
+    r.name.includes("Pipeline")
+)
+||
+runsData.workflow_runs[0];
 
 const jobsResponse =
 await fetch(
