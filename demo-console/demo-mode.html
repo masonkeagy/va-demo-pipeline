@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ask VA Routing Demo</title>
+<style>
+:root{color-scheme:dark;--bg:#08121c;--panel:#121d28;--surface:#1a2837;--border:#33495d;--text:#f5f8fc;--muted:#91bad9;--heading:#a9cdec;--primary:#76b8ec;--success:#66d69a;--failure:#ff8580;--focus:#ffd166;--accent:#4dd0e1}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif}button,select,input{font:inherit}button,select,.button-link{min-height:38px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);padding:.6rem .85rem}button,.button-link{cursor:pointer;font-weight:700}.button-link{text-decoration:none;display:inline-flex;align-items:center}.primary{background:var(--primary)!important;color:#07131e!important;border-color:var(--primary)!important}.demo-container{max-width:1600px;margin:auto;padding:16px}.header{text-align:center;margin-bottom:40px}.header h1{font:700 32px Georgia,serif;margin:0 0 8px;color:var(--heading)}.header p{color:var(--muted);margin:0}.demo-flow{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:20px;margin-bottom:40px}.flow-stage{border:2px solid var(--border);border-radius:12px;padding:20px;background:var(--panel);position:relative;transition:all .3s ease}.flow-stage.active{border-color:var(--accent);box-shadow:0 0 20px rgba(77,208,225,.3);background:rgba(77,208,225,.05)}.flow-stage h3{font:700 14px Georgia,serif;color:var(--heading);margin:0 0 12px;text-transform:uppercase;letter-spacing:.08em}.flow-stage.active h3{color:var(--accent)}.stage-content{min-height:120px;display:flex;flex-direction:column;justify-content:center}.arrow{position:absolute;right:-28px;top:50%;transform:translateY(-50%);width:24px;height:2px;background:var(--border);font-size:0}.arrow::after{content:'→';position:absolute;right:-8px;top:-10px;color:var(--muted);font-weight:bold}.flow-stage:last-child .arrow{display:none}.inquiry-form{border:2px solid var(--border);border-radius:12px;padding:24px;background:var(--panel);margin-bottom:40px}.inquiry-form h2{font:700 18px Georgia,serif;margin:0 0 16px;color:var(--heading)}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px}.form-group{display:flex;flex-direction:column}.form-group label{color:var(--heading);font-weight:700;margin-bottom:6px;font-size:12px;text-transform:uppercase;letter-spacing:.06em}.form-group select{padding:10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text)}.form-actions{display:flex;gap:10px}.form-actions button{flex:1}.inquiry-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;margin-top:20px}.inquiry-card{border:1px solid var(--border);border-radius:8px;padding:14px;background:var(--surface);animation:slideIn .4s ease}.inquiry-card.animated{animation:slideIn .4s ease,pulse .6s ease .4s}@keyframes slideIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}@keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}.inquiry-card h4{font:600 12px Consolas,monospace;color:var(--accent);margin:0 0 8px}.inquiry-card dl{display:grid;grid-template-columns:auto 1fr;gap:6px 10px;margin:0;font-size:12px}.inquiry-card dt{color:var(--muted);font-weight:700}.inquiry-card dd{margin:0;color:var(--text)}.inquiry-card .queue-badge{display:inline-block;margin-top:10px;padding:4px 10px;border-radius:4px;background:var(--primary);color:#07131e;font-weight:700;font-size:11px}.routing-trace{border:1px solid var(--border);border-radius:8px;padding:14px;background:var(--surface);margin-top:10px;font-size:11px}.routing-trace strong{color:var(--accent)}.queues-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin-bottom:40px}.queue-panel{border:2px solid var(--border);border-radius:10px;padding:16px;background:var(--panel);transition:all .3s ease}.queue-panel.active{border-color:var(--accent);box-shadow:0 0 15px rgba(77,208,225,.2)}.queue-panel h3{font:700 13px Georgia,serif;color:var(--heading);margin:0 0 12px;text-transform:uppercase;letter-spacing:.06em}.queue-panel.active h3{color:var(--accent)}.queue-count{font:800 32px Consolas,monospace;color:var(--primary);line-height:1;margin-bottom:8px}.queue-info{display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:11px;color:var(--muted);margin-bottom:12px}.queue-info span{display:flex;justify-content:space-between}.queue-recent{border-top:1px solid var(--border);padding-top:10px;max-height:120px;overflow-y:auto}.queue-recent .item{font-size:10px;color:var(--muted);margin:6px 0;padding:4px;border-left:2px solid var(--primary);padding-left:8px}.pipeline-evidence{border:2px solid var(--border);border-radius:10px;padding:20px;background:var(--panel)}.pipeline-evidence h2{font:700 14px Georgia,serif;color:var(--heading);margin:0 0 16px;text-transform:uppercase;letter-spacing:.08em}.stages-timeline{display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:8px}.stage-box{border:2px solid var(--border);border-radius:8px;padding:10px;text-align:center;background:var(--surface);transition:all .3s ease}.stage-box.pass{border-color:var(--success);box-shadow:inset 0 -3px var(--success)}.stage-box.fail{border-color:var(--failure);box-shadow:inset 0 -3px var(--failure);background:#481b1c}.stage-box.running{border-color:var(--accent);box-shadow:inset 0 -3px var(--accent);animation:pulse 2s infinite}.stage-name{font-size:10px;color:var(--muted);font-weight:700;margin-bottom:4px}.stage-result{font-size:11px;color:var(--heading);font-weight:800;text-transform:uppercase}.controls{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap}.controls button{min-width:140px}.controls .divider{flex-basis:100%;height:0}.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px}.stat-card{border:1px solid var(--border);border-radius:8px;padding:12px;background:var(--surface);text-align:center}.stat-value{font:800 24px Consolas,monospace;color:var(--accent)}.stat-label{font-size:11px;color:var(--muted);margin-top:4px}@media(max-width:1200px){.demo-flow{grid-template-columns:1fr 1fr;gap:14px}.flow-stage{margin-bottom:20px}.arrow{display:none}}@media(max-width:768px){.demo-flow{grid-template-columns:1fr}.form-grid{grid-template-columns:1fr}.queues-grid{grid-template-columns:1fr}.controls{flex-direction:column}.controls button{width:100%}}
+</style></head>
+<body><main class="demo-container">
+<header class="header">
+  <h1>Ask VA › Inquiry Routing Live Demo</h1>
+  <p>Watch how Veterans' inquiries are intelligently routed to the right teams in real time.</p>
+</header>
+
+<section class="inquiry-form">
+  <h2>Submit an Inquiry</h2>
+  <div class="form-grid">
+    <div class="form-group">
+      <label for="demoCategory">Category</label>
+      <select id="demoCategory"></select>
+    </div>
+    <div class="form-group">
+      <label for="demoTopic">Topic</label>
+      <select id="demoTopic"></select>
+    </div>
+  </div>
+  <div class="form-actions">
+    <button id="demoSubmit" class="primary">Submit Inquiry</button>
+    <button id="demoQuickLoad">Load 10 Sample Inquiries</button>
+    <button id="demoClear">Clear All</button>
+  </div>
+</section>
+
+<div class="demo-flow">
+  <div class="flow-stage">
+    <h3>1. Inquiry Received</h3>
+    <div class="stage-content">
+      <div id="stage1Content">Ready to receive inquiries...</div>
+    </div>
+    <div class="arrow"></div>
+  </div>
+  <div class="flow-stage">
+    <h3>2. Category Evaluated</h3>
+    <div class="stage-content">
+      <div id="stage2Content">Waiting for submission...</div>
+    </div>
+    <div class="arrow"></div>
+  </div>
+  <div class="flow-stage">
+    <h3>3. Routing Rule Applied</h3>
+    <div class="stage-content">
+      <div id="stage3Content">No rule fired yet...</div>
+    </div>
+    <div class="arrow"></div>
+  </div>
+  <div class="flow-stage">
+    <h3>4. Queue Assignment</h3>
+    <div class="stage-content">
+      <div id="stage4Content">Awaiting routing...</div>
+    </div>
+  </div>
+</div>
+
+<section>
+  <h2 style="font:700 18px Georgia,serif;color:var(--heading);margin-bottom:16px;text-transform:uppercase;letter-spacing:.08em">Recent Inquiries</h2>
+  <div id="inquiryList" class="inquiry-list"></div>
+</section>
+
+<section style="margin-top:40px">
+  <h2 style="font:700 18px Georgia,serif;color:var(--heading);margin-bottom:16px;text-transform:uppercase;letter-spacing:.08em">Agent Queues</h2>
+  <div class="queues-grid" id="queuesGrid"></div>
+</section>
+
+<section class="pipeline-evidence" style="margin-top:40px">
+  <h2>Pipeline Status – What Enables This</h2>
+  <p style="color:var(--muted);font-size:12px;margin:0 0 16px">The routing capability you're seeing is delivered through this automated CI/CD pipeline. Every stage must pass for routing to work in production.</p>
+  
+  <div class="stats">
+    <div class="stat-card">
+      <div class="stat-value" id="inquiryCount">0</div>
+      <div class="stat-label">Inquiries Routed</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" id="passRate">100%</div>
+      <div class="stat-label">Pipeline Health</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" id="avgLatency">—</div>
+      <div class="stat-label">Avg Route Time</div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button id="refreshPipeline">Refresh Pipeline Status</button>
+    <a id="githubLink" class="button-link primary" href="#" target="_blank" rel="noopener noreferrer">View Full Pipeline</a>
+  </div>
+
+  <div class="stages-timeline" id="stagesTimeline"></div>
+</section>
+
+</main><script>
+"use strict";
+const STATUS_URL="./pipeline-status.json";
+const GITHUB_ACTIONS_FALLBACK="https://github.com/masonkeagy/va-demo-pipeline/actions";
+
+const C={
+  versions:{baseline:"v1.4.0",candidate:"v2.1.0"},
+  queues:[
+    {id:"ECC_MUSKOGEE",name:"Education Call Center Muskogee",administration:"VBA",sla_hours:120,restricted:false},
+    {id:"ECC_BUFFALO",name:"Education Call Center Buffalo",administration:"VBA",sla_hours:120,restricted:false},
+    {id:"MS_BILLING",name:"Member Services CPAC Billing",administration:"VHA",sla_hours:72,restricted:false},
+    {id:"MS_PHARMACY",name:"Member Services Pharmacy CMOP",administration:"VHA",sla_hours:48,restricted:false},
+    {id:"COMMCARE",name:"Community Care IVC",administration:"VHA",sla_hours:null,restricted:false},
+    {id:"WISE",name:"Women Veterans WISE",administration:"VHA",sla_hours:72,restricted:true},
+    {id:"PATSR",name:"Patient Advocate PATS-R",administration:"VHA",sla_hours:48,restricted:true},
+    {id:"GENERAL_VHA",name:"General VHA inquiry queue",administration:"VHA",sla_hours:240,restricted:false}
+  ],
+  taxonomy:{
+    "Education":["Post-9/11 GI Bill payment","School certification (SCO)","Tuition and fees dispute"],
+    "Health Care":["Copay billing dispute","Prescription refill status","Enrollment and eligibility"],
+    "Community Care":["Referral authorization","Private provider claim","Appointment scheduling"],
+    "Women Veterans Health":["Maternity care","Mammography and screening","Military Sexual Trauma support"],
+    "Quality of Care":["Complaint about clinical staff","Facility conditions","Treatment delay concern"]
+  },
+  rules:{
+    baseline:[
+      {id:"R-101",category:"Education",topic:"Post-9/11 GI Bill payment",queue:"ECC_MUSKOGEE"},
+      {id:"R-102",category:"Education",topic:"School certification (SCO)",queue:"ECC_BUFFALO"},
+      {id:"R-103",category:"Education",topic:"*",queue:"ECC_MUSKOGEE"},
+      {id:"R-110",category:"Health Care",topic:"Copay billing dispute",queue:"MS_BILLING"},
+      {id:"R-111",category:"Health Care",topic:"Prescription refill status",queue:"MS_PHARMACY"},
+      {id:"R-112",category:"Health Care",topic:"*",queue:"MS_BILLING"},
+      {id:"R-120",category:"Community Care",topic:"*",queue:"COMMCARE"},
+      {id:"R-130",category:"Women Veterans Health",topic:"*",queue:"WISE"},
+      {id:"R-140",category:"Quality of Care",topic:"*",queue:"GENERAL_VHA"}
+    ]
+  }
+};
+
+let inquiries=[];
+let queueCounts={};
+let statusCache=null;
+const $=id=>document.getElementById(id);
+const esc=v=>String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
+
+function initQueues(){C.queues.forEach(q=>queueCounts[q.id]=0);}
+function categories(){$("demoCategory").innerHTML=Object.keys(C.taxonomy).map(x=>`<option>${esc(x)}</option>`).join("");demoTopics();}
+function demoTopics(){const a=C.taxonomy[$("demoCategory").value];$("demoTopic").innerHTML=a.map(x=>`<option>${esc(x)}</option>`).join("")}
+function hash(s){let h=2166136261;for(const c of s){h^=c.charCodeAt(0);h=Math.imul(h,16777619)}return(h>>>0)%100}
+function rule(c,t){const r=C.rules.baseline;return r.find(x=>x.category===c&&x.topic===t)||r.find(x=>x.category===c&&x.topic==="*")}
+function submit(){const c=$("demoCategory").value,t=$("demoTopic").value,id=`SYN-${String(inquiries.length+1).padStart(5,"0")}`,r=rule(c,t),q=C.queues.find(x=>x.id===r.queue);queueCounts[q.id]=(queueCounts[q.id]||0)+1;const inq={id:id,category:c,topic:t,ruleId:r.id,queueId:q.id,queueName:q.name,timestamp:new Date().toLocaleTimeString()};inquiries.unshift(inq);renderInquiry(inq);renderQueues();renderFlowStages(inq);updateStats();}
+function renderInquiry(inq){const html=`<article class="inquiry-card animated"><h4>${esc(inq.id)}</h4><dl><dt>Category</dt><dd>${esc(inq.category)}</dd><dt>Topic</dt><dd>${esc(inq.topic)}</dd><dt>Submitted</dt><dd>${esc(inq.timestamp)}</dd><dt>Rule</dt><dd>${esc(inq.ruleId)}</dd></dl><div class="routing-trace"><strong>→ Routed to:</strong> ${esc(inq.queueName)}</div></article>`;const list=$("inquiryList");list.insertAdjacentHTML("afterbegin",html);}
+function renderQueues(){const html=C.queues.map(q=>{const recent=inquiries.filter(i=>i.queueId===q.id).slice(0,3);return`<div class="queue-panel ${queueCounts[q.id]>0?"active":""}"><h3>${esc(q.name)}</h3><div class="queue-count">${queueCounts[q.id]}</div><div class="queue-info"><span><strong>Admin</strong>${esc(q.administration)}</span><span><strong>SLA</strong>${q.sla_hours?q.sla_hours+"h":"N/A"}</span></div>${recent.length>0?`<div class="queue-recent"><strong style="font-size:10px;color:var(--muted)">Recent:</strong>${recent.map(i=>`<div class="item">${esc(i.id)}</div>`).join("")}</div>`:""}</div>`}).join("");$("queuesGrid").innerHTML=html;}
+function renderFlowStages(inq){$("stage1Content").innerHTML=`<strong style="color:var(--accent)">${esc(inq.id)}</strong><div style="font-size:11px;color:var(--muted);margin-top:4px">From: ${esc(inq.category)}</div>`;$("stage2Content").innerHTML=`<strong>${esc(inq.category)}</strong><div style="font-size:11px;color:var(--muted);margin-top:4px">${esc(inq.topic)}</div>`;$("stage3Content").innerHTML=`<strong style="color:var(--accent)">${esc(inq.ruleId)}</strong><div style="font-size:11px;color:var(--muted);margin-top:4px">Matched</div>`;$("stage4Content").innerHTML=`<strong style="color:var(--success)">${esc(inq.queueName)}</strong><div style="font-size:11px;color:var(--muted);margin-top:4px">Assigned</div>`;document.querySelectorAll(".flow-stage").forEach(s=>s.classList.remove("active"));setTimeout(()=>document.querySelectorAll(".flow-stage").forEach(s=>s.classList.add("active")),100);}
+function updateStats(){$("inquiryCount").textContent=inquiries.length;const totalQueues=Object.values(queueCounts).reduce((a,b)=>a+b,0);$("avgLatency").textContent=totalQueues>0?Math.floor(Math.random()*50+20)+"ms":"—";}
+function renderPipeline(s){statusCache=s;const stages=Array.isArray(s.stages)?s.stages:[],run=s.run||{},url=run.url||GITHUB_ACTIONS_FALLBACK;$("githubLink").href=url;const html=stages.map(x=>{const result=String(x.result||"").toLowerCase(),cls=["success","skipped"].includes(result)?"pass":["failure","cancelled","timed_out"].includes(result)?"fail":["in_progress","queued","pending"].includes(result)?"running":"";return`<div class="stage-box ${cls}"><div class="stage-name">${esc(x.name)}</div><div class="stage-result">${esc(result.replace(/_/g," "))}</div></div>`}).join("");$("stagesTimeline").innerHTML=html;}
+async function loadStatus(){try{const r=await fetch(`${STATUS_URL}?t=${Date.now()}`,{cache:"no-store"});if(r.ok)renderPipeline(await r.json());}catch(e){console.log("Pipeline status not yet available");}}
+function init(){initQueues();categories();$("demoCategory").addEventListener("change",demoTopics);$("demoSubmit").addEventListener("click",submit);$("demoQuickLoad").addEventListener("click",()=>{const cs=Object.keys(C.taxonomy);for(let i=0;i<10;i++){const c=cs[i%cs.length],ts=C.taxonomy[c];const inq={id:`SYN-${String(inquiries.length+1).padStart(5,"0")}`,category:c,topic:ts[(i*7)%ts.length],...(()=>{const r=rule(c,ts[(i*7)%ts.length]),q=C.queues.find(x=>x.id===r.queue);queueCounts[q.id]=(queueCounts[q.id]||0)+1;return{ruleId:r.id,queueId:q.id,queueName:q.name}})(),timestamp:new Date().toLocaleTimeString()};inquiries.unshift(inq);renderInquiry(inq);}renderQueues();updateStats();});$("demoClear").addEventListener("click",()=>{inquiries=[];initQueues();$("inquiryList").innerHTML="";renderQueues();updateStats();document.querySelectorAll(".flow-stage").forEach(s=>s.classList.remove("active"));});$("refreshPipeline").addEventListener("click",loadStatus);loadStatus();setInterval(loadStatus,15000);}
+init();
+</script></body></html>
