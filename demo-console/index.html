@@ -374,18 +374,26 @@ try{
 
 const runsResponse =
 await fetch(
-`${API}/actions/runs?per_page=5`
+`${API}/actions/runs?per_page=50`
 );
 
 const runsData =
 await runsResponse.json();
 
-if(!runsData.workflow_runs?.length){
-return;
-}
-
+/*
+LOOK FOR THE REAL PIPELINE
+NOT THE GITHUB PAGES WORKFLOW
+*/
 const run =
-runsData.workflow_runs[0];
+runsData.workflow_runs.find(r =>
+    r.name === "VA Demo CI/CD Pipeline"
+);
+
+if(!run){
+    el("statusText").textContent =
+      "Pipeline not found";
+    return;
+}
 
 const jobsResponse =
 await fetch(
@@ -398,29 +406,138 @@ await jobsResponse.json();
 const jobs =
 jobsData.jobs || [];
 
+/*
+FORCE THE 12 STAGES TO ALWAYS EXIST
+*/
+const pipelineStages = [
+{
+id:"Stage 1 - PR Validation",
+label:"PR Validation"
+},
+{
+id:"Stage 2 - Unit Tests",
+label:"Unit Tests"
+},
+{
+id:"Stage 3 - Security Scanning",
+label:"Security Scan"
+},
+{
+id:"Stage 4 - Build and Artifact Signing",
+label:"Build & Sign"
+},
+{
+id:"Stage 5 - Deploy to Dev",
+label:"Deploy Dev"
+},
+{
+id:"Stage 6 - Integration and Security Tests",
+label:"Integration Tests"
+},
+{
+id:"Stage 7 - Deploy to TEST/UAT",
+label:"Deploy UAT"
+},
+{
+id:"Stage 8 - Regression Testing",
+label:"Regression"
+},
+{
+id:"Stage 9a - Deploy to PreProd",
+label:"PreProd"
+},
+{
+id:"Stage 9b - Deploy to Production",
+label:"Production"
+},
+{
+id:"Stage 10 - Smoke Tests and Rollback",
+label:"Smoke Tests"
+},
+{
+id:"Stage 11 - Monitoring Active",
+label:"Monitoring"
+}
+];
+
 let passed = 0;
 
-jobs.forEach(job=>{
-if(job.conclusion==="success"){
-passed++;
+const stageHtml =
+pipelineStages.map(stage => {
+
+const match =
+jobs.find(j =>
+j.name === stage.id
+);
+
+let css = "";
+let status = "WAITING";
+
+if(match){
+
+if(match.status === "in_progress"){
+
+css = "running";
+status = "RUNNING";
+
 }
-});
+else if(match.conclusion === "success"){
+
+css = "success";
+status = "SUCCESS";
+passed++;
+
+}
+else if(match.conclusion === "failure"){
+
+css = "failure";
+status = "FAILED";
+
+}
+else if(match.status === "completed"){
+
+status =
+match.conclusion || "DONE";
+
+}
+
+}
+
+return `
+<div class="stage ${css}">
+<div class="stage-name">
+${stage.label}
+</div>
+<div class="stage-status">
+${status}
+</div>
+</div>
+`;
+
+}).join("");
+
+el("stages").innerHTML =
+stageHtml;
 
 el("progress").textContent =
-`${passed}/${jobs.length}`;
+`${passed}/12`;
 
 el("updated").textContent =
 new Date(run.updated_at)
 .toLocaleTimeString();
 
-el("runInfo").innerHTML=
+el("runInfo").innerHTML =
 `
 <b>Workflow:</b>
 ${run.name}
 <br>
 
-<b>Run ID:</b>
-${run.id}
+<b>Branch:</b>
+${run.head_branch}
+<br>
+
+<b>Run #:</b>
+${run.run_number}
 <br>
 
 <b>Status:</b>
@@ -431,84 +548,30 @@ ${run.status}
 ${run.conclusion || "Running"}
 `;
 
-const stages =
-jobs.map(job=>{
-
-let css="";
-
-if(job.status==="in_progress"){
-css="running";
-}
-else if(job.conclusion==="success"){
-css="success";
-}
-else if(job.conclusion==="failure"){
-css="failure";
-}
-
-return `
-<div class="stage ${css}">
-<div class="stage-name">
-${job.name}
-</div>
-
-<div class="stage-status">
-${job.status}
-<br>
-${job.conclusion || ""}
-</div>
-</div>
-`;
-
-});
-
-el("stages").innerHTML =
-stages.join("");
-
-let pipelineState="idle";
+let pipelineState = "idle";
 
 if(
 jobs.some(
-j=>j.status==="in_progress"
+j => j.status === "in_progress"
 )
 ){
-pipelineState="running";
+pipelineState = "running";
 }
 else if(
 jobs.some(
-j=>j.conclusion==="failure"
+j => j.conclusion === "failure"
 )
 ){
-pipelineState="failure";
+pipelineState = "failure";
 }
 else if(
-jobs.length &&
-jobs.every(
-j=>j.conclusion==="success"
-)
+passed === 12
 ){
-pipelineState="success";
+pipelineState = "success";
 }
 
 el("statusDot").className =
 `dot ${pipelineState}`;
-
-el("statusText").textContent =
-pipelineState.toUpperCase();
-
-}catch(e){
-
-console.error(e);
-
-el("statusDot").className =
-"dot failure";
-
-el("statusText").textContent =
-"GitHub API Error";
-
-}
-
-}
 
 async function refresh(){
 
