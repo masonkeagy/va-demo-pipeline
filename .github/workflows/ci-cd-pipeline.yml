@@ -1919,5 +1919,28 @@ jobs:
           path: pipeline-dashboard/
           retention-days: 30
 
+# Publish to GitHub Pages
+  publish_demo_console:
+    name: "Publish Demo Console to GitHub Pages"
+    runs-on: ubuntu-latest
+    if: always()
+    needs: publish_pipeline_status
+    permissions:
+      contents: write
+      pages: write
+    steps:
+      - name: Download Dashboard Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: pipeline-dashboard
+          path: ./dashboard
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dashboard
+          cname: # Leave blank unless you have a custom domain
+
 
            
