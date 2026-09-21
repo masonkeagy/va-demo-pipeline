@@ -2,22 +2,33 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>VA Demo Pipeline - Live Monitor</title>
+<title>VA Demo Pipeline - Real GitHub Integration</title>
 <style>
-:root{color-scheme:dark;--bg:#08121c;--panel:#121d28;--surface:#1a2837;--border:#33495d;--text:#f5f8fc;--muted:#91bad9;--heading:#a9cdec;--primary:#76b8ec;--success:#66d69a;--failure:#ff8580;--focus:#ffd166;--accent:#4dd0e1}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif}button,select,input{font:inherit}button,select,.button-link{min-height:38px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);padding:.6rem .85rem;font-weight:700;cursor:pointer;transition:all .2s}button:hover{background:var(--primary);color:#07131e;border-color:var(--primary)}.button-link{text-decoration:none;display:inline-flex;align-items:center;gap:8px}.primary{background:var(--primary)!important;color:#07131e!important}.container{max-width:1600px;margin:auto;padding:16px}.header{text-align:center;margin-bottom:40px;padding:24px;border:2px solid var(--border);border-radius:12px;background:var(--panel)}.header h1{font:700 32px Georgia,serif;margin:0 0 12px;color:var(--heading)}.header p{color:var(--muted);margin:0;font-size:14px}.layout{display:grid;grid-template-columns:1fr 1.5fr;gap:24px;margin-bottom:40px}@media(max-width:1200px){.layout{grid-template-columns:1fr}}.panel{border:2px solid var(--border);border-radius:12px;padding:24px;background:var(--panel)}.panel h2{font:700 18px Georgia,serif;color:var(--heading);margin:0 0 20px;text-transform:uppercase;letter-spacing:.08em}.panel p{color:var(--muted);font-size:13px;margin:0 0 16px}.form-group{margin-bottom:16px}.form-group label{display:block;color:var(--heading);font-weight:700;margin-bottom:8px;font-size:12px;text-transform:uppercase}.form-group input,.form-group select{width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text)}.form-actions{display:flex;gap:10px;flex-wrap:wrap}.form-actions button{flex:1}.status-badge{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px}.status-badge.idle{background:var(--muted)}.status-badge.running{background:var(--primary);animation:pulse 1.5s infinite}.status-badge.success{background:var(--success)}.status-badge.failure{background:var(--failure)}@keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}.pipeline-status{display:flex;align-items:center;gap:12px;margin-bottom:20px;font-weight:600}.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px}.stat-card{border:1px solid var(--border);border-radius:8px;padding:14px;background:var(--surface);text-align:center}.stat-value{font:800 28px Consolas,monospace;color:var(--accent)}.stat-label{font-size:11px;color:var(--muted);margin-top:6px;text-transform:uppercase}.stages-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:20px}.stage-card{border:2px solid var(--border);border-radius:8px;padding:12px;background:var(--surface);text-align:center;transition:all .4s ease;min-height:90px;display:flex;flex-direction:column;justify-content:center}.stage-card.pending{border-color:var(--border);opacity:.5}.stage-card.queued,.stage-card.in_progress,.stage-card.waiting{border-color:var(--accent);box-shadow:0 0 12px rgba(77,208,225,.3);animation:pulse 1.5s infinite}.stage-card.completed,.stage-card.success{border-color:var(--success);box-shadow:inset 0 -3px var(--success);animation:none}.stage-card.failure{border-color:var(--failure);background:#481b1c;box-shadow:inset 0 -3px var(--failure)}.stage-name{font:700 10px Georgia,serif;color:var(--heading);margin-bottom:8px;text-transform:uppercase}.stage-status{font:800 11px Consolas,monospace;color:var(--muted)}.stage-card.queued .stage-status,.stage-card.in_progress .stage-status{color:var(--accent)}.stage-card.success .stage-status{color:var(--success)}.stage-card.failure .stage-status{color:var(--failure)}.log-viewer{border:1px solid var(--border);border-radius:8px;background:var(--surface);padding:14px;max-height:300px;overflow-y:auto;font-family:Consolas,monospace;font-size:11px;line-height:1.6}.log-entry{margin:4px 0}.log-entry.info{color:var(--primary)}.log-entry.success{color:var(--success)}.log-entry.error{color:var(--failure)}.pr-list{display:grid;gap:12px}.pr-card{border-left:4px solid var(--border);padding:14px;background:var(--surface);border-radius:4px;cursor:pointer;transition:all .2s}.pr-card:hover{background:rgba(118,184,236,.1)}.pr-card.active{border-left-color:var(--accent);background:rgba(77,208,225,.1)}.pr-card.success{border-left-color:var(--success)}.pr-card.failure{border-left-color:var(--failure)}.pr-card.running{border-left-color:var(--primary);animation:pulse 2s infinite}.pr-number{font:600 12px Consolas,monospace;color:var(--accent)}.pr-title{font:600 13px;color:var(--heading)}.pr-meta{display:flex;gap:12px;margin:8px 0;font-size:11px}.pr-branch{color:var(--primary)}.pr-time{color:var(--muted)}.pr-status{font:700 11px;text-transform:uppercase;padding:2px 6px;border-radius:3px;background:var(--border);display:inline-block}.pr-status.success{background:rgba(102,214,154,.2);color:var(--success)}.pr-status.failure{background:rgba(255,133,128,.2);color:var(--failure)}.pr-status.running{background:rgba(118,184,236,.2);color:var(--primary);animation:pulse 1.5s infinite}.empty-state{text-align:center;padding:40px 20px;color:var(--muted)}.github-link{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);text-decoration:none;font-size:12px;margin-top:12px}.github-link:hover{background:var(--primary);color:#07131e}
+:root{color-scheme:dark;--bg:#08121c;--panel:#121d28;--surface:#1a2837;--border:#33495d;--text:#f5f8fc;--muted:#91bad9;--heading:#a9cdec;--primary:#76b8ec;--success:#66d69a;--failure:#ff8580;--focus:#ffd166;--accent:#4dd0e1}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif}button,select,input{font:inherit}button,select,.button-link{min-height:38px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);padding:.6rem .85rem;font-weight:700;cursor:pointer;transition:all .2s}button:hover,select:hover,.button-link:hover{background:var(--primary);color:#07131e;border-color:var(--primary)}button.primary,a.button-link.primary{background:var(--primary)!important;color:#07131e!important;border-color:var(--primary)!important}.button-link{text-decoration:none;display:inline-flex;align-items:center;gap:8px}:focus-visible{outline:3px solid var(--focus);outline-offset:3px}.container{max-width:1600px;margin:auto;padding:16px}.header{text-align:center;margin-bottom:40px;padding:24px;border:2px solid var(--border);border-radius:12px;background:var(--panel)}.header h1{font:700 32px Georgia,serif;margin:0 0 12px;color:var(--heading)}.header p{color:var(--muted);margin:0;font-size:14px}.layout{display:grid;grid-template-columns:1fr 1.5fr;gap:24px;margin-bottom:40px}@media(max-width:1200px){.layout{grid-template-columns:1fr}}.panel{border:2px solid var(--border);border-radius:12px;padding:24px;background:var(--panel)}.panel h2{font:700 18px Georgia,serif;color:var(--heading);margin:0 0 20px;text-transform:uppercase;letter-spacing:.08em}.panel p{color:var(--muted);font-size:13px;margin:0 0 16px}.form-group{margin-bottom:16px}.form-group label{display:block;color:var(--heading);font-weight:700;margin-bottom:8px;font-size:12px;text-transform:uppercase;letter-spacing:.06em}.form-group input,.form-group select,.form-group textarea{width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);font:inherit}.form-group textarea{min-height:80px;resize:vertical}.form-actions{display:flex;gap:10px;flex-wrap:wrap}.form-actions button{flex:1}.status-badge{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px}.status-badge.idle{background:var(--muted)}.status-badge.running{background:var(--primary);animation:pulse 1.5s infinite}.status-badge.success{background:var(--success)}.status-badge.failure{background:var(--failure)}@keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}.pipeline-status{display:flex;align-items:center;gap:12px;margin-bottom:20px;font-weight:600}.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px}.stat-card{border:1px solid var(--border);border-radius:8px;padding:14px;background:var(--surface);text-align:center}.stat-value{font:800 28px Consolas,monospace;color:var(--accent)}.stat-label{font-size:11px;color:var(--muted);margin-top:6px;text-transform:uppercase;letter-spacing:.05em}.stages-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:20px}.stage-card{border:2px solid var(--border);border-radius:8px;padding:12px;background:var(--surface);text-align:center;transition:all .3s ease;min-height:90px;display:flex;flex-direction:column;justify-content:center}.stage-card.pending{border-color:var(--border);opacity:.6}.stage-card.in_progress{border-color:var(--accent);box-shadow:0 0 12px rgba(77,208,225,.3)}.stage-card.completed{border-color:var(--success);box-shadow:inset 0 -3px var(--success)}.stage-card.success{border-color:var(--success);box-shadow:inset 0 -3px var(--success)}.stage-card.failure{border-color:var(--failure);background:#481b1c;box-shadow:inset 0 -3px var(--failure)}.stage-name{font:700 10px Georgia,serif;color:var(--heading);margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em}.stage-status{font:800 11px Consolas,monospace;color:var(--muted)}.stage-card.in_progress .stage-status,.stage-card.in_progress .stage-name{color:var(--accent);animation:pulse 1.5s infinite}.stage-card.success .stage-status{color:var(--success)}.stage-card.failure .stage-status{color:var(--failure)}.log-viewer{border:1px solid var(--border);border-radius:8px;background:var(--surface);padding:14px;max-height:300px;overflow-y:auto;font-family:Consolas,monospace;font-size:11px;line-height:1.6}.log-entry{margin:4px 0}.log-entry.info{color:var(--primary)}.log-entry.success{color:var(--success)}.log-entry.error{color:var(--failure)}.log-entry.stage{color:var(--heading);font-weight:700;margin-top:8px}.pr-list{display:grid;gap:12px}.pr-card{border-left:4px solid var(--border);padding:14px;background:var(--surface);border-radius:4px;transition:all .3s;cursor:pointer}.pr-card:hover{background:rgba(118,184,236,.1)}.pr-card.active{border-left-color:var(--accent);background:rgba(77,208,225,.1)}.pr-card.success{border-left-color:var(--success)}.pr-card.failure{border-left-color:var(--failure)}.pr-header{display:flex;justify-content:space-between;align-items:start;margin-bottom:8px}.pr-number{font:600 12px Consolas,monospace;color:var(--accent)}.pr-title{font:600 13px;color:var(--heading)}.pr-meta{display:flex;gap:12px;margin-bottom:8px;font-size:11px}.pr-branch{color:var(--primary)}.pr-time{color:var(--muted)}.pr-status{font:700 11px;text-transform:uppercase;letter-spacing:.05em;display:inline-block;padding:2px 6px;border-radius:3px;background:var(--border)}.pr-status.success{background:rgba(102,214,154,.2);color:var(--success)}.pr-status.failure{background:rgba(255,133,128,.2);color:var(--failure)}.pr-status.running{background:rgba(118,184,236,.2);color:var(--primary);animation:pulse 1.5s infinite}.empty-state{text-align:center;padding:40px 20px;color:var(--muted)}.empty-state p{margin:0}.github-link{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);text-decoration:none;font-size:12px;margin-top:12px}.github-link:hover{background:var(--primary);color:#07131e}
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
 </style></head>
 <body>
 <main class="container">
 
 <header class="header">
   <h1>VA Demo Pipeline</h1>
-  <p>Live GitHub integration — watch your pull requests run through the CI/CD pipeline in real-time</p>
+  <p>Real GitHub integration — watch your pull requests automatically run through the CI/CD pipeline</p>
 </header>
 
 <div class="layout">
+  <!-- LEFT: GitHub Info & Actions -->
   <section class="panel">
     <h2>GitHub Integration</h2>
-    <p>This dashboard monitors real pull requests and their live pipeline runs.</p>
+    <p>This dashboard monitors real pull requests and pipeline runs from your GitHub repository.</p>
     
     <div class="form-group" style="margin-bottom: 20px;">
       <label>Repository</label>
@@ -28,8 +39,8 @@
     
     <div class="form-group">
       <label>Create a PR to Test</label>
-      <p style="font-size: 12px; color: var(--muted); margin: 0 0 12px;">Create a new branch and open a pull request. The pipeline will automatically trigger and you'll see it run live below.</p>
-      <a href="https://github.com/masonkeagy/va-demo-pipeline/compare" class="button-link primary" target="_blank">
+      <p style="font-size: 12px; color: var(--muted); margin: 0 0 12px;">Create a new branch and open a pull request to this repository. The pipeline will automatically trigger and you'll see it run live below.</p>
+      <a href="https://github.com/masonkeagy/va-demo-pipeline/compare" class="button-link primary" target="_blank" rel="noopener noreferrer">
         ↗ Create PR on GitHub
       </a>
     </div>
@@ -37,31 +48,33 @@
     <hr style="border: none; border-top: 1px solid var(--border); margin: 20px 0;">
     
     <div class="form-group">
-      <button id="refreshBtn" class="primary" style="width: 100%;">Refresh Now (Auto: 3s)</button>
-      <p style="font-size: 11px; color: var(--muted); margin: 8px 0 0;">Updates automatically every 3 seconds</p>
+      <label>Auto-Refresh</label>
+      <button id="refreshBtn" class="primary" style="width: 100%;">Refresh Now</button>
+      <p style="font-size: 11px; color: var(--muted); margin: 8px 0 0;">Refreshes automatically every 10 seconds</p>
     </div>
   </section>
 
+  <!-- RIGHT: Pipeline Monitor -->
   <section class="panel">
     <h2>Pipeline Monitor</h2>
     
     <div class="pipeline-status">
       <span id="statusBadge" class="status-badge idle"></span>
-      <span id="statusText">Loading pull requests...</span>
+      <span id="statusText" style="font-weight: 600;">Loading pull requests...</span>
     </div>
     
     <div class="stats-grid" id="statsGrid" style="display: none;">
       <div class="stat-card">
-        <div class="stat-value" id="prNumber">—</div>
-        <div class="stat-label">PR #</div>
+        <div class="stat-value" id="totalPRs">0</div>
+        <div class="stat-label">Pull Requests</div>
       </div>
       <div class="stat-card">
         <div class="stat-value" id="passedStages">0/12</div>
-        <div class="stat-label">Progress</div>
+        <div class="stat-label">Current Progress</div>
       </div>
       <div class="stat-card">
-        <div class="stat-value" id="elapsedTime">—</div>
-        <div class="stat-label">Elapsed</div>
+        <div class="stat-value" id="lastUpdate">—</div>
+        <div class="stat-label">Last Update</div>
       </div>
     </div>
     
@@ -69,17 +82,18 @@
     
     <div class="log-viewer" id="logViewer">
       <div style="color: var(--muted); text-align: center; padding: 20px;">
-        <p>Logs will appear here</p>
+        <p>Logs will appear here when pipeline runs</p>
       </div>
     </div>
   </section>
 </div>
 
+<!-- Pull Request List -->
 <section class="panel">
   <h2>Recent Pull Requests</h2>
   <div class="pr-list" id="prList">
     <div class="empty-state">
-      <p>Loading pull requests...</p>
+      <p>Loading pull requests from GitHub...</p>
     </div>
   </div>
 </section>
@@ -90,15 +104,33 @@
 "use strict";
 
 const REPO = "masonkeagy/va-demo-pipeline";
-const OWNER = "masonkeagy";
-const GITHUB_API = "https://api.github.com";
+const GITHUB_API = "https://api.github.com/repos/" + REPO;
+const STATUS_URL = "./pipeline-status.json";
 
 let prs = [];
-let currentRun = null;
-let runStartTime = null;
-let timerInterval = null;
+let currentPR = null;
+let statusCache = null;
 
 const $ = id => document.getElementById(id);
+
+const STAGES = [
+  "pr_validation",
+  "unit_tests",
+  "security_scanning",
+  "build_and_sign",
+  "deploy_dev",
+  "integration_performance_tests",
+  "deploy_uat",
+  "regression_tests",
+  "deploy_preprod",
+  "deploy_prod",
+  "smoke_tests",
+  "monitoring_summary"
+];
+
+function formatTime(date) {
+  return new Date(date).toLocaleTimeString();
+}
 
 function addLog(message, type = "info") {
   const logViewer = $("logViewer");
@@ -112,120 +144,89 @@ function addLog(message, type = "info") {
   logViewer.scrollTop = logViewer.scrollHeight;
 }
 
-function renderStages(jobs) {
+function renderStages() {
   const grid = $("stagesGrid");
   
-  if (!jobs || jobs.length === 0) {
-    grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--muted); padding: 20px;">No jobs data available</div>`;
+  if (!statusCache || !statusCache.stages) {
+    grid.innerHTML = STAGES.map((id, idx) => `
+      <div class="stage-card pending">
+        <div class="stage-name">${id.replace(/_/g, " ")}</div>
+        <div class="stage-status">PENDING</div>
+      </div>
+    `).join("");
     return;
   }
   
-  grid.innerHTML = jobs.map(job => {
-    const status = job.status;
-    const conclusion = job.conclusion;
-    
-    let cardStatus = "pending";
-    if (status === "in_progress") cardStatus = "in_progress";
-    else if (status === "queued") cardStatus = "queued";
-    else if (conclusion === "success") cardStatus = "success";
-    else if (conclusion === "failure") cardStatus = "failure";
+  grid.innerHTML = statusCache.stages.map(stage => {
+    const result = String(stage.result || "").toLowerCase();
+    let status = "pending";
+    if (["success", "skipped"].includes(result)) status = "success";
+    else if (["failure", "cancelled", "timed_out"].includes(result)) status = "failure";
+    else if (["in_progress", "queued", "pending"].includes(result)) status = "in_progress";
     
     return `
-      <div class="stage-card ${cardStatus}">
-        <div class="stage-name">${job.name.substring(0, 18)}</div>
-        <div class="stage-status">${status === "in_progress" ? "RUNNING" : (conclusion || status).toUpperCase().substring(0, 10)}</div>
+      <div class="stage-card ${status}">
+        <div class="stage-name">${(stage.name || stage.id).substring(0, 15)}</div>
+        <div class="stage-status">${result.replace(/_/g, " ").toUpperCase().substring(0, 10)}</div>
       </div>
     `;
   }).join("");
 }
 
-async function fetchRunJobs(runId) {
+async function loadPipelineStatus() {
   try {
-    const r = await fetch(`${GITHUB_API}/repos/${OWNER}/${REPO.split("/")[1]}/actions/runs/${runId}/jobs?per_page=100`);
+    const r = await fetch(`${STATUS_URL}?t=${Date.now()}`, { cache: "no-store" });
     if (r.ok) {
-      const data = await r.json();
-      return data.jobs || [];
+      statusCache = await r.json();
+      
+      const stages = statusCache.stages || [];
+      const passed = stages.filter(s => ["success", "skipped"].includes(String(s.result || "").toLowerCase())).length;
+      
+      $("passedStages").textContent = `${passed}/${stages.length}`;
+      $("lastUpdate").textContent = formatTime(statusCache.run?.timestamp || new Date());
+      
+      let overall = "idle";
+      if (stages.some(s => ["in_progress", "queued", "pending"].includes(String(s.result || "").toLowerCase()))) {
+        overall = "running";
+      } else if (stages.some(s => ["failure", "cancelled"].includes(String(s.result || "").toLowerCase()))) {
+        overall = "failure";
+      } else if (stages.length > 0 && stages.every(s => ["success", "skipped"].includes(String(s.result || "").toLowerCase()))) {
+        overall = "success";
+      }
+      
+      $("statusBadge").className = `status-badge ${overall}`;
+      $("statusText").textContent = overall === "running" ? "Pipeline running..." : 
+                                     overall === "success" ? "Pipeline succeeded" :
+                                     overall === "failure" ? "Pipeline failed" : "Idle";
+      
+      renderStages();
     }
   } catch (e) {
-    console.error("Error fetching jobs:", e);
+    console.log("Pipeline status not yet available");
   }
-  return [];
-}
-
-async function fetchLatestRun() {
-  try {
-    const r = await fetch(`${GITHUB_API}/repos/${OWNER}/${REPO.split("/")[1]}/actions/runs?per_page=1&event=pull_request`);
-    if (r.ok) {
-      const data = await r.json();
-      return data.workflow_runs?.[0] || null;
-    }
-  } catch (e) {
-    console.error("Error fetching latest run:", e);
-  }
-  return null;
-}
-
-async function updatePipelineStatus() {
-  const latestRun = await fetchLatestRun();
-  
-  if (!latestRun) {
-    $("statusBadge").className = "status-badge idle";
-    $("statusText").textContent = "No recent pipeline runs";
-    return;
-  }
-  
-  currentRun = latestRun;
-  const jobs = await fetchRunJobs(latestRun.id);
-  
-  // Update status badge
-  if (latestRun.status === "in_progress") {
-    $("statusBadge").className = "status-badge running";
-    $("statusText").textContent = "Pipeline running...";
-  } else if (latestRun.conclusion === "success") {
-    $("statusBadge").className = "status-badge success";
-    $("statusText").textContent = "Pipeline succeeded ✓";
-  } else if (latestRun.conclusion === "failure") {
-    $("statusBadge").className = "status-badge failure";
-    $("statusText").textContent = "Pipeline failed ✗";
-  }
-  
-  // Update stats
-  $("statsGrid").style.display = "grid";
-  $("prNumber").textContent = latestRun.pull_requests?.[0]?.number || "—";
-  
-  const completed = jobs.filter(j => j.conclusion).length;
-  $("passedStages").textContent = `${completed}/${jobs.length}`;
-  
-  const started = new Date(latestRun.created_at);
-  const elapsed = Math.floor((Date.now() - started) / 1000);
-  const mins = Math.floor(elapsed / 60);
-  const secs = elapsed % 60;
-  $("elapsedTime").textContent = mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
-  
-  // Render stages
-  renderStages(jobs);
-  
-  // Log updates
-  jobs.forEach(job => {
-    if (job.status === "in_progress") {
-      addLog(`Running: ${job.name}`, "info");
-    } else if (job.conclusion === "success") {
-      addLog(`✓ ${job.name} passed`, "success");
-    } else if (job.conclusion === "failure") {
-      addLog(`✗ ${job.name} failed`, "error");
-    }
-  });
 }
 
 async function loadPullRequests() {
   try {
-    const r = await fetch(`${GITHUB_API}/repos/${OWNER}/${REPO.split("/")[1]}/pulls?state=all&per_page=10&sort=updated`);
-    if (r.ok) {
-      prs = await r.json();
-      renderPRList();
+    const r = await fetch(`${GITHUB_API}/pulls?state=all&per_page=10&sort=updated`, {
+      headers: {
+        "Accept": "application/vnd.github.v3+json"
+      }
+    });
+    
+    if (!r.ok) throw new Error(`GitHub API error: ${r.status}`);
+    
+    prs = await r.json();
+    $("totalPRs").textContent = prs.length;
+    
+    renderPRList();
+    
+    if (!currentPR && prs.length > 0) {
+      selectPR(prs[0]);
     }
   } catch (e) {
     console.error("Error loading PRs:", e);
+    $("prList").innerHTML = `<div class="empty-state"><p>Could not load pull requests. Make sure your repo is public or check GitHub API limits.</p></div>`;
   }
 }
 
@@ -233,23 +234,25 @@ function renderPRList() {
   const list = $("prList");
   
   if (prs.length === 0) {
-    list.innerHTML = `<div class="empty-state"><p>No pull requests yet.</p></div>`;
+    list.innerHTML = `<div class="empty-state"><p>No pull requests yet. <a href="https://github.com/masonkeagy/va-demo-pipeline/compare" target="_blank" style="color: var(--primary);">Create one →</a></p></div>`;
     return;
   }
   
-  list.innerHTML = prs.slice(0, 5).map(pr => {
-    const isLatest = currentRun && currentRun.pull_requests?.some(r => r.number === pr.number);
-    const statusClass = isLatest ? (currentRun.status === "in_progress" ? "running" : (currentRun.conclusion === "success" ? "success" : "failure")) : "";
+  list.innerHTML = prs.map(pr => {
+    const isActive = currentPR && currentPR.id === pr.id;
+    const statusClass = pr.state === "closed" ? (pr.merged ? "success" : "failure") : (currentPR?.id === pr.id ? "running" : "");
     
     return `
-      <div class="pr-card ${statusClass} ${isLatest ? "active" : ""}">
-        <div>
-          <span class="pr-number">#${pr.number}</span>
-          <span class="pr-title" style="margin-left: 8px;">${pr.title}</span>
+      <div class="pr-card ${statusClass} ${isActive ? "active" : ""}" onclick="selectPR(${JSON.stringify(pr).replace(/"/g, '&quot;')})">
+        <div class="pr-header">
+          <div>
+            <div class="pr-number">#${pr.number}</div>
+            <div class="pr-title">${pr.title}</div>
+          </div>
+          <div class="pr-status ${pr.state === "closed" ? (pr.merged ? "success" : "failure") : (isActive ? "running" : "")}">${pr.state === "closed" ? (pr.merged ? "merged" : "closed") : "open"}</div>
         </div>
         <div class="pr-meta">
           <span class="pr-branch">${pr.head.ref}</span>
-          <span class="pr-status ${pr.state === "closed" ? (pr.merged ? "success" : "failure") : (isLatest ? "running" : "")}">${pr.state === "closed" ? (pr.merged ? "merged" : "closed") : "open"}</span>
           <span class="pr-time">${new Date(pr.updated_at).toLocaleString()}</span>
         </div>
       </div>
@@ -257,10 +260,24 @@ function renderPRList() {
   }).join("");
 }
 
+function selectPR(pr) {
+  if (typeof pr === "string") pr = JSON.parse(pr);
+  currentPR = pr;
+  $("statsGrid").style.display = "grid";
+  renderPRList();
+  addLog(`PR #${pr.number} selected: ${pr.title}`, "info");
+  addLog(`Branch: ${pr.head.ref}`, "info");
+  addLog(`Status: ${pr.state}`, "info");
+}
+
 async function refresh() {
   $("refreshBtn").disabled = true;
-  await Promise.all([updatePipelineStatus(), loadPullRequests()]);
+  $("refreshBtn").textContent = "Refreshing...";
+  
+  await Promise.all([loadPullRequests(), loadPipelineStatus()]);
+  
   $("refreshBtn").disabled = false;
+  $("refreshBtn").textContent = "Refresh Now";
 }
 
 function init() {
@@ -269,8 +286,40 @@ function init() {
   // Initial load
   refresh();
   
-  // Auto-refresh every 3 seconds for live updates
-  setInterval(refresh, 3000);
+  // Auto-refresh every 10 seconds
+  setInterval(refresh, 2000);
+}
+
+function renderStages() {
+  const grid = $("stagesGrid");
+  
+  if (!statusCache || !statusCache.stages) {
+    grid.innerHTML = STAGES.map((id, idx) => `
+      <div class="stage-card pending">
+        <div class="stage-name">${id.replace(/_/g, " ")}</div>
+        <div class="stage-status">PENDING</div>
+      </div>
+    `).join("");
+    return;
+  }
+  
+  grid.innerHTML = statusCache.stages.map((stage, idx) => {
+    const result = String(stage.result || "").toLowerCase();
+    let status = "pending";
+    if (["success", "skipped"].includes(result)) status = "success";
+    else if (["failure", "cancelled", "timed_out"].includes(result)) status = "failure";
+    else if (["in_progress", "queued", "pending"].includes(result)) status = "in_progress";
+    
+    // Add staggered animation
+    const delay = idx * 100;
+    
+    return `
+      <div class="stage-card ${status}" style="animation-delay: ${delay}ms; animation: slideIn .4s ease forwards;">
+        <div class="stage-name">${(stage.name || stage.id).substring(0, 15)}</div>
+        <div class="stage-status">${result.replace(/_/g, " ").toUpperCase().substring(0, 10)}</div>
+      </div>
+    `;
+  }).join("");
 }
 
 init();
