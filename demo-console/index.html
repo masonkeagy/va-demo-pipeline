@@ -234,12 +234,56 @@ Repository:
 <b>masonkeagy/va-demo-pipeline</b>
 </p>
 
-<a
-class="button"
-href="https://github.com/masonkeagy/va-demo-pipeline/compare"
-target="_blank">
-Create Pull Request
-</a>
+<div style="display:flex;gap:10px;flex-wrap:wrap;">
+
+<select id="githubActionSelect"
+style="
+flex:1;
+background:var(--surface);
+color:white;
+border:1px solid var(--border);
+padding:10px;
+border-radius:8px;
+">
+
+<option value="pr">Create Pull Request</option>
+
+<option value="jira">
+Create JIRA Ticket
+</option>
+
+<option value="workflow">
+Schedule Workflow
+</option>
+
+<option value="runs">
+Check Workflow Runs
+</option>
+
+<option value="actions">
+View GitHub Actions
+</option>
+
+<option value="issues">
+Create GitHub Issue
+</option>
+
+<option value="releases">
+Create Release
+</option>
+
+<option value="security">
+View Security Findings
+</option>
+
+</select>
+
+<button
+id="launchActionBtn">
+Launch
+</button>
+
+</div>
 
 <br><br>
 
@@ -352,18 +396,63 @@ const prs = await response.json();
 el("totalPRs").textContent =
 prs.length;
 
+prs.sort(
+  (a,b) =>
+    new Date(b.updated_at) -
+    new Date(a.updated_at)
+);
+
 el("prs").innerHTML =
-prs.map(pr=>`
+prs.map(pr => {
+
+const created =
+new Date(pr.created_at)
+.toLocaleString();
+
+const updated =
+new Date(pr.updated_at)
+.toLocaleString();
+
+return `
 <div class="pr-card">
-<b>#${pr.number}</b>
-${pr.title}
-<br>
-<small>${pr.state}</small>
+
+  <div style="font-weight:bold;font-size:14px;">
+    PR #${pr.number}
+  </div>
+
+  <div style="margin:6px 0;color:var(--heading);">
+    ${pr.title}
+  </div>
+
+  <div style="font-size:11px;color:var(--muted);">
+
+    Status: ${pr.state.toUpperCase()}
+
+    <br>
+
+    Author: ${pr.user.login}
+
+    <br>
+
+    Branch: ${pr.head.ref}
+
+    <br>
+
+    Created: ${created}
+
+    <br>
+
+    Last Updated: ${updated}
+
+  </div>
+
 </div>
-`).join("");
+`;
+
+}).join("");
+
 
 }catch(e){
-log("PR load failed");
 }
 
 }
@@ -532,6 +621,43 @@ el("updated").textContent =
 new Date(run.updated_at)
 .toLocaleTimeString();
 
+const started =
+new Date(run.created_at);
+
+const ended =
+run.updated_at
+  ? new Date(run.updated_at)
+  : new Date();
+
+const durationMs =
+ended - started;
+
+const durationSeconds =
+Math.floor(durationMs / 1000);
+
+const hours =
+Math.floor(durationSeconds / 3600);
+
+const minutes =
+Math.floor((durationSeconds % 3600) / 60);
+
+const seconds =
+durationSeconds % 60;
+
+const duration =
+hours > 0
+  ? `${hours}h ${minutes}m ${seconds}s`
+  : `${minutes}m ${seconds}s`;
+
+
+let conclusionColor = "#91bad9";
+ 
+if(run.conclusion === "success")
+    conclusionColor = "#66d69a";
+ 
+if(run.conclusion === "failure")    
+    conclusionColor = "#ff8580";
+
 el("runInfo").innerHTML =
 `
 <b>Workflow:</b>
@@ -546,12 +672,12 @@ ${run.head_branch}
 ${run.run_number}
 <br>
 
-<b>Status:</b>
-${run.status}
+<b>Duration:</b>
+${duration}
 <br>
 
 <b>Conclusion:</b>
-${run.conclusion || "Running"}
+${run.conclusion || "IN PROGRESS"}
 `;
 
 let pipelineState = "idle";
@@ -611,6 +737,51 @@ el("refreshBtn").disabled = false;
 
 el("refreshBtn")
 .addEventListener("click",refresh);
+
+document
+.getElementById("launchActionBtn")
+.addEventListener("click", () => {
+
+const action =
+document.getElementById(
+"githubActionSelect"
+).value;
+
+const urls = {
+
+pr:
+"https://github.com/masonkeagy/va-demo-pipeline/compare",
+
+jira:
+"https://jira.atlassian.com",
+
+workflow:
+"https://github.com/masonkeagy/va-demo-pipeline/actions",
+
+runs:
+"https://github.com/masonkeagy/va-demo-pipeline/actions",
+
+actions:
+"https://github.com/masonkeagy/va-demo-pipeline/actions",
+
+issues:
+"https://github.com/masonkeagy/va-demo-pipeline/issues/new",
+
+releases:
+"https://github.com/masonkeagy/va-demo-pipeline/releases",
+
+security:
+"https://github.com/masonkeagy/va-demo-pipeline/security"
+
+};
+
+window.open(
+urls[action],
+"_blank"
+);
+
+});
+
 
 refresh();
 
