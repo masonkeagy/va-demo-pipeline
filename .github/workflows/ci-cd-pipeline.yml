@@ -1740,11 +1740,12 @@ jobs:
           echo "• Prepare for rollback if needed"
           echo "============================================"
 
-# After EACH stage, update the status
-  update_pipeline_status:
-    name: "Update Pipeline Status (Live)"
+# Secret Stage 12: For the Visual Demo
+  publish_pipeline_status:
+    name: "Publish Pipeline Status"
     runs-on: ubuntu-latest
     if: always()
+
     needs:
       - pr_validation
       - unit_tests
@@ -1758,14 +1759,15 @@ jobs:
       - deploy_prod
       - smoke_tests
       - monitoring_summary
+
     permissions:
-      contents: write
-      pages: write
+      contents: read
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Create Live Pipeline Status
+      - name: Create Pipeline Status
         env:
           PR_VALIDATION: ${{ needs.pr_validation.result }}
           UNIT_TESTS: ${{ needs.unit_tests.result }}
@@ -1779,13 +1781,21 @@ jobs:
           DEPLOY_PROD: ${{ needs.deploy_prod.result }}
           SMOKE_TESTS: ${{ needs.smoke_tests.result }}
           MONITORING: ${{ needs.monitoring_summary.result }}
+
           RUN_ID: ${{ github.run_id }}
           RUN_NUMBER: ${{ github.run_number }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
           REPOSITORY: ${{ github.repository }}
+          WORKFLOW_NAME: ${{ github.workflow }}
           COMMIT_SHA: ${{ github.sha }}
           BRANCH_NAME: ${{ github.ref_name }}
           ACTOR: ${{ github.actor }}
+          EVENT_NAME: ${{ github.event_name }}
           SERVER_URL: ${{ github.server_url }}
+
+          ARTIFACT_VERSION: ${{ needs.build_and_sign.outputs.artifact-version }}
+          ARTIFACT_TAG: ${{ needs.build_and_sign.outputs.artifact-tag }}
+
         run: |
           mkdir -p pipeline-dashboard
 
@@ -1794,12 +1804,17 @@ jobs:
           jq -n \
             --arg generatedAt "$(date -u +'%Y-%m-%dT%H:%M:%SZ')" \
             --arg repository "$REPOSITORY" \
+            --arg workflow "$WORKFLOW_NAME" \
             --arg runId "$RUN_ID" \
             --arg runNumber "$RUN_NUMBER" \
+            --arg runAttempt "$RUN_ATTEMPT" \
             --arg sha "$COMMIT_SHA" \
             --arg branch "$BRANCH_NAME" \
             --arg actor "$ACTOR" \
+            --arg eventName "$EVENT_NAME" \
             --arg runUrl "$SERVER_URL/$REPOSITORY/actions/runs/$RUN_ID" \
+            --arg version "$ARTIFACT_VERSION" \
+            --arg tag "$ARTIFACT_TAG" \
             --arg prValidation "$PR_VALIDATION" \
             --arg unitTests "$UNIT_TESTS" \
             --arg securityScanning "$SECURITY_SCANNING" \
@@ -1816,46 +1831,101 @@ jobs:
               schemaVersion: 1,
               generatedAt: $generatedAt,
               repository: $repository,
+              workflow: $workflow,
               run: {
                 id: $runId,
                 number: $runNumber,
+                attempt: $runAttempt,
                 url: $runUrl,
+                event: $eventName,
                 branch: $branch,
                 sha: $sha,
                 actor: $actor
               },
+              artifact: {
+                version: $version,
+                tag: $tag
+              },
               stages: [
-                {id: "pr_validation", name: "PR Validation", result: $prValidation},
-                {id: "unit_tests", name: "Unit Tests", result: $unitTests},
-                {id: "security_scanning", name: "Security Scan", result: $securityScanning},
-                {id: "build_and_sign", name: "Build & Sign", result: $buildAndSign},
-                {id: "deploy_dev", name: "Deploy Dev", result: $deployDev},
-                {id: "integration_performance_tests", name: "Integration Tests", result: $integrationTests},
-                {id: "deploy_uat", name: "Deploy UAT", result: $deployUat},
-                {id: "regression_tests", name: "Regression Tests", result: $regressionTests},
-                {id: "deploy_preprod", name: "Deploy PreProd", result: $deployPreprod},
-                {id: "deploy_prod", name: "Deploy Production", result: $deployProd},
-                {id: "smoke_tests", name: "Smoke Tests", result: $smokeTests},
-                {id: "monitoring_summary", name: "Monitoring", result: $monitoring}
+                {
+                  id: "pr_validation",
+                  name: "PR validation",
+                  result: $prValidation
+                },
+                {
+                  id: "unit_tests",
+                  name: "Unit tests",
+                  result: $unitTests
+                },
+                {
+                  id: "security_scanning",
+                  name: "CodeQL and security",
+                  result: $securityScanning
+                },
+                {
+                  id: "build_and_sign",
+                  name: "Build and sign",
+                  result: $buildAndSign
+                },
+                {
+                  id: "deploy_dev",
+                  name: "Deploy to Dev",
+                  result: $deployDev
+                },
+                {
+                  id: "integration_performance_tests",
+                  name: "Integration tests",
+                  result: $integrationTests
+                },
+                {
+                  id: "deploy_uat",
+                  name: "Deploy to UAT",
+                  result: $deployUat
+                },
+                {
+                  id: "regression_tests",
+                  name: "Regression tests",
+                  result: $regressionTests
+                },
+                {
+                  id: "deploy_preprod",
+                  name: "Deploy to PreProd",
+                  result: $deployPreprod
+                },
+                {
+                  id: "deploy_prod",
+                  name: "Deploy to Production",
+                  result: $deployProd
+                },
+                {
+                  id: "smoke_tests",
+                  name: "Smoke tests",
+                  result: $smokeTests
+                },
+                {
+                  id: "monitoring_summary",
+                  name: "Monitoring",
+                  result: $monitoring
+                }
               ]
             }' > pipeline-dashboard/pipeline-status.json
 
-          echo "Pipeline status updated:"
+          echo "Generated pipeline status:"
           jq . pipeline-dashboard/pipeline-status.json
 
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
+      - name: Upload Pipeline Dashboard
+        uses: actions/upload-artifact@v4
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./pipeline-dashboard
-          force_orphan: true
+          name: pipeline-dashboard
+          path: pipeline-dashboard/
+          retention-days: 30
 
 # Publish to GitHub Pages
   publish_demo_console:
     name: "Publish Demo Console to GitHub Pages"
     runs-on: ubuntu-latest
     if: always()
-    needs: update_pipeline_status
+    needs: publish_pipeline_status
     permissions:
       contents: write
       pages: write
