@@ -1929,18 +1929,34 @@ jobs:
       contents: write
       pages: write
     steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
       - name: Download Dashboard Artifact
         uses: actions/download-artifact@v4
         with:
           name: pipeline-dashboard
           path: ./dashboard
 
+      - name: Verify Files
+        run: |
+          echo "Dashboard contents:"
+          ls -lah dashboard/
+          echo ""
+          echo "Checking for index.html:"
+          if [ -f dashboard/index.html ]; then
+            echo "✓ index.html found"
+          else
+            echo "ERROR: index.html not found in dashboard/"
+            exit 1
+          fi
+
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./dashboard
-          cname: # Leave blank unless you have a custom domain
+          force_orphan: true
 
 
            
