@@ -332,19 +332,21 @@ Loading run information...
 
 <br>
 
-<div
-class="log"
-id="activityFeed">
-
 <div class="current-run">
 
   <h3>Regression Results</h3>
 
   <div id="regressionResults">
+
     Loading regression results...
+
   </div>
 
 </div>
+
+<div
+class="log"
+id="activityFeed">
 
 Loading GitHub activity...
 
@@ -647,8 +649,12 @@ id:"Stage 5 - Deploy to Dev",
 label:"Deploy Dev"
 },
 {
-id:"Stage 6 - Integration Tests",
+id:"Stage 6a - Integration Tests",
 label:"Integration Tests"
+},
+{
+id:"Stage 6b - DAST Security Scan",
+label:"DAST Security Scan"
 },
 {
 id:"Stage 7 - Deploy to TEST/UAT",
@@ -1172,7 +1178,7 @@ urls[action],
 
 refresh();
 
-setInterval(refresh,2000);
+setInterval(refresh,10000);
 
 </script>
 
