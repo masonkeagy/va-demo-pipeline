@@ -511,6 +511,88 @@ await jobsResponse.json();
 const jobs =
 jobsData.jobs || [];
 
+const activityItems = [];
+
+const buildJob =
+jobs.find(j =>
+j.name.includes("Build")
+);
+
+if(buildJob &&
+buildJob.conclusion === "success"){
+
+activityItems.push({
+icon:"📦",
+message:"Build Artifact Created"
+});
+
+}
+
+const securityJob =
+jobs.find(j =>
+j.name.includes("Security")
+);
+
+if(securityJob &&
+securityJob.conclusion === "success"){
+
+activityItems.push({
+icon:"🛡️",
+message:"Security Scan Completed"
+});
+
+}
+
+
+const uatJob =
+jobs.find(j =>
+j.name.includes("UAT")
+);
+
+if(uatJob &&
+uatJob.conclusion === "success"){
+
+activityItems.push({
+icon:"✅",
+message:"Deployment Approved for UAT"
+});
+
+}
+
+
+const prodJob =
+jobs.find(j =>
+j.name.includes("Production")
+);
+
+if(prodJob &&
+prodJob.conclusion === "success"){
+
+activityItems.push({
+icon:"🚀",
+message:"Production Deployment Complete"
+});
+
+}
+``
+
+
+const monitoringJob =
+jobs.find(j =>
+j.name.includes("Monitoring")
+);
+
+if(monitoringJob &&
+monitoringJob.conclusion === "success"){
+
+activityItems.push({
+icon:"📈",
+message:"Application Monitoring Active"
+});
+
+}
+``
+
 /*
 FORCE THE 12 STAGES TO ALWAYS EXIST
 */
@@ -774,13 +856,6 @@ description =
 
 break;
 
-case "PushEvent":
-
-description =
-`🚀 Code Pushed`;
-
-break;
-
 case "IssuesEvent":
 
 description =
@@ -853,6 +928,54 @@ Unavailable
 
 </div>
 `;
+
+activityItems.push({
+icon:"📦",
+message:"Build Artifact Created"
+});
+ 
+activityItems.push({
+icon:"🛡️",
+message:"Security Scan Completed"
+});
+ 
+activityItems.push({
+icon:"✅",
+message:"Deployment Approved for UAT"
+});
+ 
+/*
+GitHub events
+*/
+ 
+events.slice(0,5).forEach(event => {
+ 
+if(event.type === "PushEvent"){
+ 
+activityItems.push({
+icon:"🚀",
+message:"Code Pushed"
+});
+ 
+}
+ 
+});
+ 
+/*
+PUT IT HERE
+*/
+ 
+el("activityFeed").innerHTML =
+activityItems.map(item => `
+<div style="
+padding:8px;
+margin-bottom:8px;
+border-bottom:1px solid #33495d;
+">
+${item.icon}
+${item.message}
+</div>
+`).join("");
 
 }
 
