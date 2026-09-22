@@ -1108,11 +1108,11 @@ async function refresh(){
 
     await Promise.all([
       loadPRs(),
-      loadPipeline()
+      loadPipeline(),
+      loadRegressionResults()
       //loadActivityFeed()
     ]);
     
-    loadRegressionResults()
   }
   finally {
 
