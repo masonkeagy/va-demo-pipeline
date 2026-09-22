@@ -480,7 +480,7 @@ jobs:
           echo "============================================"
 
 # Stage 6: Integration Tests
-  integration_performance_tests:
+  integration_tests:
     name: "Stage 6 - Integration Tests"
     runs-on: ubuntu-latest
     needs: deploy_dev
@@ -615,7 +615,7 @@ jobs:
     name: "Stage 7 - Deploy to TEST/UAT"
     runs-on: ubuntu-latest
     needs:
-      - integration_performance_tests
+      - integration_tests
       - build_and_sign
       - dast_security_scan
     environment:
@@ -1780,7 +1780,8 @@ jobs:
       - security_scanning
       - build_and_sign
       - deploy_dev
-      - integration_performance_tests
+      - integration_tests
+      - dast_security_scan
       - deploy_uat
       - regression_tests
       - deploy_preprod
@@ -1802,7 +1803,8 @@ jobs:
           SECURITY_SCANNING: ${{ needs.security_scanning.result }}
           BUILD_AND_SIGN: ${{ needs.build_and_sign.result }}
           DEPLOY_DEV: ${{ needs.deploy_dev.result }}
-          INTEGRATION_TESTS: ${{ needs.integration_performance_tests.result }}
+          INTEGRATION_TESTS: ${{ needs.integration_tests.result }}
+          DAST_SECURITY_SCANNING: ${{ needs.dast_security_scan.result }}
           DEPLOY_UAT: ${{ needs.deploy_uat.result }}
           REGRESSION_TESTS: ${{ needs.regression_tests.result }}
           DEPLOY_PREPROD: ${{ needs.deploy_preprod.result }}
