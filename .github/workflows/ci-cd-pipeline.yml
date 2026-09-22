@@ -1812,6 +1812,12 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
+      - name: Download Regression Results
+        uses: actions/download-artifact@v4
+        with:
+          name: regression-test-results-stage-8
+          path: ./regression-results
+
       - name: Create Pipeline Status
         env:
           PR_VALIDATION: ${{ needs.pr_validation.result }}
@@ -1846,6 +1852,20 @@ jobs:
           mkdir -p pipeline-dashboard
 
           cp demo-console/index.html pipeline-dashboard/index.html
+
+          mkdir -p pipeline-dashboard/regression
+
+          cp regression-results/regression-summary.json \
+            pipeline-dashboard/regression/ || true
+
+          cp regression-results/ai-review.json \
+            pipeline-dashboard/regression/ || true
+
+          cp regression-results/performance-summary.json \
+            pipeline-dashboard/regression/ || true
+
+          cp regression-results/a11y-results.json \
+            pipeline-dashboard/regression/ || true
 
           jq -n \
             --arg generatedAt "$(date -u +'%Y-%m-%dT%H:%M:%SZ')" \
