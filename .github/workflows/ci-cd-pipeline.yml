@@ -119,7 +119,7 @@ jobs:
   security_scanning:
     name: "Stage 3 - Security Scanning"
     runs-on: ubuntu-latest
-    needs: unit_tests
+    needs: pr_validation
     permissions:
       actions: read
       contents: read
@@ -202,7 +202,9 @@ jobs:
   build_and_sign:
     name: "Stage 4 - Build and Artifact Signing"
     runs-on: windows-latest
-    needs: security_scanning
+    needs:
+      - unit_tests
+      - security_scanning
     permissions:
       contents: read
       id-token: write
@@ -477,9 +479,9 @@ jobs:
           echo "Next Stage: Stage 6 - Integration & Performance Tests"
           echo "============================================"
 
-# Stage 6: Integration & Security Tests
+# Stage 6: Integration Tests
   integration_performance_tests:
-    name: "Stage 6 - Integration and Security Tests"
+    name: "Stage 6 - Integration Tests"
     runs-on: ubuntu-latest
     needs: deploy_dev
     env:
@@ -506,36 +508,6 @@ jobs:
             --url "$DEV_URL"
       
       # ============================================
-      # DAST Security Testing (OWASP ZAP)
-      # ============================================
-      - name: DAST Security Scan (OWASP ZAP)
-        id: dast
-        continue-on-error: true
-        run: |
-          echo "============================================"
-          echo "Dynamic Application Security Testing (DAST)"
-          echo "============================================"
-          echo "Tool: OWASP ZAP"
-          echo "Target: $DEV_URL"
-          echo ""
-          
-          docker run --rm \
-            -v $(pwd):/zap/wrk/:rw \
-            ghcr.io/zaproxy/zaproxy:stable \
-            zap-baseline.py \
-            -t $DEV_URL \
-            -J zap-report.json || true
-          
-          if [ -f "zap-report.json" ]; then
-            echo ""
-            echo "✓ ZAP baseline scan completed"
-            echo "Scan results available in: zap-report.json"
-          else
-            echo ""
-            echo "⚠ ZAP scan completed (no results file generated)"
-          fi
-      
-      # ============================================
       # Upload Reports
       # ============================================
       - name: Upload Test Reports
@@ -545,7 +517,6 @@ jobs:
           name: integration-security-results
           path: |
             api-test-results.json
-            zap-report.json
           retention-days: 30
       
       # ============================================
@@ -561,7 +532,6 @@ jobs:
           echo ""
           echo "Integration Tests:      ✓ Executed"
           echo "API Validation Tests:   ✓ Executed"
-          echo "DAST Scan (OWASP ZAP):  ✓ Executed"
           echo ""
           echo "Test Results:"
           
@@ -569,19 +539,76 @@ jobs:
             echo "  • API Tests: $(grep -o 'PASS\|FAIL' api-test-results.json | head -1)"
           fi
           
-          if [ -f "zap-report.json" ]; then
-            echo "  • DAST Security Scan: Completed"
-            ALERT_COUNT=$(grep -o '"alerts"' zap-report.json | wc -l)
-            echo "    └─ Alerts: $ALERT_COUNT"
-          fi
-          
           echo ""
           echo "Artifacts Generated:"
           echo "  • api-test-results.json"
-          echo "  • zap-report.json"
           echo ""
           echo "Next Stage: Stage 7 - Deploy to TEST/UAT"
           echo "============================================"
+
+#DAST Scurity Scan
+  dast_security_scan:
+    name: "Stage 6b - DAST Security Scan"
+    runs-on: ubuntu-latest
+    needs: deploy_dev
+
+    env:
+      DEV_URL: "https://dev.placeholder.com"
+
+    steps:
+
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: DAST Security Scan (OWASP ZAP)
+        id: dast
+        continue-on-error: true
+        run: |
+
+          echo "============================================"
+          echo "Dynamic Application Security Testing (DAST)"
+          echo "============================================"
+
+          docker run --rm \
+            -v $(pwd):/zap/wrk/:rw \
+            ghcr.io/zaproxy/zaproxy:stable \
+            zap-baseline.py \
+            -t $DEV_URL \
+            -J zap-report.json || true
+
+          if [ -f "zap-report.json" ]; then
+
+            echo "✓ ZAP baseline scan completed"
+
+          else
+
+            echo "⚠ No ZAP report found"
+
+          fi
+
+      - name: Upload DAST Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dast-security-results
+          path: zap-report.json
+          retention-days: 30
+
+      - name: DAST Summary
+        if: always()
+        run: |
+
+          echo "============================================"
+          echo "Stage 6b: DAST Security Scan Complete"
+          echo "============================================"
+
+          if [ -f "zap-report.json" ]; then
+
+            ALERT_COUNT=$(grep -o '"alerts"' zap-report.json | wc -l)
+
+            echo "Alerts Found: $ALERT_COUNT"
+
+          fi
 
 # Stage 7: Deploy to TEST/UAT
   deploy_uat:
@@ -590,6 +617,7 @@ jobs:
     needs:
       - integration_performance_tests
       - build_and_sign
+      - dast_security_scan
     environment:
       name: uat
       url: https://uat.placeholder.com
