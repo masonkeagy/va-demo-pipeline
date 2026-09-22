@@ -361,6 +361,8 @@ Loading GitHub activity...
 const REPO = "masonkeagy/va-demo-pipeline";
 const API = `https://api.github.com/repos/${REPO}`;
 
+let refreshRunning = false;
+
 function el(id){
 return document.getElementById(id);
 }
@@ -402,6 +404,10 @@ await fetch(
 );
 
 const prs = await response.json();
+
+if (!Array.isArray(prs)) {
+  return;
+}
 
 el("totalPRs").textContent =
 prs.length;
@@ -471,6 +477,9 @@ async function loadPipeline(){
 
 try{
 
+
+const activityItems = [];
+
 const runsResponse =
 await fetch(
 `${API}/actions/runs?per_page=50`
@@ -478,6 +487,16 @@ await fetch(
 
 const runsData =
 await runsResponse.json();
+
+if (!runsData.workflow_runs) {
+
+  console.warn(
+    "GitHub rate limited"
+  );
+
+  return;
+}
+
 
 console.log("RUNS", runsData);
 
@@ -511,7 +530,6 @@ await jobsResponse.json();
 const jobs =
 jobsData.jobs || [];
 
-const activityItems = [];
 
 const buildJob =
 jobs.find(j =>
@@ -818,6 +836,8 @@ async function loadActivityFeed(){
 
 try{
 
+const activityItems = [];
+
 const eventsResponse =
 await fetch(
 `${API}/events`
@@ -984,15 +1004,26 @@ ${item.message}
 
 async function refresh(){
 
-el("refreshBtn").disabled = true;
+  if(refreshRunning){
+    return;
+  }
 
-await Promise.all([
-loadPRs(),
-loadPipeline(),
-loadActivityFeed()
-]);
+  refreshRunning = true;
 
-el("refreshBtn").disabled = false;
+  try{
+
+    await Promise.all([
+      loadPRs(),
+      loadPipeline(),
+      //loadActivityFeed()
+    ]);
+
+  }
+  finally {
+
+    refreshRunning = false;
+
+  }
 
 }
 
