@@ -1839,6 +1839,10 @@ jobs:
           name: regression-test-results-stage-8
           path: ./regression-results
 
+      - name: Verify Download
+        run: |
+          find regression-results -type f
+
       - name: Verify Downloaded Regression Files
         run: |
           echo "Downloaded Files:"
