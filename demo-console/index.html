@@ -530,6 +530,7 @@ await jobsResponse.json();
 const jobs =
 jobsData.jobs || [];
 
+loadActivityFeed(jobs);
 
 const buildJob =
 jobs.find(j =>
@@ -832,175 +833,165 @@ el("statusText").textContent =
 
 }
 
-async function loadActivityFeed(){
+function loadActivityFeed(jobs = []) {
 
-try{
+  const activityItems = [];
 
-const activityItems = [];
+  if (
+    jobs.find(j =>
+      j.name.includes("PR Validation") &&
+      j.conclusion === "success"
+    )
+  ) {
+    activityItems.push({
+      icon: "✅",
+      message: "Pull Request Validation Completed"
+    });
+  }
 
-const eventsResponse =
-await fetch(
-`${API}/events`
-);
+  if (
+    jobs.find(j =>
+      j.name.includes("Unit Tests") &&
+      j.conclusion === "success"
+    )
+  ) {
+    activityItems.push({
+      icon: "🧪",
+      message: "Unit Testing Passed"
+    });
+  }
 
-const events =
-await eventsResponse.json();
+  if (
+    jobs.find(j =>
+      j.name.includes("Security") &&
+      j.conclusion === "success"
+    )
+  ) {
+    activityItems.push({
+      icon: "🛡️",
+      message: "CodeQL & Security Scans Passed"
+    });
+  }
 
-const feed =
-events
-.slice(0,10)
-.map(event => {
+  if (
+    jobs.find(j =>
+      j.name.includes("Build") &&
+      j.conclusion === "success"
+    )
+  ) {
+    activityItems.push({
+      icon: "📦",
+      message: "Build Artifact Created"
+    });
+  }
 
-let description = "";
+  if (
+    jobs.find(j =>
+      j.name.includes("Deploy to Dev") &&
+      j.conclusion === "success"
+    )
+  ) {
+    activityItems.push({
+      icon: "🚀",
+      message: "Application Successfully Deployed To Dev"
+    });
+  }
 
-switch(event.type){
+  if (
+    jobs.find(j =>
+      j.name.includes("Integration") &&
+      j.conclusion === "success"
+    )
+  ) {
+    activityItems.push({
+      icon: "🔗",
+      message: "Integration Testing Complete"
+    });
+  }
 
-case "PullRequestEvent":
+  if (
+    jobs.find(j =>
+      j.name.includes("DAST") &&
+      j.conclusion === "success"
+    )
+  ) {
+    activityItems.push({
+      icon: "🔍",
+      message: "DAST Security Scan Complete"
+    });
+  }
 
-description =
-`🔀 Pull Request ${event.payload.action}`;
+  if (
+    jobs.find(j =>
+      j.name.includes("UAT") &&
+      j.conclusion === "success"
+    )
+  ) {
+    activityItems.push({
+      icon: "👀",
+      message: "Deployment Approved For UAT"
+    });
+  }
 
-break;
+  if (
+    jobs.find(j =>
+      j.name.includes("Regression") &&
+      j.conclusion === "success"
+    )
+  ) {
+    activityItems.push({
+      icon: "📋",
+      message: "Regression Testing Passed"
+    });
+  }
 
-case "PullRequestReviewEvent":
+  if (
+    jobs.find(j =>
+      j.name.includes("PreProd") &&
+      j.conclusion === "success"
+    )
+  ) {
+    activityItems.push({
+      icon: "✅",
+      message: "Release Candidate Approved For PreProd"
+    });
+  }
 
-description =
-`✅ Pull Request Review Submitted`;
+  if (
+    jobs.find(j =>
+      j.name.includes("Production") &&
+      j.conclusion === "success"
+    )
+  ) {
+    activityItems.push({
+      icon: "🏆",
+      message: "Production Deployment Complete"
+    });
+  }
 
-break;
+  if (
+    jobs.find(j =>
+      j.name.includes("Monitoring") &&
+      j.conclusion === "success"
+    )
+  ) {
+    activityItems.push({
+      icon: "📈",
+      message: "Monitoring & Telemetry Activated"
+    });
+  }
 
-case "IssueCommentEvent":
-
-description =
-`💬 Comment Added`;
-
-break;
-
-case "IssuesEvent":
-
-description =
-`📋 Issue ${event.payload.action}`;
-
-break;
-
-default:
-
-description =
-`ℹ️ ${event.type}`;
-
+  document.getElementById("activityFeed").innerHTML =
+    activityItems.map(item => `
+      <div style="
+        padding:8px;
+        margin-bottom:8px;
+        border-bottom:1px solid #33495d;
+      ">
+        ${item.icon} ${item.message}
+      </div>
+    `).join("");
 }
-
-return `
-<div style="
-padding:8px;
-margin-bottom:8px;
-border-bottom:1px solid #33495d;
-">
-
-<div style="font-weight:bold">
-${description}
-</div>
-
-<div style="
-font-size:11px;
-color:var(--muted);
-">
-
-${new Date(event.created_at)
-.toLocaleString()}
-
-</div>
-
-</div>
-`;
-
-})
-.join("");
-
-el("activityFeed").innerHTML =
-feed;
-
-}
-catch(e){
-
-el("activityFeed").innerHTML =
-
-`
-<div>
-
-✅ CodeQL Alerts:
-Pending
-
-<br><br>
-
-✅ Pull Request Reviews:
-Pending
-
-<br><br>
-
-✅ Deployment Approvals:
-Pending
-
-<br><br>
-
-⚠ GitHub Activity Feed
-Unavailable
-
-</div>
-`;
-
-activityItems.push({
-icon:"📦",
-message:"Build Artifact Created"
-});
- 
-activityItems.push({
-icon:"🛡️",
-message:"Security Scan Completed"
-});
- 
-activityItems.push({
-icon:"✅",
-message:"Deployment Approved for UAT"
-});
- 
-/*
-GitHub events
-*/
- 
-events.slice(0,5).forEach(event => {
- 
-if(event.type === "PushEvent"){
- 
-activityItems.push({
-icon:"🚀",
-message:"Code Pushed"
-});
- 
-}
- 
-});
- 
-/*
-PUT IT HERE
-*/
- 
-el("activityFeed").innerHTML =
-activityItems.map(item => `
-<div style="
-padding:8px;
-margin-bottom:8px;
-border-bottom:1px solid #33495d;
-">
-${item.icon}
-${item.message}
-</div>
-`).join("");
-
-}
-
-}
-
 
 async function refresh(){
 
