@@ -891,6 +891,27 @@ jobs:
             --uat-url "$UAT_URL" \
             --app-type "${{ steps.app_type.outputs.is_vrm == 'true' && 'VRM' || 'STANDARD' }}"
 
+      - name: Verify Regression Files
+        run: |
+          echo "Regression Results Directory:"
+          ls -lah regression-results/
+
+          echo ""
+          echo "Regression Summary:"
+          cat regression-results/regression-summary.json || true
+
+          echo ""
+          echo "AI Review:"
+          cat regression-results/ai-review.json || true
+
+          echo ""
+          echo "Performance:"
+          cat regression-results/performance-summary.json || true
+
+          echo ""
+          echo "Accessibility:"
+          cat regression-results/a11y-results.json || true
+
       # ============================================
       # Upload Regression Artifacts
       # ============================================
@@ -1818,6 +1839,11 @@ jobs:
           name: regression-test-results-stage-8
           path: ./regression-results
 
+      - name: Verify Downloaded Regression Files
+        run: |
+          echo "Downloaded Files:"
+          find ./regression-results -type f
+
       - name: Create Pipeline Status
         env:
           PR_VALIDATION: ${{ needs.pr_validation.result }}
@@ -1978,6 +2004,11 @@ jobs:
 
           echo "Generated pipeline status:"
           jq . pipeline-dashboard/pipeline-status.json
+
+      - name: Verify Dashboard Contents
+        run: |
+          echo "Pipeline Dashboard:"
+          find pipeline-dashboard -type f
 
       - name: Upload Pipeline Dashboard
         uses: actions/upload-artifact@v4
