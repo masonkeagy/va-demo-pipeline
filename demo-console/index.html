@@ -336,6 +336,16 @@ Loading run information...
 class="log"
 id="activityFeed">
 
+<div class="current-run">
+
+  <h3>Regression Results</h3>
+
+  <div id="regressionResults">
+    Loading regression results...
+  </div>
+
+</div>
+
 Loading GitHub activity...
 
 </div>
@@ -833,6 +843,98 @@ el("statusText").textContent =
 
 }
 
+async function loadRegressionResults() {
+
+  try {
+
+    const summary =
+      await fetch(
+        "./regression/regression-summary.json"
+      ).then(r => r.json());
+
+    const ai =
+      await fetch(
+        "./regression/ai-review.json"
+      ).then(r => r.json());
+
+    const perf =
+      await fetch(
+        "./regression/performance-summary.json"
+      ).then(r => r.json());
+
+    const a11y =
+      await fetch(
+        "./regression/a11y-results.json"
+      ).then(r => r.json());
+
+    document.getElementById(
+      "regressionResults"
+    ).innerHTML = `
+
+      <div>
+
+        <b>Functional Tests</b><br>
+
+        Status:
+        ${summary.status}<br>
+
+        Tests:
+        ${summary.functionalTests}<br>
+
+        Failed:
+        ${summary.failedTests}
+
+        <hr>
+
+        <b>Accessibility</b><br>
+
+        Critical Violations:
+        ${a11y.criticalViolations}<br>
+
+        Warnings:
+        ${a11y.warnings}
+
+        <hr>
+
+        <b>Performance</b><br>
+
+        Avg Response:
+        ${perf.avgResponseMs}ms<br>
+
+        P95:
+        ${perf.p95}ms
+
+        <hr>
+
+        <b>AI Review</b><br>
+
+        Risk:
+        ${ai.risk}<br>
+
+        Recommendation:
+        ${ai.recommendation}<br>
+
+        Confidence:
+        ${ai.confidence}
+
+      </div>
+
+    `;
+
+  }
+  catch {
+
+    document.getElementById(
+      "regressionResults"
+    ).innerHTML =
+      "Regression results unavailable";
+
+  }
+
+}
+
+
+
 function loadActivityFeed(jobs = []) {
 
   console.log("ACTIVITY FEED JOBS", jobs);
@@ -1006,10 +1108,11 @@ async function refresh(){
 
     await Promise.all([
       loadPRs(),
-      loadPipeline(),
+      loadPipeline()
       //loadActivityFeed()
     ]);
-
+    
+    loadRegressionResults()
   }
   finally {
 

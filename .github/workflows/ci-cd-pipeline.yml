@@ -905,7 +905,6 @@ jobs:
             pytest-report.html
             pytest-results.xml
             regression-results/
-            a11y-results.json
           retention-days: 30
 
       # ============================================
@@ -940,6 +939,23 @@ jobs:
           echo ""
           echo "Next Stage: Stage 9a - Deploy to PreProd"
           echo "============================================"
+
+      - name: Copy Regression Results
+        run: |
+
+          mkdir -p pipeline-dashboard/regression
+
+          cp regression-results/regression-summary.json \
+            pipeline-dashboard/regression/ || true
+
+          cp regression-results/ai-review.json \
+            pipeline-dashboard/regression/ || true
+
+          cp regression-results/performance-summary.json \
+            pipeline-dashboard/regression/ || true
+
+          cp regression-results/a11y-results.json \
+            pipeline-dashboard/regression/ || true
 
 # Stage 9A: Deploy to PreProd
   deploy_preprod:
