@@ -1819,39 +1819,34 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: regression-test-results-stage-8
-          path: ./regression-results
+          path: ./download-results
 
 
       - name: Verify Download
         run: |
           echo "Downloaded files:"
-          find regression-results -type f
+          find download-results -type f
 
       - name: Copy Regression Results
         run: |
 
           mkdir -p pipeline-dashboard/regression
 
-          cp regression-results/regression-summary.json \
+          cp download-results/regression-summary.json \
             pipeline-dashboard/regression/ || true
 
-          cp regression-results/ai-review.json \
+          cp download-results/ai-review.json \
             pipeline-dashboard/regression/ || true
 
-          cp regression-results/performance-summary.json \
+          cp download-results/performance-summary.json \
             pipeline-dashboard/regression/ || true
 
-          cp regression-results/a11y-results.json \
+          cp download-results/a11y-results.json \
             pipeline-dashboard/regression/ || true
 
       - name: Verify Download
         run: |
-          find regression-results -type f
-
-      - name: Verify Downloaded Regression Files
-        run: |
-          echo "Downloaded Files:"
-          find ./regression-results -type f
+          find download-results -type f
 
       - name: Create Pipeline Status
         env:
@@ -1890,16 +1885,16 @@ jobs:
 
           mkdir -p pipeline-dashboard/regression
 
-          cp regression-results/regression-summary.json \
+          cp download-results/regression-summary.json \
             pipeline-dashboard/regression/ || true
 
-          cp regression-results/ai-review.json \
+          cp download-results/ai-review.json \
             pipeline-dashboard/regression/ || true
 
-          cp regression-results/performance-summary.json \
+          cp download-results/performance-summary.json \
             pipeline-dashboard/regression/ || true
 
-          cp regression-results/a11y-results.json \
+          cp download-results/a11y-results.json \
             pipeline-dashboard/regression/ || true
 
           jq -n \

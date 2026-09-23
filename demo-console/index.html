@@ -658,7 +658,7 @@ id:"Stage 5 - Deploy to Dev",
 label:"Deploy Dev"
 },
 {
-id:"Stage 6a - Integration Tests",
+id:"Stage 6 - Integration Tests",
 label:"Integration Tests"
 },
 {
@@ -698,9 +698,7 @@ pipelineStages.map(stage => {
 
 const match =
 jobs.find(j =>
-  j.name.toLowerCase().includes(
-    stage.label.toLowerCase()
-  )
+  j.name === stage.id
 );
 
 let css = "";
