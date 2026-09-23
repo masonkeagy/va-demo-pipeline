@@ -1842,16 +1842,16 @@ jobs:
 
           mkdir -p pipeline-dashboard/regression
 
-          cp download-results/regression-summary.json \
+          cp download-results/regression-results/regression-summary.json \
             pipeline-dashboard/regression/ || true
 
-          cp download-results/ai-review.json \
+          cp download-results/regression-results/ai-review.json \
             pipeline-dashboard/regression/ || true
 
-          cp download-results/performance-summary.json \
+          cp download-results/regression-results/performance-summary.json \
             pipeline-dashboard/regression/ || true
 
-          cp download-results/a11y-results.json \
+          cp download-results/regression-results/a11y-results.json \
             pipeline-dashboard/regression/ || true
 
       - name: Verify Download
@@ -1895,16 +1895,16 @@ jobs:
 
           mkdir -p pipeline-dashboard/regression
 
-          cp download-results/regression-summary.json \
+          cp download-results/regression-results/regression-summary.json \
             pipeline-dashboard/regression/ || true
 
-          cp download-results/ai-review.json \
+          cp download-results/regression-results/rai-review.json \
             pipeline-dashboard/regression/ || true
 
-          cp download-results/performance-summary.json \
+          cp download-results/regression-results/performance-summary.json \
             pipeline-dashboard/regression/ || true
 
-          cp download-results/a11y-results.json \
+          cp download-results/regression-results/a11y-results.json \
             pipeline-dashboard/regression/ || true
 
           jq -n \
