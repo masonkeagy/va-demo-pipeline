@@ -864,22 +864,22 @@ async function loadRegressionResults() {
 
     const summary =
       await fetch(
-        "./download-results/regression-summary.json"
+        "./regression/regression-summary.json"
       ).then(r => r.json());
 
     const ai =
       await fetch(
-        "./download-results/ai-review.json"
+        "./regression/ai-review.json"
       ).then(r => r.json());
 
     const perf =
       await fetch(
-        "./download-results/performance-summary.json"
+        "./regression/performance-summary.json"
       ).then(r => r.json());
 
     const a11y =
       await fetch(
-        "./download-results/a11y-results.json"
+        "./regression/a11y-results.json"
       ).then(r => r.json());
 
     document.getElementById(

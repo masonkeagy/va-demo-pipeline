@@ -1821,6 +1821,16 @@ jobs:
           name: regression-test-results-stage-8
           path: ./download-results
 
+      - name: Show Download Structure
+        run: |
+          pwd
+
+          echo "=================================="
+          echo "Everything in current directory"
+          echo "=================================="
+
+          find . -type f
+
 
       - name: Verify Download
         run: |
