@@ -960,23 +960,6 @@ jobs:
           echo "Next Stage: Stage 9a - Deploy to PreProd"
           echo "============================================"
 
-      - name: Copy Regression Results
-        run: |
-
-          mkdir -p pipeline-dashboard/regression
-
-          cp regression-results/regression-summary.json \
-            pipeline-dashboard/regression/ || true
-
-          cp regression-results/ai-review.json \
-            pipeline-dashboard/regression/ || true
-
-          cp regression-results/performance-summary.json \
-            pipeline-dashboard/regression/ || true
-
-          cp regression-results/a11y-results.json \
-            pipeline-dashboard/regression/ || true
-
 # Stage 9A: Deploy to PreProd
   deploy_preprod:
     name: "Stage 9a - Deploy to PreProd"
@@ -1837,6 +1820,23 @@ jobs:
         with:
           name: regression-test-results-stage-8
           path: ./regression-results
+
+      - name: Copy Regression Results
+        run: |
+
+          mkdir -p pipeline-dashboard/regression
+
+          cp regression-results/regression-summary.json \
+            pipeline-dashboard/regression/ || true
+
+          cp regression-results/ai-review.json \
+            pipeline-dashboard/regression/ || true
+
+          cp regression-results/performance-summary.json \
+            pipeline-dashboard/regression/ || true
+
+          cp regression-results/a11y-results.json \
+            pipeline-dashboard/regression/ || true
 
       - name: Verify Download
         run: |
