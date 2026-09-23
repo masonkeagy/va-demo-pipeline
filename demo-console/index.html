@@ -542,6 +542,15 @@ await jobsResponse.json();
 const jobs =
 jobsData.jobs || [];
 
+console.log(
+  "JOBS:",
+  jobs.map(j => ({
+    name: j.name,
+    status: j.status,
+    conclusion: j.conclusion
+  }))
+);
+
 loadActivityFeed(jobs);
 
 const buildJob =
@@ -689,7 +698,9 @@ pipelineStages.map(stage => {
 
 const match =
 jobs.find(j =>
-j.name === stage.id
+  j.name.toLowerCase().includes(
+    stage.label.toLowerCase()
+  )
 );
 
 let css = "";
