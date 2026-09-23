@@ -39,6 +39,10 @@ function createMockExecutionContext({ customerType = null } = {}) {
     };
 }
 
+test("Demo failure for Copilot walkthrough", () => {
+expect(true).toBe(false);
+});
+
 describe("caseForm.js", () => {
     describe("setCasePriority", () => {
         test("VIP customer should have priority set to High (1)", () => {
