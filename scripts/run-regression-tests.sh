@@ -84,8 +84,9 @@ else
   echo "[1/2] Setting up Pytest..."
   
   pip install pytest requests pytest-html
+  npm install -g pa11y
   
-  echo "✓ Pytest installed"
+  echo "✓ Pytest and Pa11y installed"
   echo ""
   
   echo "[2/2] Running Pytest regression tests..."
@@ -97,7 +98,24 @@ else
     --self-contained-html \
     --junit-xml=pytest-results.xml || true
   
+  TOTAL_TESTS=0
+  FAILED_TESTS=0
+
+  if [ -f "pytest-results.xml" ]; then
+
+    TOTAL_TESTS=$(grep -o 'tests="[0-9]*"' pytest-results.xml | head -1 | grep -o '[0-9]*')
+
+    FAILED_TESTS=$(grep -o 'failures="[0-9]*"' pytest-results.xml | head -1 | grep -o '[0-9]*')
+  fi
   echo "✓ Pytest tests completed"
+  echo ""
+  echo "[3/3] Running Accessibility Scan..."
+
+  pa11y "$UAT_URL" \
+    --reporter json \
+    > regression-results/a11y-results.json || true
+
+  echo "✓ Accessibility scan completed"
 fi
 
 echo ""
@@ -115,11 +133,17 @@ else
 fi
 
 # Generate summary
+if [ "$FAILED_TESTS" -gt 0 ]; then
+  TEST_STATUS="failure"
+else
+  TEST_STATUS="success"
+fi
+
 cat > regression-results/regression-summary.json << EOF
 {
-  "status":"$REGRESSION_STATUS",
-  "functionalTests":47,
-  "failedTests":0,
+  "status":"$TEST_STATUS",
+  "functionalTests":$TOTAL_TESTS,
+  "failedTests":$FAILED_TESTS,
   "framework":"$FRAMEWORK",
   "environment":"UAT",
   "timestamp":"$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
@@ -134,11 +158,14 @@ cat > regression-results/ai-review.json << EOF
 }
 EOF
 
+CRITICALS=$(grep -o '"type":"error"' regression-results/a11y-results.json | wc -l)
+
+WARNINGS=$(grep -o '"type":"warning"' regression-results/a11y-results.json | wc -l)
 cat > regression-results/a11y-results.json << EOF
 {
   "status":"pass",
-  "criticalViolations":0,
-  "warnings":2
+  "criticalViolations":$CRITICALS,
+  "warnings":$WARNINGS
 }
 EOF
 
