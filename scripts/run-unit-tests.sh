@@ -114,7 +114,7 @@ if [ -d "tests/WebResources" ]; then
       --coverageThreshold='{"global":{"lines":'"$MIN_COVERAGE"'}}' \
       --reporters=default \
       --reporters=jest-junit \
-      --outputFile=../../test-results/webresource-test-results.xml 2>&1 || true
+      --outputFile=../../test-results/webresource-test-results.xml 2>&1
 
     WR_EXIT_CODE=$?
     cd ../..
