@@ -125,6 +125,18 @@ Because this is still a scaffold, the following are **not implemented yet**:
 - Copilot-based release readiness logic
 - Application Factory provisioning/templates
 
+## GitHub Copilot change chat
+
+The GitHub Pages console now provides a chat interface for repository change
+requests. The page is intentionally static and does not hold GitHub
+credentials. Connect it to a separately hosted GitHub App/API service by
+providing `window.VA_CHAT_API_URL`; the service contract and security
+requirements are documented in `docs/github-copilot-chat-api.md`.
+
+All accepted changes must be delivered through pull requests. The backend must
+authenticate users, authorize repository access, use the Copilot integration
+server-side, and never write directly to `main`.
+
 ---
 
 ## Repository Structure

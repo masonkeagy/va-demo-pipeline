@@ -197,6 +197,69 @@ overflow:auto;
 font-family:Consolas;
 font-size:11px;
 }
+
+.chat{
+display:flex;
+flex-direction:column;
+gap:12px;
+}
+
+.chat-messages{
+height:280px;
+overflow:auto;
+background:#000;
+border:1px solid var(--border);
+border-radius:8px;
+padding:12px;
+}
+
+.chat-message{
+max-width:90%;
+padding:10px 12px;
+border-radius:8px;
+margin-bottom:10px;
+white-space:pre-wrap;
+}
+
+.chat-message.user{
+margin-left:auto;
+background:#244866;
+}
+
+.chat-message.assistant{
+background:var(--surface);
+}
+
+.chat-message.system{
+background:#332f1d;
+color:#ffe6a3;
+font-size:12px;
+}
+
+.chat-form{
+display:flex;
+gap:8px;
+}
+
+.chat-form textarea{
+min-height:72px;
+margin:0;
+resize:vertical;
+}
+
+.chat-form button{
+align-self:flex-end;
+white-space:nowrap;
+}
+
+.chat-result{
+font-size:12px;
+color:var(--muted);
+}
+
+.chat-result a{
+color:var(--primary);
+}
 </style>
 </head>
 
@@ -213,17 +276,22 @@ font-size:11px;
 
 <div class="panel">
 
-<h2>AI Request Intake</h2>
+<h2>GitHub Copilot Change Chat</h2>
 
-<textarea id="requestText">
-Create UAT environment for new release candidate
-</textarea>
+<p style="color:var(--muted);font-size:12px">
+Describe a repository change in plain language. The secure backend reviews the repository with GitHub Copilot and opens a pull request; this page never receives a GitHub token.
+</p>
 
-<button id="analyzeBtn">
-Analyze Request
-</button>
+<div id="chatMessages" class="chat-messages" aria-live="polite">
+<div class="chat-message system">Ready. Ask for a change, test, or investigation.</div>
+</div>
 
-<div id="analysis" style="margin-top:15px"></div>
+<form id="chatForm" class="chat-form">
+<textarea id="chatInput" aria-label="Describe a repository request" placeholder="For example: Add a validation step for the PCF control and open a pull request." required></textarea>
+<button id="sendChatBtn" type="submit">Send</button>
+</form>
+
+<div id="chatResult" class="chat-result"></div>
 
 <hr style="margin:20px 0">
 
@@ -374,36 +442,81 @@ const REPO = "masonkeagy/va-demo-pipeline";
 const API = `https://api.github.com/repos/${REPO}`;
 
 let refreshRunning = false;
+const CHAT_API_URL = window.VA_CHAT_API_URL || "";
 
 function el(id){
 return document.getElementById(id);
 }
 
-function log(msg){
-
-const viewer = el("logViewer");
-
-viewer.innerHTML +=
-`<div>${new Date().toLocaleTimeString()} | ${msg}</div>`;
-
-viewer.scrollTop = viewer.scrollHeight;
+function addChatMessage(role, text){
+  const message = document.createElement("div");
+  message.className = `chat-message ${role}`;
+  message.textContent = text;
+  el("chatMessages").appendChild(message);
+  el("chatMessages").scrollTop = el("chatMessages").scrollHeight;
 }
 
-el("analyzeBtn").addEventListener("click",()=>{
+function setChatBusy(isBusy){
+  el("sendChatBtn").disabled = isBusy;
+  el("chatInput").disabled = isBusy;
+  el("sendChatBtn").textContent = isBusy ? "Working..." : "Send";
+}
 
-const text = el("requestText").value;
+async function submitChatRequest(request){
+  if(!CHAT_API_URL){
+    addChatMessage("system", "Chat is not connected yet. Configure VA_CHAT_API_URL to point to the GitHub App API service.");
+    return;
+  }
 
-el("analysis").innerHTML=
-`
-<b>Intent:</b> Infrastructure Deployment<br>
-<b>Risk:</b> Medium<br>
-<b>Approval Required:</b> Yes<br>
-<b>Execution Path:</b> GitHub Actions<br>
-<b>Estimated Time:</b> 2 Hours
-`;
+  setChatBusy(true);
+  el("chatResult").textContent = "";
 
-log(`AI classified request: ${text}`);
+  try{
+    const response = await fetch(`${CHAT_API_URL.replace(/\/$/, "")}/api/chat`, {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      credentials: "include",
+      body: JSON.stringify({
+        repository: REPO,
+        request,
+        conversationId: el("chatForm").dataset.conversationId || undefined
+      })
+    });
+    const result = await response.json().catch(() => ({}));
 
+    if(!response.ok){
+      throw new Error(result.message || `Request failed (${response.status})`);
+    }
+
+    if(result.conversationId){
+      el("chatForm").dataset.conversationId = result.conversationId;
+    }
+    addChatMessage("assistant", result.message || "The request was accepted.");
+
+    if(result.pullRequest && result.pullRequest.url){
+      const link = document.createElement("a");
+      link.href = result.pullRequest.url;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      link.textContent = `#${result.pullRequest.number} ${result.pullRequest.title || ""}`;
+      el("chatResult").textContent = "Pull request created: ";
+      el("chatResult").appendChild(link);
+    }
+  }catch(error){
+    addChatMessage("system", error.message);
+  }finally{
+    setChatBusy(false);
+  }
+}
+
+el("chatForm").addEventListener("submit", event => {
+  event.preventDefault();
+  const input = el("chatInput");
+  const request = input.value.trim();
+  if(!request) return;
+  addChatMessage("user", request);
+  input.value = "";
+  submitChatRequest(request);
 });
 
 async function loadPRs(){
