@@ -325,31 +325,45 @@ def plot_numeric_distribution(df: pd.DataFrame, sheet_name: str = "Sheet", outpu
 def plot_sheet_comparison(summary_df: pd.DataFrame, output_path: str = "chart_sheet_comparison.png") -> str:
     """
     Create a comparison bar chart showing rows/columns across all sheets.
-    
+
     Args:
         summary_df: DataFrame from summarize_sheets() function
         output_path: Where to save the chart
-        
+
     Returns:
         Path to the saved chart image
     """
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
-    
+
     if summary_df.empty or 'Sheet Name' not in summary_df.columns:
-        # Handle empty/no-data case gracefully
-        ax1.text(0.5, 0.5, 'No Data Available', 
-                  horizontalalignment='center', verticalalignment='center',
-                  fontsize=14, transform=ax1.transAxes)
-        ax2.text(0.5, 0.5, 'No Data Available', 
-                  horizontalalignment='center', verticalalignment='center',
-                  fontsize=14, transform=ax2.transAxes)
+        ax1.text(0.5, 0.5, 'No Data Available',
+                 horizontalalignment='center', verticalalignment='center',
+                 fontsize=14, transform=ax1.transAxes)
+        ax2.text(0.5, 0.5, 'No Data Available',
+                 horizontalalignment='center', verticalalignment='center',
+                 fontsize=14, transform=ax2.transAxes)
     else:
-        # Chart 1: Row counts per sheet
-        ax1.bar(summary_df['Sheet Name'], summary_df['Rows'], color='steelblue')
+        sheet_names = summary_df['Sheet Name'].astype(str)
+        row_counts = summary_df['Rows'] if 'Rows' in summary_df.columns else pd.Series([0] * len(sheet_names), index=summary_df.index)
+        col_counts = summary_df['Columns'] if 'Columns' in summary_df.columns else pd.Series([0] * len(sheet_names), index=summary_df.index)
+
+        ax1.bar(sheet_names, row_counts, color='steelblue')
         ax1.set_title('Row Count by Sheet')
         ax1.set_ylabel('Number of Rows')
         ax1.set_xlabel('Sheet Name')
-        ax1.tick_params
+        ax1.tick_params(axis='x', rotation=45)
+
+        ax2.bar(sheet_names, col_counts, color='darkorange')
+        ax2.set_title('Column Count by Sheet')
+        ax2.set_ylabel('Number of Columns')
+        ax2.set_xlabel('Sheet Name')
+        ax2.tick_params(axis='x', rotation=45)
+
+    fig.suptitle('Sheet Comparison Overview')
+    plt.tight_layout()
+    plt.savefig(output_path, dpi=100)
+    plt.close(fig)
+    return output_path
 
 
 def generate_all_visualizations(sheets: Dict[str, pd.DataFrame], output_dir: str = ".") -> List[str]:
