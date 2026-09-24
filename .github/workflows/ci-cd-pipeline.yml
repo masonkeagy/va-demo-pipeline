@@ -619,12 +619,12 @@ jobs:
       - dast_security_scan
     environment:
       name: uat
-      url: https://uat.placeholder.com
+      url: https://masonkeagy.github.io/va-demo-pipeline/
     permissions:
       contents: read
       id-token: write
     env:
-      UAT_URL: "https://uat.placeholder.com"
+      UAT_URL: "https://masonkeagy.github.io/va-demo-pipeline/"
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -838,7 +838,7 @@ jobs:
       - deploy_uat
       - build_and_sign
     env:
-      UAT_URL: "https://uat.placeholder.com"
+      UAT_URL: "https://masonkeagy.github.io/va-demo-pipeline/"
       APP_TYPE: ${{ vars.APP_TYPE }}
     steps:
       - name: Checkout Code

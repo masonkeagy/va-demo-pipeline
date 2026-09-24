@@ -8,28 +8,20 @@
  * ============================================
  */
 
-const { setCasePriority, clearVipNotification } = require("../../src/WebResources/javascript/caseForm");
+const { setCasePriority, showVipNotification, clearVipNotification } = require("../../src/WebResources/caseForm");
 
 /**
  * Helper to build a mock Xrm executionContext with
  * configurable attribute values.
  */
-function createMockExecutionContext({
-    customerType = null,
-    includeCustomerType = true,
-    includePriority = true,
-} = {}) {
+function createMockExecutionContext({ customerType = null } = {}) {
     const attributes = {
-        ...(includeCustomerType && {
-            customer_type: {
-                getValue: jest.fn(() => customerType),
-            },
-        }),
-        ...(includePriority && {
-            prioritycode: {
-                setValue: jest.fn(),
-            },
-        }),
+        customer_type: {
+            getValue: jest.fn(() => customerType),
+        },
+        prioritycode: {
+            setValue: jest.fn(),
+        },
     };
 
     const formContext = {
@@ -46,6 +38,11 @@ function createMockExecutionContext({
         _formContext: formContext,
     };
 }
+
+
+test("Demo failure for Copilot walkthrough", () => {
+expect(true).toBe(false);
+});
 
 describe("caseForm.js", () => {
     describe("setCasePriority", () => {
@@ -78,7 +75,7 @@ describe("caseForm.js", () => {
         });
 
         test("Missing customer_type attribute should not throw", () => {
-            const executionContext = createMockExecutionContext({ includeCustomerType: false });
+            const executionContext = createMockExecutionContext({ customerType: null });
 
             expect(() => setCasePriority(executionContext)).not.toThrow();
         });
