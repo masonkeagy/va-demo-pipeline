@@ -295,74 +295,6 @@ Describe a repository change in plain language. The secure backend reviews the r
 
 <hr style="margin:20px 0">
 
-<h2>GitHub</h2>
-
-<p>
-Repository:
-<b>masonkeagy/va-demo-pipeline</b>
-</p>
-
-<div style="display:flex;gap:10px;flex-wrap:wrap;">
-
-<label for="githubActionSelect">
-GitHub Action
-</label>
-
-<select id="githubActionSelect"
-style="
-flex:1;
-background:var(--surface);
-color:white;
-border:1px solid var(--border);
-padding:10px;
-border-radius:8px;
-">
-
-<option value="pr">Create Pull Request</option>
-
-<option value="jira">
-Create JIRA Ticket
-</option>
-
-<option value="workflow">
-Schedule Workflow
-</option>
-
-<option value="runs">
-Check Workflow Runs
-</option>
-
-<option value="actions">
-View GitHub Actions
-</option>
-
-<option value="issues">
-Create GitHub Issue
-</option>
-
-<option value="releases">
-Create Release
-</option>
-
-<option value="security">
-View Security Findings
-</option>
-
-</select>
-
-<button
-id="launchActionBtn">
-Launch
-</button>
-
-</div>
-
-<br><br>
-
-<button id="refreshBtn">
-Refresh Now
-</button>
-
 </div>
 
 <div class="panel">
@@ -796,7 +728,7 @@ label:"Production"
 },
 {
 id:"Stage 10 - Smoke Tests and Rollback",
-label:"Smoke Tests"
+label:"Smoke Tests & Rollback"
 },
 {
 id:"Stage 11 - Monitoring Active",

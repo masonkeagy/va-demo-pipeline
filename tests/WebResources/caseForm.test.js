@@ -52,6 +52,7 @@ describe("caseForm.js", () => {
             expect(executionContext._attributes.prioritycode.setValue).toHaveBeenCalledWith(1);
         });
 
+
         test("VIP customer should trigger a form notification", () => {
             const executionContext = createMockExecutionContext({ customerType: "VIP" });
 
