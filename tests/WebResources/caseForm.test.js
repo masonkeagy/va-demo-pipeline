@@ -72,6 +72,10 @@ describe("caseForm.js", () => {
             expect(executionContext._attributes.prioritycode.setValue).not.toHaveBeenCalled();
         });
 
+        test("Demo failure for Copilot walkthrough", () => {
+            expect(true).toBe(false);
+        });
+
         test("Missing customer_type attribute should not throw", () => {
             const executionContext = createMockExecutionContext({ includeCustomerType: false });
 
