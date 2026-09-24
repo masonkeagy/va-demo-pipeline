@@ -52,13 +52,6 @@ describe("caseForm.js", () => {
             expect(executionContext._attributes.prioritycode.setValue).toHaveBeenCalledWith(1);
         });
 
-        
-        
-        test("Demo failure for Copilot walkthrough", () => {
-            expect(true).toBe(false);
-        });
-
-
         test("VIP customer should trigger a form notification", () => {
             const executionContext = createMockExecutionContext({ customerType: "VIP" });
 
