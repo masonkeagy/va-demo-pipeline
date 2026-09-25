@@ -802,11 +802,15 @@ id:"Stage 9b - Deploy to Production",
 label:"Production"
 },
 {
-id:"Stage 10 - Smoke Tests and Rollback",
-label:"Smoke Tests & Rollback"
+id:"Stage 10 - Smoke Tests",
+label:"Smoke Tests"
 },
 {
-id:"Stage 11 - Monitoring Active",
+id:"Stage 11 - Rollback",
+label:"Rollback"
+},
+{
+id:"Stage 12 - Monitoring Active",
 label:"Monitoring"
 }
 ];
@@ -871,7 +875,7 @@ el("stages").innerHTML =
 stageHtml;
 
 el("progress").textContent =
-`${passed}/13`;
+`${passed}/14`;
 
 el("updated").textContent =
 new Date(run.updated_at)

@@ -1420,9 +1420,9 @@ jobs:
           echo "Next Stage: Stage 10 - Smoke Tests and Rollback"
           echo "============================================"
 
-# Stage 10: Smoke Tests + Automated Rollback
+# Stage 10: Smoke Tests
   smoke_tests:
-    name: "Stage 10 - Smoke Tests and Rollback"
+    name: "Stage 10 - Smoke Tests"
     runs-on: ubuntu-latest
     needs:
       - deploy_prod
@@ -1490,6 +1490,83 @@ jobs:
           else
             echo "⚠ Validation file not found"
           fi
+
+      
+      # ============================================
+      # Upload Smoke Test Artifacts
+      # ============================================
+      - name: Upload Smoke Test Artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-test-artifacts
+          path: |
+            smoke-results.json
+            production-validation.json
+            rollback-artifacts/
+            incident-records/
+            notifications/
+          retention-days: 30
+
+      # ============================================
+      # Stage Summary
+      # ============================================
+      - name: Smoke Test Summary
+        if: always()
+        run: |
+          echo ""
+          echo "============================================"
+          echo "Stage 10: Smoke Tests and Rollback Complete"
+          echo "============================================"
+          echo ""
+          echo "Smoke Test Status:  ✓ SUCCESS"
+          echo "Environment:        Production"
+          echo "Application:        va-demo-pipeline"
+          echo "Version:            ${{ needs.build_and_sign.outputs.artifact-version }}"
+          echo ""
+          echo "Validation Areas:"
+          echo "  • Homepage availability"
+          echo "  • API health"
+          echo "  • Authentication"
+          echo "  • Database connectivity"
+          echo ""
+          echo "Rollback Status:"
+          echo "  • Rollback Required: NO"
+          echo "  • Stable Release: ACTIVE"
+          echo ""
+          echo "Artifacts:"
+          echo "  • smoke-results.json"
+          echo "  • production-validation.json"
+          echo "  • rollback-artifacts/"
+          echo "  • incident-records/"
+          echo "  • notifications/"
+          echo ""
+          echo "Pipeline Status: ✓ ON TRACK"
+          echo "============================================"
+          echo ""
+          echo "Next Stage: Stage 11 - Monitoring and Telemetry"
+          echo "============================================"
+
+  rollback_validation:
+    name: "Stage 11 - Automated Rollback"
+    runs-on: ubuntu-latest
+
+    needs:
+      - smoke_tests
+      - build_and_sign
+
+    if: failure() || always()
+
+    steps:
+
+      - name: Rollback Assessment
+        run: |
+
+          echo "============================================"
+          echo "Stage 11 - Rollback Assessment"
+          echo "============================================"
+
+          echo "Rollback readiness evaluated"
 
       # ============================================
       # Azure Login for Rollback
@@ -1565,60 +1642,11 @@ jobs:
           EOF
           cat notifications/ops-alert.txt
 
-      # ============================================
-      # Upload Smoke Test Artifacts
-      # ============================================
-      - name: Upload Smoke Test Artifacts
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: smoke-test-artifacts
-          path: |
-            smoke-results.json
-            production-validation.json
-            rollback-artifacts/
-            incident-records/
-            notifications/
-          retention-days: 30
 
-      # ============================================
-      # Stage Summary
-      # ============================================
-      - name: Smoke Test Summary
-        if: always()
+      - name: Rollback Summary
         run: |
-          echo ""
-          echo "============================================"
-          echo "Stage 10: Smoke Tests and Rollback Complete"
-          echo "============================================"
-          echo ""
-          echo "Smoke Test Status:  ✓ SUCCESS"
-          echo "Environment:        Production"
-          echo "Application:        va-demo-pipeline"
-          echo "Version:            ${{ needs.build_and_sign.outputs.artifact-version }}"
-          echo ""
-          echo "Validation Areas:"
-          echo "  • Homepage availability"
-          echo "  • API health"
-          echo "  • Authentication"
-          echo "  • Database connectivity"
-          echo ""
-          echo "Rollback Status:"
-          echo "  • Rollback Required: NO"
-          echo "  • Stable Release: ACTIVE"
-          echo ""
-          echo "Artifacts:"
-          echo "  • smoke-results.json"
-          echo "  • production-validation.json"
-          echo "  • rollback-artifacts/"
-          echo "  • incident-records/"
-          echo "  • notifications/"
-          echo ""
-          echo "Pipeline Status: ✓ ON TRACK"
-          echo "============================================"
-          echo ""
-          echo "Next Stage: Stage 11 - Monitoring and Telemetry"
-          echo "============================================"
+
+          echo "Rollback stage complete"
 
 # Stage 11: Monitoring + Telemetry
   monitoring_summary:
