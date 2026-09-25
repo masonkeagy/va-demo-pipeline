@@ -1,0 +1,8 @@
+{
+  "status":"failure",
+  "functionalTests":0,
+  "failedTests":1,
+  "framework":"pytest",
+  "environment":"UAT",
+  "timestamp":"2026-09-25T15:56:50Z"
+}

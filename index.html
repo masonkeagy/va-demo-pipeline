@@ -1,0 +1,1319 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<title>VA AI Platform Engineering Demo</title>
+
+<style>
+:root{
+--bg:#08121c;
+--panel:#121d28;
+--surface:#1a2837;
+--border:#33495d;
+--text:#f5f8fc;
+--muted:#91bad9;
+--heading:#a9cdec;
+--primary:#76b8ec;
+--success:#66d69a;
+--failure:#ff8580;
+--accent:#4dd0e1;
+}
+
+*{box-sizing:border-box}
+
+body{
+margin:0;
+background:var(--bg);
+color:var(--text);
+font:14px system-ui;
+}
+
+.container{
+max-width:1600px;
+margin:auto;
+padding:20px;
+}
+
+.header{
+background:var(--panel);
+border:2px solid var(--border);
+border-radius:12px;
+padding:24px;
+margin-bottom:20px;
+text-align:center;
+}
+
+.header h1{
+margin:0 0 10px;
+color:var(--heading);
+}
+
+.layout{
+display:grid;
+grid-template-columns:400px 1fr;
+gap:20px;
+}
+
+@media(max-width:1100px){
+.layout{
+grid-template-columns:1fr;
+}
+}
+
+.panel{
+background:var(--panel);
+border:2px solid var(--border);
+border-radius:12px;
+padding:20px;
+}
+
+h2{
+margin-top:0;
+color:var(--heading);
+}
+
+button,a.button{
+background:var(--primary);
+color:#000;
+font-weight:700;
+padding:10px 14px;
+border:none;
+border-radius:8px;
+cursor:pointer;
+text-decoration:none;
+display:inline-block;
+}
+
+textarea{
+width:100%;
+min-height:100px;
+background:var(--surface);
+border:1px solid var(--border);
+border-radius:8px;
+padding:10px;
+color:white;
+margin-bottom:12px;
+}
+
+.status{
+display:flex;
+align-items:center;
+gap:10px;
+margin-bottom:20px;
+font-weight:bold;
+}
+
+.dot{
+width:14px;
+height:14px;
+border-radius:50%;
+}
+
+.idle{background:#777;}
+.running{background:var(--accent);}
+.success{background:var(--success);}
+.failure{background:var(--failure);}
+
+.stats{
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:10px;
+margin-bottom:20px;
+}
+
+.stat{
+background:var(--surface);
+padding:15px;
+border-radius:8px;
+text-align:center;
+}
+
+.stat-value{
+font-size:26px;
+font-weight:bold;
+color:var(--accent);
+}
+
+.current-run{
+padding:15px;
+background:var(--surface);
+border-radius:8px;
+margin-bottom:20px;
+}
+
+.stages{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+gap:10px;
+}
+
+#GithubSection {
+  display: none;
+}
+
+.stage{
+background:var(--surface);
+border:2px solid var(--border);
+border-radius:8px;
+padding:10px;
+text-align:center;
+}
+
+.stage.success{
+border-color:var(--success);
+}
+
+.stage.failure{
+border-color:var(--failure);
+}
+
+.stage.running{
+border-color:var(--accent);
+box-shadow:0 0 12px rgba(77,208,225,.3);
+}
+
+.stage-name{
+font-weight:bold;
+font-size:12px;
+margin-bottom:10px;
+}
+
+.stage-status{
+font-size:11px;
+}
+
+.pr-card{
+background:var(--surface);
+border-left:4px solid var(--border);
+padding:12px;
+margin-bottom:10px;
+border-radius:6px;
+}
+
+.log{
+background:#000;
+padding:12px;
+border-radius:8px;
+height:250px;
+overflow:auto;
+font-family:Consolas;
+font-size:11px;
+}
+
+.chat{
+display:flex;
+flex-direction:column;
+gap:12px;
+}
+
+.chat-messages{
+height:280px;
+overflow:auto;
+background:#000;
+border:1px solid var(--border);
+border-radius:8px;
+padding:12px;
+}
+
+.chat-message{
+max-width:90%;
+padding:10px 12px;
+border-radius:8px;
+margin-bottom:10px;
+white-space:pre-wrap;
+}
+
+.chat-message.user{
+margin-left:auto;
+background:#244866;
+}
+
+.chat-message.assistant{
+background:var(--surface);
+}
+
+.chat-message.system{
+background:#332f1d;
+color:#ffe6a3;
+font-size:12px;
+}
+
+.chat-form{
+display:flex;
+gap:8px;
+}
+
+.chat-form textarea{
+min-height:72px;
+margin:0;
+resize:vertical;
+}
+
+.chat-form button{
+align-self:flex-end;
+white-space:nowrap;
+}
+
+.chat-result{
+font-size:12px;
+color:var(--muted);
+}
+
+.chat-result a{
+color:var(--primary);
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<header class="header">
+<h1>VA AI Platform Engineering Demo</h1>
+<p>AI Request → GitHub PR → Pipeline → Deployment</p>
+</header>
+
+<div class="layout">
+
+<div class="panel">
+
+<h2>GitHub Copilot Change Chat</h2>
+
+<p style="color:var(--muted);font-size:12px">
+Describe a repository change in plain language. The secure backend reviews the repository with GitHub Copilot and opens a pull request; this page never receives a GitHub token.
+</p>
+
+<div id="chatMessages" class="chat-messages" aria-live="polite">
+<div class="chat-message system">Ready. Ask for a change, test, or investigation.</div>
+</div>
+
+<form id="chatForm" class="chat-form">
+<textarea id="chatInput" aria-label="Describe a repository request" placeholder="For example: Add a validation step for the PCF control and open a pull request." required></textarea>
+<button id="sendChatBtn" type="submit">Send</button>
+</form>
+
+<div id="chatResult" class="chat-result"></div>
+
+<hr style="margin:20px 0">
+
+<div class="current-run">
+
+  <h3>Regression Results</h3>
+
+  <div id="regressionResults">
+
+    Loading regression results...
+
+  </div>
+
+</div>
+
+<div id = "GithubSection">
+<h2>GitHub</h2>
+
+<p>
+Repository:
+<b>masonkeagy/va-demo-pipeline</b>
+</p>
+
+<div style="display:flex;gap:10px;flex-wrap:wrap;">
+
+<label for="githubActionSelect">
+GitHub Action
+</label>
+
+<select id="githubActionSelect"
+style="
+flex:1;
+background:var(--surface);
+color:white;
+border:1px solid var(--border);
+padding:10px;
+border-radius:8px;
+">
+
+<option value="pr">Create Pull Request</option>
+
+<option value="jira">
+Create JIRA Ticket
+</option>
+
+<option value="workflow">
+Schedule Workflow
+</option>
+
+<option value="runs">
+Check Workflow Runs
+</option>
+
+<option value="actions">
+View GitHub Actions
+</option>
+
+<option value="issues">
+Create GitHub Issue
+</option>
+
+<option value="releases">
+Create Release
+</option>
+
+<option value="security">
+View Security Findings
+</option>
+
+</select>
+
+<button
+id="launchActionBtn">
+Launch
+</button>
+
+</div>
+
+<br><br>
+
+<button id="refreshBtn">
+Refresh Now
+</button>
+
+</div>
+
+</div>
+
+<div class="panel">
+
+<h2>Pipeline Monitor</h2>
+
+<div class="status">
+<div id="statusDot" class="dot idle"></div>
+<div id="statusText">Loading...</div>
+</div>
+
+<div class="stats">
+<div class="stat">
+<div id="totalPRs" class="stat-value">0</div>
+<div>PRs</div>
+</div>
+
+<div class="stat">
+<div id="progress" class="stat-value">0</div>
+<div>Stages</div>
+</div>
+
+<div class="stat">
+<div id="updated" class="stat-value">--</div>
+<div>Updated</div>
+</div>
+</div>
+
+<div class="current-run" id="runInfo">
+Loading run information...
+</div>
+
+<div class="stages" id="stages">
+</div>
+
+<br>
+
+<div
+class="log"
+id="activityFeed">
+
+Loading GitHub activity...
+
+</div>
+
+</div>
+
+</div>
+
+<br>
+
+<div class="panel">
+
+<h2>Recent Pull Requests</h2>
+
+<div id="prs"></div>
+
+</div>
+
+</div>
+
+<script>
+
+const REPO = "masonkeagy/va-demo-pipeline";
+const API = `https://api.github.com/repos/${REPO}`;
+
+let refreshRunning = false;
+const CHAT_API_URL = window.VA_CHAT_API_URL || "";
+
+function el(id){
+return document.getElementById(id);
+}
+
+function addChatMessage(role, text){
+  const message = document.createElement("div");
+  message.className = `chat-message ${role}`;
+  message.textContent = text;
+  el("chatMessages").appendChild(message);
+  el("chatMessages").scrollTop = el("chatMessages").scrollHeight;
+}
+
+function setChatBusy(isBusy){
+  el("sendChatBtn").disabled = isBusy;
+  el("chatInput").disabled = isBusy;
+  el("sendChatBtn").textContent = isBusy ? "Working..." : "Send";
+}
+
+async function submitChatRequest(request){
+  if(!CHAT_API_URL){
+    addChatMessage("system", "Chat is not connected yet. Configure VA_CHAT_API_URL to point to the GitHub App API service.");
+    return;
+  }
+
+  setChatBusy(true);
+  el("chatResult").textContent = "";
+
+  try{
+    const response = await fetch(`${CHAT_API_URL.replace(/\/$/, "")}/api/chat`, {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      credentials: "include",
+      body: JSON.stringify({
+        repository: REPO,
+        request,
+        conversationId: el("chatForm").dataset.conversationId || undefined
+      })
+    });
+    const result = await response.json().catch(() => ({}));
+
+    if(!response.ok){
+      throw new Error(result.message || `Request failed (${response.status})`);
+    }
+
+    if(result.conversationId){
+      el("chatForm").dataset.conversationId = result.conversationId;
+    }
+    addChatMessage("assistant", result.message || "The request was accepted.");
+
+    if(result.pullRequest && result.pullRequest.url){
+      const link = document.createElement("a");
+      link.href = result.pullRequest.url;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      link.textContent = `#${result.pullRequest.number} ${result.pullRequest.title || ""}`;
+      el("chatResult").textContent = "Pull request created: ";
+      el("chatResult").appendChild(link);
+    }
+  }catch(error){
+    addChatMessage("system", error.message);
+  }finally{
+    setChatBusy(false);
+  }
+}
+
+el("chatForm").addEventListener("submit", event => {
+  event.preventDefault();
+  const input = el("chatInput");
+  const request = input.value.trim();
+  if(!request) return;
+  addChatMessage("user", request);
+  input.value = "";
+  submitChatRequest(request);
+});
+
+async function loadPRs(){
+console.log("PRS", prs);
+try{
+
+const response =
+await fetch(
+`${API}/pulls?state=all&per_page=10`
+);
+
+const prs = await response.json();
+
+if (!Array.isArray(prs)) {
+  return;
+}
+
+el("totalPRs").textContent =
+prs.length;
+
+prs.sort(
+  (a,b) =>
+    new Date(b.updated_at) -
+    new Date(a.updated_at)
+);
+
+el("prs").innerHTML =
+prs.map(pr => {
+
+const created =
+new Date(pr.created_at)
+.toLocaleString();
+
+const updated =
+new Date(pr.updated_at)
+.toLocaleString();
+
+return `
+<div class="pr-card">
+
+  <div style="font-weight:bold;font-size:14px;">
+    PR #${pr.number}
+  </div>
+
+  <div style="margin:6px 0;color:var(--heading);">
+    ${pr.title}
+  </div>
+
+  <div style="font-size:11px;color:var(--muted);">
+
+    Status: ${pr.state.toUpperCase()}
+
+    <br>
+
+    Author: ${pr.user.login}
+
+    <br>
+
+    Branch: ${pr.head.ref}
+
+    <br>
+
+    Created: ${created}
+
+    <br>
+
+    Last Updated: ${updated}
+
+  </div>
+
+</div>
+`;
+
+}).join("");
+
+
+}catch(e){
+}
+
+}
+
+async function loadPipeline(){
+
+try{
+
+
+const activityItems = [];
+
+const runsResponse =
+await fetch(
+`${API}/actions/runs?per_page=50`
+);
+
+const runsData =
+await runsResponse.json();
+
+if (!runsData.workflow_runs) {
+
+  console.warn(
+    "GitHub rate limited"
+  );
+
+  return;
+}
+
+
+console.log("RUNS", runsData);
+
+/*
+LOOK FOR THE REAL PIPELINE
+NOT THE GITHUB PAGES WORKFLOW
+*/
+console.log(runsData.workflow_runs);
+
+const run =
+runsData.workflow_runs.find(r =>
+    r.path &&
+    r.path.includes("main.yml")
+)
+||
+runsData.workflow_runs.find(r =>
+    r.name &&
+    r.name.includes("Pipeline")
+)
+||
+runsData.workflow_runs[0];
+
+const jobsResponse =
+await fetch(
+`${API}/actions/runs/${run.id}/jobs`
+);
+
+const jobsData =
+await jobsResponse.json();
+
+const jobs =
+jobsData.jobs || [];
+
+console.log(
+  "JOBS:",
+  jobs.map(j => ({
+    name: j.name,
+    status: j.status,
+    conclusion: j.conclusion
+  }))
+);
+
+loadActivityFeed(jobs);
+
+const buildJob =
+jobs.find(j =>
+j.name.includes("Build")
+);
+
+if(buildJob &&
+buildJob.conclusion === "success"){
+
+activityItems.push({
+icon:"📦",
+message:"Build Artifact Created"
+});
+
+}
+
+const securityJob =
+jobs.find(j =>
+j.name.includes("Security")
+);
+
+if(securityJob &&
+securityJob.conclusion === "success"){
+
+activityItems.push({
+icon:"🛡️",
+message:"Security Scan Completed"
+});
+
+}
+
+
+const uatJob =
+jobs.find(j =>
+j.name.includes("UAT")
+);
+
+if(uatJob &&
+uatJob.conclusion === "success"){
+
+activityItems.push({
+icon:"✅",
+message:"Deployment Approved for UAT"
+});
+
+}
+
+
+const prodJob =
+jobs.find(j =>
+j.name.includes("Production")
+);
+
+if(prodJob &&
+prodJob.conclusion === "success"){
+
+activityItems.push({
+icon:"🚀",
+message:"Production Deployment Complete"
+});
+
+}
+``
+
+
+const monitoringJob =
+jobs.find(j =>
+j.name.includes("Monitoring")
+);
+
+if(monitoringJob &&
+monitoringJob.conclusion === "success"){
+
+activityItems.push({
+icon:"📈",
+message:"Application Monitoring Active"
+});
+
+}
+``
+
+/*
+FORCE THE 12 STAGES TO ALWAYS EXIST
+*/
+const pipelineStages = [
+{
+id:"Stage 1 - PR Validation",
+label:"PR Validation"
+},
+{
+id:"Stage 2 - Unit Tests",
+label:"Unit Tests"
+},
+{
+id:"Stage 3 - Security Scanning",
+label:"Security Scan"
+},
+{
+id:"Stage 4 - Build and Artifact Signing",
+label:"Build & Sign"
+},
+{
+id:"Stage 5 - Deploy to Dev",
+label:"Deploy Dev"
+},
+{
+id:"Stage 6 - Integration Tests",
+label:"Integration Tests"
+},
+{
+id:"Stage 6b - DAST Security Scan",
+label:"DAST Security Scan"
+},
+{
+id:"Stage 7 - Deploy to TEST/UAT",
+label:"Deploy UAT"
+},
+{
+id:"Stage 8 - Regression Testing",
+label:"Regression"
+},
+{
+id:"Stage 9a - Deploy to PreProd",
+label:"PreProd"
+},
+{
+id:"Stage 9b - Deploy to Production",
+label:"Production"
+},
+{
+id:"Stage 10 - Smoke Tests",
+label:"Smoke Tests"
+},
+{
+id:"Stage 11 - Automated Rollback",
+label:"Rollback"
+},
+{
+id:"Stage 12 - Monitoring Active",
+label:"Monitoring"
+}
+];
+
+let passed = 0;
+
+const stageHtml =
+pipelineStages.map(stage => {
+
+const match =
+jobs.find(j =>
+  j.name === stage.id
+);
+
+let css = "";
+let status = "WAITING";
+
+if(match){
+
+if(match.status === "in_progress"){
+
+css = "running";
+status = "RUNNING";
+
+}
+else if(match.conclusion === "success"){
+
+css = "success";
+status = "SUCCESS";
+passed++;
+
+}
+else if(match.conclusion === "failure"){
+
+css = "failure";
+status = "FAILED";
+
+}
+else if(match.status === "completed"){
+
+status =
+match.conclusion || "DONE";
+
+}
+
+}
+
+return `
+<div class="stage ${css}">
+<div class="stage-name">
+${stage.label}
+</div>
+<div class="stage-status">
+${status}
+</div>
+</div>
+`;
+
+}).join("");
+
+el("stages").innerHTML =
+stageHtml;
+
+el("progress").textContent =
+`${passed}/14`;
+
+el("updated").textContent =
+new Date(run.updated_at)
+.toLocaleTimeString();
+
+const started =
+new Date(run.created_at);
+
+const ended =
+run.updated_at
+  ? new Date(run.updated_at)
+  : new Date();
+
+const durationMs =
+ended - started;
+
+const durationSeconds =
+Math.floor(durationMs / 1000);
+
+const hours =
+Math.floor(durationSeconds / 3600);
+
+const minutes =
+Math.floor((durationSeconds % 3600) / 60);
+
+const seconds =
+durationSeconds % 60;
+
+const duration =
+hours > 0
+  ? `${hours}h ${minutes}m ${seconds}s`
+  : `${minutes}m ${seconds}s`;
+
+
+let conclusionColor = "#91bad9";
+ 
+if(run.conclusion === "success")
+    conclusionColor = "#66d69a";
+ 
+if(run.conclusion === "failure")    
+    conclusionColor = "#ff8580";
+
+el("runInfo").innerHTML =
+`
+<b>Workflow:</b>
+${run.name}
+<br>
+
+<b>Branch:</b>
+${run.head_branch}
+<br>
+
+<b>Run #:</b>
+${run.run_number}
+<br>
+
+<b>Duration:</b>
+${duration}
+<br>
+
+<b>Conclusion:</b>
+${run.conclusion || "IN PROGRESS"}
+`;
+
+let pipelineState = "idle";
+
+if(
+jobs.some(
+j => j.status === "in_progress"
+)
+){
+pipelineState = "running";
+}
+else if(
+jobs.some(
+j => j.conclusion === "failure"
+)
+){
+pipelineState = "failure";
+}
+else if(
+passed === 12
+){
+pipelineState = "success";
+}
+
+el("statusDot").className =
+`dot ${pipelineState}`;
+
+el("statusText").textContent =
+pipelineState.toUpperCase();
+
+}catch(e){
+
+console.error(e);
+
+el("statusDot").className =
+"dot failure";
+
+el("statusText").textContent =
+"GitHub API Error";
+
+}
+
+}
+
+async function loadRegressionResults() {
+
+  try {
+
+    const summary =
+      await fetch(
+        "./regression/regression-summary.json"
+      ).then(r => r.json());
+
+    const ai =
+      await fetch(
+        "./regression/ai-review.json"
+      ).then(r => r.json());
+
+    const perf =
+      await fetch(
+        "./regression/performance-summary.json"
+      ).then(r => r.json());
+
+    const a11y =
+      await fetch(
+        "./regression/a11y-results.json"
+      ).then(r => r.json());
+
+    document.getElementById(
+      "regressionResults"
+    ).innerHTML = `
+
+      <div>
+
+        <b>Functional Tests</b><br>
+
+        Status:
+        ${summary.status}<br>
+
+        Tests:
+        ${summary.functionalTests}<br>
+
+        Failed:
+        ${summary.failedTests}
+
+        <hr>
+
+        <b>Accessibility</b><br>
+
+        Critical Violations:
+        ${a11y.criticalViolations}<br>
+
+        Warnings:
+        ${a11y.warnings}
+
+        <hr>
+
+        <b>Performance</b><br>
+
+        Avg Response:
+        ${perf.avgResponseMs}ms<br>
+
+        P95:
+        ${perf.p95}ms
+
+        <hr>
+
+        <b>AI Review</b><br>
+
+        Risk:
+        ${ai.risk}<br>
+
+        Recommendation:
+        ${ai.recommendation}<br>
+
+        Confidence:
+        ${ai.confidence}
+
+      </div>
+
+    `;
+
+  }
+  catch {
+
+    document.getElementById(
+      "regressionResults"
+    ).innerHTML =
+      "Regression results unavailable";
+
+  }
+
+}
+
+
+
+function loadActivityFeed(jobs = []) {
+
+  console.log("ACTIVITY FEED JOBS", jobs);
+  const activityItems = [];
+
+  if (
+    jobs.find(j =>
+      j.name.includes("PR Validation") &&
+      j.conclusion === "success"
+    )
+  ) {
+    activityItems.push({
+      icon: "✅",
+      message: "Pull Request Validation Completed"
+    });
+  }
+
+  if (
+    jobs.find(j =>
+      j.name.includes("Unit Tests") &&
+      j.conclusion === "success"
+    )
+  ) {
+    activityItems.push({
+      icon: "🧪",
+      message: "Unit Testing Passed"
+    });
+  }
+
+  if (
+    jobs.find(j =>
+      j.name.includes("Security") &&
+      j.conclusion === "success"
+    )
+  ) {
+    activityItems.push({
+      icon: "🛡️",
+      message: "CodeQL & Security Scans Passed"
+    });
+  }
+
+  if (
+    jobs.find(j =>
+      j.name.includes("Build") &&
+      j.conclusion === "success"
+    )
+  ) {
+    activityItems.push({
+      icon: "📦",
+      message: "Build Artifact Created"
+    });
+  }
+
+  if (
+    jobs.find(j =>
+      j.name.includes("Deploy to Dev") &&
+      j.conclusion === "success"
+    )
+  ) {
+    activityItems.push({
+      icon: "🚀",
+      message: "Application Successfully Deployed To Dev"
+    });
+  }
+
+  if (
+    jobs.find(j =>
+      j.name.includes("Integration") &&
+      j.conclusion === "success"
+    )
+  ) {
+    activityItems.push({
+      icon: "🔗",
+      message: "Integration Testing Complete"
+    });
+  }
+
+  if (
+    jobs.find(j =>
+      j.name.includes("DAST") &&
+      j.conclusion === "success"
+    )
+  ) {
+    activityItems.push({
+      icon: "🔍",
+      message: "DAST Security Scan Complete"
+    });
+  }
+
+  if (
+    jobs.find(j =>
+      j.name.includes("UAT") &&
+      j.conclusion === "success"
+    )
+  ) {
+    activityItems.push({
+      icon: "👀",
+      message: "Deployment Approved For UAT"
+    });
+  }
+
+  if (
+    jobs.find(j =>
+      j.name.includes("Regression") &&
+      j.conclusion === "success"
+    )
+  ) {
+    activityItems.push({
+      icon: "📋",
+      message: "Regression Testing Passed"
+    });
+  }
+
+  if (
+    jobs.find(j =>
+      j.name.includes("PreProd") &&
+      j.conclusion === "success"
+    )
+  ) {
+    activityItems.push({
+      icon: "✅",
+      message: "Release Candidate Approved For PreProd"
+    });
+  }
+
+  if (
+    jobs.find(j =>
+      j.name.includes("Production") &&
+      j.conclusion === "success"
+    )
+  ) {
+    activityItems.push({
+      icon: "🏆",
+      message: "Production Deployment Complete"
+    });
+  }
+
+  if (
+    jobs.find(j =>
+      j.name.includes("Monitoring") &&
+      j.conclusion === "success"
+    )
+  ) {
+    activityItems.push({
+      icon: "📈",
+      message: "Monitoring & Telemetry Activated"
+    });
+  }
+
+  document.getElementById("activityFeed").innerHTML =
+    activityItems.map(item => `
+      <div style="
+        padding:8px;
+        margin-bottom:8px;
+        border-bottom:1px solid #33495d;
+      ">
+        ${item.icon} ${item.message}
+      </div>
+    `).join("");
+}
+
+async function refresh(){
+
+  if(refreshRunning){
+    return;
+  }
+
+  refreshRunning = true;
+
+  try{
+
+    await Promise.all([
+      loadPRs(),
+      loadPipeline(),
+      loadRegressionResults()
+      //loadActivityFeed()
+    ]);
+    
+  }
+  finally {
+
+    refreshRunning = false;
+
+  }
+
+}
+
+el("refreshBtn")
+.addEventListener("click",refresh);
+
+document
+.getElementById("launchActionBtn")
+.addEventListener("click", () => {
+
+const action =
+document.getElementById(
+"githubActionSelect"
+).value;
+
+const urls = {
+
+pr:
+"https://github.com/masonkeagy/va-demo-pipeline/compare",
+
+jira:
+"https://jira.atlassian.com",
+
+workflow:
+"https://github.com/masonkeagy/va-demo-pipeline/actions",
+
+runs:
+"https://github.com/masonkeagy/va-demo-pipeline/actions",
+
+actions:
+"https://github.com/masonkeagy/va-demo-pipeline/actions",
+
+issues:
+"https://github.com/masonkeagy/va-demo-pipeline/issues/new",
+
+releases:
+"https://github.com/masonkeagy/va-demo-pipeline/releases",
+
+security:
+"https://github.com/masonkeagy/va-demo-pipeline/security"
+
+};
+
+window.open(
+urls[action],
+"_blank"
+);
+
+});
+
+
+refresh();
+
+setInterval(refresh,10000);
+
+</script>
+
+</body>
+</html>

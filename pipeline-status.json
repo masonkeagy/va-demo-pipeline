@@ -1,0 +1,82 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-09-25T15:57:49Z",
+  "repository": "masonkeagy/va-demo-pipeline",
+  "workflow": "VA Demo CI/CD Pipeline",
+  "run": {
+    "id": "36156861988",
+    "number": "128",
+    "attempt": "1",
+    "url": "https://github.com/masonkeagy/va-demo-pipeline/actions/runs/36156861988",
+    "event": "push",
+    "branch": "main",
+    "sha": "3a0ff3ea431492c1da0f1e8cdd412c03edbba2df",
+    "actor": "masonkeagy"
+  },
+  "artifact": {
+    "version": "1.0.0-20260925-155329",
+    "tag": "3a0ff3ea431492c1da0f1e8cdd412c03edbba2df"
+  },
+  "stages": [
+    {
+      "id": "pr_validation",
+      "name": "PR validation",
+      "result": "success"
+    },
+    {
+      "id": "unit_tests",
+      "name": "Unit tests",
+      "result": "success"
+    },
+    {
+      "id": "security_scanning",
+      "name": "CodeQL and security",
+      "result": "success"
+    },
+    {
+      "id": "build_and_sign",
+      "name": "Build and sign",
+      "result": "success"
+    },
+    {
+      "id": "deploy_dev",
+      "name": "Deploy to Dev",
+      "result": "success"
+    },
+    {
+      "id": "integration_performance_tests",
+      "name": "Integration tests",
+      "result": "success"
+    },
+    {
+      "id": "deploy_uat",
+      "name": "Deploy to UAT",
+      "result": "success"
+    },
+    {
+      "id": "regression_tests",
+      "name": "Regression tests",
+      "result": "success"
+    },
+    {
+      "id": "deploy_preprod",
+      "name": "Deploy to PreProd",
+      "result": "success"
+    },
+    {
+      "id": "deploy_prod",
+      "name": "Deploy to Production",
+      "result": "success"
+    },
+    {
+      "id": "smoke_tests",
+      "name": "Smoke tests",
+      "result": "success"
+    },
+    {
+      "id": "monitoring_summary",
+      "name": "Monitoring",
+      "result": "success"
+    }
+  ]
+}
