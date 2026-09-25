@@ -1417,7 +1417,7 @@ jobs:
           echo "  • production-report.json"
           echo "  • production-release/"
           echo ""
-          echo "Next Stage: Stage 10 - Smoke Tests and Rollback"
+          echo "Next Stage: Stage 10 - Smoke Tests"
           echo "============================================"
 
 # Stage 10: Smoke Tests
