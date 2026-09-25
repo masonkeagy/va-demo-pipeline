@@ -1547,7 +1547,7 @@ jobs:
           echo "Next Stage: Stage 11 - Monitoring and Telemetry"
           echo "============================================"
 
-  rollback_validation:
+  rollback:
     name: "Stage 11 - Automated Rollback"
     runs-on: ubuntu-latest
 
@@ -1648,7 +1648,7 @@ jobs:
 
           echo "Rollback stage complete"
 
-# Stage 11: Monitoring + Telemetry
+# Stage 12: Monitoring + Telemetry
   monitoring_summary:
     name: "Stage 11 - Monitoring Active"
     runs-on: ubuntu-latest
