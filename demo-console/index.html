@@ -486,7 +486,6 @@ async function submitChatRequest(request){
     const response = await fetch(`${CHAT_API_URL.replace(/\/$/, "")}/api/chat`, {
       method: "POST",
       headers: {"Content-Type": "application/json"},
-      credentials: "include",
       body: JSON.stringify({
         repository: REPO,
         request,
