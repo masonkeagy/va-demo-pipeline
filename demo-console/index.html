@@ -480,6 +480,9 @@ async function submitChatRequest(request){
   el("chatResult").textContent = "";
 
   try{
+    console.log(
+      `${CHAT_API_URL.replace(/\/$/, "")}/api/chat`
+    );
     const response = await fetch(`${CHAT_API_URL.replace(/\/$/, "")}/api/chat`, {
       method: "POST",
       headers: {"Content-Type": "application/json"},
