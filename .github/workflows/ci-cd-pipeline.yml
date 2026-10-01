@@ -1,6 +1,6 @@
 # Full CI/CD Pipeline Skeleton
 # Ready for real tools to be plugged in
-# test for open ai implementation4 real repo access
+# test for open ai repo structure view
 
 name: VA Demo CI/CD Pipeline
 
