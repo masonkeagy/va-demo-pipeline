@@ -159,6 +159,70 @@ border:2px solid var(--border);
 border-radius:8px;
 padding:10px;
 text-align:center;
+transition:background .2s ease,border-color .2s ease,box-shadow .2s ease;
+}
+
+.stage-item{
+min-width:0;
+}
+
+.stage.clickable{
+cursor:pointer;
+}
+
+.stage.clickable:hover{
+background:#223448;
+border-color:var(--primary);
+}
+
+.stage.expanded{
+border-color:var(--primary);
+box-shadow:0 0 12px rgba(118,184,236,.2);
+}
+
+.stage:focus-visible{
+outline:2px solid var(--primary);
+outline-offset:2px;
+}
+
+.stage-indicator{
+float:right;
+color:var(--muted);
+}
+
+.stage-details{
+margin-top:8px;
+padding:12px;
+background:var(--panel);
+border:1px solid var(--border);
+border-radius:8px;
+text-align:left;
+font-size:12px;
+overflow-wrap:anywhere;
+}
+
+.stage-details[hidden]{
+display:none;
+}
+
+.stage-details dl{
+display:grid;
+grid-template-columns:minmax(90px,auto) 1fr;
+gap:6px 10px;
+margin:0;
+}
+
+.stage-details dt{
+color:var(--muted);
+font-weight:bold;
+}
+
+.stage-details dd{
+margin:0;
+}
+
+.stage-details a{
+color:var(--primary);
 }
 
 .stage.success{
@@ -172,6 +236,11 @@ border-color:var(--failure);
 .stage.running{
 border-color:var(--accent);
 box-shadow:0 0 12px rgba(77,208,225,.3);
+}
+
+.stage.clickable.expanded{
+border-color:var(--primary);
+box-shadow:0 0 12px rgba(118,184,236,.2);
 }
 
 .stage-name{
@@ -456,6 +525,111 @@ function el(id){
 return document.getElementById(id);
 }
 
+let pipelineJobs = [];
+
+function escapeHtml(value){
+return String(value ?? "")
+.replaceAll("&","&amp;")
+.replaceAll("<","&lt;")
+.replaceAll(">","&gt;")
+.replaceAll('"',"&quot;")
+.replaceAll("'","&#039;");
+}
+
+function formatStageDate(value){
+if(!value){
+return "—";
+}
+
+const date = new Date(value);
+return Number.isNaN(date.getTime())
+? "—"
+: date.toLocaleString();
+}
+
+function formatStageDuration(job){
+if(!job || !job.started_at){
+return "—";
+}
+
+const start = new Date(job.started_at).getTime();
+const end = job.completed_at
+? new Date(job.completed_at).getTime()
+: Date.now();
+
+if(!Number.isFinite(start) || !Number.isFinite(end) || end < start){
+return "—";
+}
+
+const totalSeconds = Math.floor((end - start) / 1000);
+const hours = Math.floor(totalSeconds / 3600);
+const minutes = Math.floor((totalSeconds % 3600) / 60);
+const seconds = totalSeconds % 60;
+
+return hours > 0
+? `${hours}h ${minutes}m ${seconds}s`
+: minutes > 0
+? `${minutes}m ${seconds}s`
+: `${seconds}s`;
+}
+
+function showStageDetails(job){
+const stage = el("stages").querySelector(".stage.expanded");
+if(!stage){
+return;
+}
+
+const details = stage.nextElementSibling;
+const stageName = stage.dataset.stageName;
+const status = stage.dataset.status || "WAITING";
+const jobName = job?.name || stage.dataset.jobName || "—";
+const conclusion = job?.conclusion || stage.dataset.conclusion || "—";
+const failedSteps = (job?.steps || [])
+.filter(step => step.conclusion === "failure")
+.map(step => step.name);
+const jobUrl = typeof job?.html_url === "string" &&
+job.html_url.startsWith("https://github.com/")
+? job.html_url
+: "";
+const jobInfo = job
+? `
+  ${jobUrl ? `<p><a href="${escapeHtml(jobUrl)}" target="_blank" rel="noopener noreferrer">Open job in GitHub Actions</a></p>` : ""}
+  ${job.runner_name ? `<p><b>Runner:</b> ${escapeHtml(job.runner_name)}</p>` : ""}
+  ${job.runner_group_name ? `<p><b>Runner group:</b> ${escapeHtml(job.runner_group_name)}</p>` : ""}
+  ${(job.steps || []).length
+    ? `<p><b>Steps:</b> ${job.steps.map(step =>
+        `${escapeHtml(step.name)} — ${escapeHtml(step.conclusion || step.status || "pending")}`
+      ).join("<br>")}</p>`
+    : ""}
+`
+: `<p>No execution data available for this stage.</p>`;
+const failureDetails = job?.conclusion === "failure"
+? `
+  <p><b>Failure message:</b> ${failedSteps.length
+    ? `Failed step${failedSteps.length === 1 ? "" : "s"}: ${failedSteps.map(escapeHtml).join(", ")}`
+    : "The GitHub Actions job failed; inspect the job logs for details."}</p>
+  <p><b>Suggested next action:</b> ${jobUrl
+    ? `Review the failed step logs in <a href="${escapeHtml(jobUrl)}" target="_blank" rel="noopener noreferrer">GitHub Actions</a>.`
+    : "Review the failed step logs in GitHub Actions."}</p>
+`
+: "";
+
+details.innerHTML = `
+  <dl>
+    <dt>Stage Name</dt><dd>${escapeHtml(stageName)}</dd>
+    <dt>Current Status</dt><dd>${escapeHtml(status)}</dd>
+    <dt>Job Name</dt><dd>${escapeHtml(jobName)}</dd>
+    <dt>Started Time</dt><dd>${escapeHtml(formatStageDate(job?.started_at))}</dd>
+    <dt>Completed Time</dt><dd>${escapeHtml(formatStageDate(job?.completed_at))}</dd>
+    <dt>Duration</dt><dd>${escapeHtml(formatStageDuration(job))}</dd>
+    <dt>Conclusion</dt><dd>${escapeHtml(conclusion)}</dd>
+  </dl>
+  ${jobInfo}
+  ${failureDetails}
+`;
+details.hidden = false;
+}
+
 function addChatMessage(role, text){
   const message = document.createElement("div");
   message.className = `chat-message ${role}`;
@@ -664,6 +838,7 @@ await jobsResponse.json();
 
 const jobs =
 jobsData.jobs || [];
+pipelineJobs = jobs;
 
 console.log(
   "JOBS:",
@@ -821,12 +996,13 @@ label:"Monitoring"
 let passed = 0;
 
 const stageHtml =
-pipelineStages.map(stage => {
+pipelineStages.map((stage, stageIndex) => {
 
 const match =
 jobs.find(j =>
   j.name === stage.id
 );
+const detailsId = `stage-details-${stageIndex}`;
 
 let css = "";
 let status = "WAITING";
@@ -862,13 +1038,20 @@ match.conclusion || "DONE";
 }
 
 return `
-<div class="stage ${css}">
-<div class="stage-name">
-${stage.label}
+<div class="stage-item">
+<div class="stage ${css} clickable" role="button" tabindex="0"
+aria-expanded="false" aria-controls="${detailsId}"
+data-stage-name="${escapeHtml(stage.label)}"
+data-job-name="${escapeHtml(match?.name || "")}"
+data-status="${escapeHtml(status)}"
+data-conclusion="${escapeHtml(match?.conclusion || "")}"
+data-started-at="${escapeHtml(match?.started_at || "")}"
+data-completed-at="${escapeHtml(match?.completed_at || "")}">
+<span class="stage-indicator" aria-hidden="true">▼</span>
+<div class="stage-name">${escapeHtml(stage.label)}</div>
+<div class="stage-status">${escapeHtml(status)}</div>
 </div>
-<div class="stage-status">
-${status}
-</div>
+<div class="stage-details" id="${detailsId}" hidden></div>
 </div>
 `;
 
@@ -1311,6 +1494,46 @@ urls[action],
 
 });
 
+el("stages").addEventListener("click", event => {
+const stage = event.target.closest(".stage.clickable");
+if(!stage || !el("stages").contains(stage)){
+return;
+}
+
+const wasExpanded = stage.classList.contains("expanded");
+el("stages").querySelectorAll(".stage.expanded").forEach(openStage => {
+openStage.classList.remove("expanded");
+openStage.setAttribute("aria-expanded","false");
+openStage.querySelector(".stage-indicator").textContent = "▼";
+openStage.nextElementSibling.hidden = true;
+});
+
+if(wasExpanded){
+return;
+}
+
+stage.classList.add("expanded");
+stage.setAttribute("aria-expanded","true");
+stage.querySelector(".stage-indicator").textContent = "▲";
+const job = pipelineJobs.find(candidate =>
+candidate.name === stage.dataset.jobName
+);
+showStageDetails(job || null);
+});
+
+el("stages").addEventListener("keydown", event => {
+if(event.key !== "Enter" && event.key !== " "){
+return;
+}
+
+const stage = event.target.closest(".stage.clickable");
+if(!stage){
+return;
+}
+
+event.preventDefault();
+stage.click();
+});
 
 refresh();
 
