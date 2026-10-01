@@ -175,11 +175,6 @@ background:#223448;
 border-color:var(--primary);
 }
 
-.stage.expanded{
-border-color:var(--primary);
-box-shadow:0 0 12px rgba(118,184,236,.2);
-}
-
 .stage:focus-visible{
 outline:2px solid var(--primary);
 outline-offset:2px;
@@ -188,41 +183,6 @@ outline-offset:2px;
 .stage-indicator{
 float:right;
 color:var(--muted);
-}
-
-.stage-details{
-margin-top:8px;
-padding:12px;
-background:var(--panel);
-border:1px solid var(--border);
-border-radius:8px;
-text-align:left;
-font-size:12px;
-overflow-wrap:anywhere;
-}
-
-.stage-details[hidden]{
-display:none;
-}
-
-.stage-details dl{
-display:grid;
-grid-template-columns:minmax(90px,auto) 1fr;
-gap:6px 10px;
-margin:0;
-}
-
-.stage-details dt{
-color:var(--muted);
-font-weight:bold;
-}
-
-.stage-details dd{
-margin:0;
-}
-
-.stage-details a{
-color:var(--primary);
 }
 
 .stage.success{
@@ -241,6 +201,283 @@ box-shadow:0 0 12px rgba(77,208,225,.3);
 .stage.clickable.expanded{
 border-color:var(--primary);
 box-shadow:0 0 12px rgba(118,184,236,.2);
+}
+
+.stage-modal-overlay{
+position:fixed;
+inset:0;
+z-index:1000;
+display:grid;
+place-items:center;
+padding:4vh 6vw;
+background:rgba(2,8,14,.76);
+backdrop-filter:blur(5px);
+animation:stage-overlay-in .18s ease-out both;
+}
+
+.stage-modal-overlay[hidden]{
+display:none;
+}
+
+.stage-modal-overlay.is-closing{
+animation:stage-overlay-out .18s ease-in both;
+}
+
+.stage-modal{
+width:min(88vw,1440px);
+height:82vh;
+display:flex;
+flex-direction:column;
+overflow:hidden;
+background:var(--panel);
+border:1px solid var(--border);
+border-radius:14px;
+box-shadow:0 24px 80px rgba(0,0,0,.55);
+animation:stage-modal-in .22s cubic-bezier(.2,.8,.2,1) both;
+}
+
+.stage-modal-overlay.is-closing .stage-modal{
+animation:stage-modal-out .18s ease-in both;
+}
+
+.stage-modal-header{
+position:sticky;
+top:0;
+z-index:1;
+display:flex;
+align-items:center;
+gap:16px;
+padding:18px 22px;
+background:var(--panel);
+border-bottom:1px solid var(--border);
+}
+
+.stage-modal-heading{
+min-width:0;
+flex:1;
+}
+
+.stage-modal-heading h2{
+margin:0;
+color:var(--heading);
+font-size:20px;
+}
+
+.stage-modal-status{
+display:inline-flex;
+align-items:center;
+gap:8px;
+margin-top:6px;
+font-size:12px;
+font-weight:bold;
+}
+
+.stage-modal-status::before{
+content:"";
+width:9px;
+height:9px;
+border-radius:50%;
+background:#8995a1;
+}
+
+.stage-modal-status.success{color:var(--success)}
+.stage-modal-status.success::before{background:var(--success)}
+.stage-modal-status.failure{color:var(--failure)}
+.stage-modal-status.failure::before{background:var(--failure)}
+.stage-modal-status.running{color:var(--accent)}
+.stage-modal-status.running::before{background:var(--accent)}
+.stage-modal-status.waiting{color:#aeb8c2}
+.stage-modal-status.waiting::before{background:#8995a1}
+
+.stage-modal-close{
+width:38px;
+height:38px;
+flex:0 0 auto;
+padding:0;
+border:1px solid var(--border);
+border-radius:8px;
+background:var(--surface);
+color:var(--text);
+font-size:24px;
+line-height:1;
+cursor:pointer;
+}
+
+.stage-modal-close:hover{
+background:#26384a;
+}
+
+.stage-modal-content{
+flex:1;
+overflow:auto;
+padding:22px;
+}
+
+.stage-modal-section{
+margin-bottom:22px;
+padding:18px;
+background:var(--surface);
+border:1px solid var(--border);
+border-radius:10px;
+}
+
+.stage-modal-section:last-child{
+margin-bottom:0;
+}
+
+.stage-modal-section h3{
+margin:0 0 14px;
+color:var(--heading);
+font-size:14px;
+}
+
+.stage-modal-summary{
+display:grid;
+grid-template-columns:repeat(4,minmax(0,1fr));
+gap:14px;
+}
+
+.stage-modal-field{
+min-width:0;
+}
+
+.stage-modal-field-label{
+display:block;
+margin-bottom:5px;
+color:var(--muted);
+font-size:11px;
+font-weight:bold;
+text-transform:uppercase;
+letter-spacing:.04em;
+}
+
+.stage-modal-field-value{
+overflow-wrap:anywhere;
+}
+
+.stage-modal-description{
+margin:0 0 16px;
+color:var(--muted);
+}
+
+.stage-modal-steps{
+display:grid;
+gap:8px;
+}
+
+.stage-modal-step{
+display:grid;
+grid-template-columns:minmax(0,1fr) auto;
+gap:16px;
+align-items:center;
+padding:10px 12px;
+background:var(--panel);
+border:1px solid var(--border);
+border-radius:7px;
+}
+
+.stage-modal-step-status{
+font-size:11px;
+font-weight:bold;
+text-transform:uppercase;
+}
+
+.stage-modal-step-status.success{color:var(--success)}
+.stage-modal-step-status.failure{color:var(--failure)}
+.stage-modal-step-status.running{color:var(--accent)}
+.stage-modal-step-status.waiting{color:var(--muted)}
+
+.stage-modal-message{
+padding:12px;
+background:rgba(255,133,128,.08);
+border-left:3px solid var(--failure);
+border-radius:4px;
+}
+
+.stage-modal-pre{
+max-height:300px;
+overflow:auto;
+margin:0;
+padding:12px;
+background:#071019;
+border-radius:6px;
+color:var(--text);
+font:12px/1.5 Consolas,monospace;
+white-space:pre-wrap;
+overflow-wrap:anywhere;
+}
+
+.stage-modal-footer{
+display:flex;
+align-items:center;
+gap:10px;
+padding:14px 22px;
+background:var(--panel);
+border-top:1px solid var(--border);
+}
+
+.stage-modal-footer button,
+.stage-modal-footer a{
+min-height:38px;
+padding:9px 13px;
+border:1px solid var(--border);
+border-radius:7px;
+background:var(--surface);
+color:var(--text);
+font:inherit;
+font-weight:bold;
+text-decoration:none;
+cursor:pointer;
+}
+
+.stage-modal-footer a[aria-disabled="true"]{
+cursor:not-allowed;
+opacity:.5;
+}
+
+.stage-modal-footer button:disabled{
+cursor:not-allowed;
+opacity:.5;
+}
+
+.stage-modal-footer .stage-modal-ai{
+margin-left:auto;
+border-color:var(--primary);
+background:var(--primary);
+color:#07131e;
+}
+
+.stage-modal-footer [hidden]{
+display:none;
+}
+
+@keyframes stage-overlay-in{
+from{opacity:0}
+to{opacity:1}
+}
+
+@keyframes stage-overlay-out{
+from{opacity:1}
+to{opacity:0}
+}
+
+@keyframes stage-modal-in{
+from{opacity:0;transform:scale(.97)}
+to{opacity:1;transform:scale(1)}
+}
+
+@keyframes stage-modal-out{
+from{opacity:1;transform:scale(1)}
+to{opacity:0;transform:scale(.98)}
+}
+
+@media(max-width:760px){
+.stage-modal-overlay{padding:2vh 3vw}
+.stage-modal{width:94vw;height:92vh}
+.stage-modal-header,.stage-modal-content{padding:16px}
+.stage-modal-summary{grid-template-columns:repeat(2,minmax(0,1fr))}
+.stage-modal-footer{flex-wrap:wrap;padding:12px 16px}
+.stage-modal-footer .stage-modal-ai{margin-left:0}
 }
 
 .stage-name{
@@ -512,6 +749,25 @@ Loading GitHub activity...
 
 </div>
 
+<div id="stageModalOverlay" class="stage-modal-overlay" hidden>
+<section id="stageModal" class="stage-modal" role="dialog" aria-modal="true" aria-labelledby="stageModalTitle" aria-describedby="stageModalDescription">
+  <header class="stage-modal-header">
+    <div class="stage-modal-heading">
+      <h2 id="stageModalTitle"></h2>
+      <div id="stageModalStatus" class="stage-modal-status"></div>
+    </div>
+    <button id="stageModalClose" class="stage-modal-close" type="button" aria-label="Close stage details">×</button>
+  </header>
+  <div id="stageModalContent" class="stage-modal-content"></div>
+  <footer class="stage-modal-footer">
+    <a id="stageModalJobLink" href="#" target="_blank" rel="noopener noreferrer">View GitHub Job</a>
+    <button id="stageModalCopy" type="button">Copy Details</button>
+    <button id="stageModalAi" class="stage-modal-ai" type="button" hidden>Analyze With AI</button>
+    <span id="stageModalFeedback" role="status" aria-live="polite"></span>
+  </footer>
+</section>
+</div>
+
 <script>
 
 window.VA_CHAT_API_URL = "https://copilotva-abdzdfcthmgshufm.eastus2-01.azurewebsites.net";
@@ -526,6 +782,9 @@ return document.getElementById(id);
 }
 
 let pipelineJobs = [];
+let activeStage = null;
+let activeStageJob = null;
+let stageModalCloseTimer = null;
 
 function escapeHtml(value){
 return String(value ?? "")
@@ -573,61 +832,145 @@ return hours > 0
 : `${seconds}s`;
 }
 
-function showStageDetails(job){
-const stage = el("stages").querySelector(".stage.expanded");
+function stageStatusClass(status, conclusion){
+const normalized = String(conclusion || status || "").toLowerCase();
+if(normalized === "success"){
+return "success";
+}
+if(["failure","cancelled","timed_out","action_required"].includes(normalized)){
+return "failure";
+}
+if(["running","in_progress"].includes(normalized)){
+return "running";
+}
+return "waiting";
+}
+
+function showStageModal(job, stage = el("stages").querySelector(".stage.expanded")){
 if(!stage){
 return;
 }
 
-const details = stage.nextElementSibling;
+clearTimeout(stageModalCloseTimer);
+activeStage = stage;
+activeStageJob = job || null;
 const stageName = stage.dataset.stageName;
 const status = stage.dataset.status || "WAITING";
-const jobName = job?.name || stage.dataset.jobName || "—";
 const conclusion = job?.conclusion || stage.dataset.conclusion || "—";
-const failedSteps = (job?.steps || [])
-.filter(step => step.conclusion === "failure")
-.map(step => step.name);
+const jobName = job?.name || stage.dataset.jobName || "—";
 const jobUrl = typeof job?.html_url === "string" &&
 job.html_url.startsWith("https://github.com/")
 ? job.html_url
 : "";
-const jobInfo = job
-? `
-  ${jobUrl ? `<p><a href="${escapeHtml(jobUrl)}" target="_blank" rel="noopener noreferrer">Open job in GitHub Actions</a></p>` : ""}
-  ${job.runner_name ? `<p><b>Runner:</b> ${escapeHtml(job.runner_name)}</p>` : ""}
-  ${job.runner_group_name ? `<p><b>Runner group:</b> ${escapeHtml(job.runner_group_name)}</p>` : ""}
-  ${(job.steps || []).length
-    ? `<p><b>Steps:</b> ${job.steps.map(step =>
-        `${escapeHtml(step.name)} — ${escapeHtml(step.conclusion || step.status || "pending")}`
-      ).join("<br>")}</p>`
-    : ""}
-`
-: `<p>No execution data available for this stage.</p>`;
-const failureDetails = job?.conclusion === "failure"
-? `
-  <p><b>Failure message:</b> ${failedSteps.length
-    ? `Failed step${failedSteps.length === 1 ? "" : "s"}: ${failedSteps.map(escapeHtml).join(", ")}`
-    : "The GitHub Actions job failed; inspect the job logs for details."}</p>
-  <p><b>Suggested next action:</b> ${jobUrl
-    ? `Review the failed step logs in <a href="${escapeHtml(jobUrl)}" target="_blank" rel="noopener noreferrer">GitHub Actions</a>.`
-    : "Review the failed step logs in GitHub Actions."}</p>
-`
+const runner = job
+? [job.runner_name, job.runner_group_name].filter(Boolean).join(" / ") || "—"
+: "—";
+const steps = job?.steps || [];
+const failedSteps = steps.filter(step => step.conclusion === "failure");
+const outputs = job?.outputs && Object.keys(job.outputs).length
+? JSON.stringify(job.outputs, null, 2)
 : "";
+const statusClass = stageStatusClass(status, conclusion);
+const stageDescription = stage.dataset.stageDescription ||
+`Execution details for the ${stageName} pipeline stage.`;
 
-details.innerHTML = `
-  <dl>
-    <dt>Stage Name</dt><dd>${escapeHtml(stageName)}</dd>
-    <dt>Current Status</dt><dd>${escapeHtml(status)}</dd>
-    <dt>Job Name</dt><dd>${escapeHtml(jobName)}</dd>
-    <dt>Started Time</dt><dd>${escapeHtml(formatStageDate(job?.started_at))}</dd>
-    <dt>Completed Time</dt><dd>${escapeHtml(formatStageDate(job?.completed_at))}</dd>
-    <dt>Duration</dt><dd>${escapeHtml(formatStageDuration(job))}</dd>
-    <dt>Conclusion</dt><dd>${escapeHtml(conclusion)}</dd>
-  </dl>
-  ${jobInfo}
-  ${failureDetails}
+el("stageModalTitle").textContent = stageName;
+el("stageModalStatus").className = `stage-modal-status ${statusClass}`;
+el("stageModalStatus").textContent = status;
+el("stageModalJobLink").href = jobUrl || "#";
+el("stageModalJobLink").setAttribute("aria-disabled", String(!jobUrl));
+el("stageModalJobLink").tabIndex = jobUrl ? 0 : -1;
+el("stageModalJobLink").classList.toggle("is-disabled", !jobUrl);
+el("stageModalJobLink").onclick = jobUrl ? null : event => event.preventDefault();
+el("stageModalAi").hidden = conclusion.toLowerCase() !== "failure";
+el("stageModalFeedback").textContent = "";
+
+el("stageModalContent").innerHTML = `
+  <section class="stage-modal-section">
+    <h3>Summary</h3>
+    <p id="stageModalDescription" class="stage-modal-description">${escapeHtml(stageDescription)}</p>
+    <div class="stage-modal-summary">
+      <div class="stage-modal-field"><span class="stage-modal-field-label">Status</span><span class="stage-modal-field-value">${escapeHtml(status)}</span></div>
+      <div class="stage-modal-field"><span class="stage-modal-field-label">Conclusion</span><span class="stage-modal-field-value">${escapeHtml(conclusion)}</span></div>
+      <div class="stage-modal-field"><span class="stage-modal-field-label">Duration</span><span class="stage-modal-field-value">${escapeHtml(formatStageDuration(job))}</span></div>
+      <div class="stage-modal-field"><span class="stage-modal-field-label">Job Name</span><span class="stage-modal-field-value">${escapeHtml(jobName)}</span></div>
+    </div>
+  </section>
+  <section class="stage-modal-section">
+    <h3>Execution Details</h3>
+    <div class="stage-modal-summary">
+      <div class="stage-modal-field"><span class="stage-modal-field-label">Started Time</span><span class="stage-modal-field-value">${escapeHtml(formatStageDate(job?.started_at))}</span></div>
+      <div class="stage-modal-field"><span class="stage-modal-field-label">Completed Time</span><span class="stage-modal-field-value">${escapeHtml(formatStageDate(job?.completed_at))}</span></div>
+      <div class="stage-modal-field"><span class="stage-modal-field-label">Runner</span><span class="stage-modal-field-value">${escapeHtml(runner)}</span></div>
+      <div class="stage-modal-field"><span class="stage-modal-field-label">Job Name</span><span class="stage-modal-field-value">${escapeHtml(jobName)}</span></div>
+    </div>
+    ${job ? "" : `<p class="stage-modal-description">No execution data available for this stage.</p>`}
+  </section>
+  <section class="stage-modal-section">
+    <h3>GitHub Job Details</h3>
+    ${steps.length
+      ? `<div class="stage-modal-steps">${steps.map(step => {
+          const stepStatus = step.conclusion || step.status || "pending";
+          return `<div class="stage-modal-step"><span>${escapeHtml(step.name)}</span><span class="stage-modal-step-status ${stageStatusClass(step.status, stepStatus)}">${escapeHtml(stepStatus)}</span></div>`;
+        }).join("")}</div>`
+      : `<p class="stage-modal-description">${job ? "No step details are available for this job." : "Job steps will appear here when execution data is available."}</p>`
+    }
+    ${conclusion.toLowerCase() === "failure"
+      ? `<div class="stage-modal-message"><b>Failure information:</b> ${failedSteps.length
+          ? `Failed step${failedSteps.length === 1 ? "" : "s"}: ${failedSteps.map(step => escapeHtml(step.name)).join(", ")}.`
+          : "The GitHub Actions job failed. Review the job logs for the underlying error."}
+        <br><b>Suggested next action:</b> Review the failed step logs${jobUrl ? ` in <a href="${escapeHtml(jobUrl)}" target="_blank" rel="noopener noreferrer">GitHub Actions</a>` : " in GitHub Actions"}.</div>`
+      : ""}
+    <h3 style="margin-top:18px">Outputs</h3>
+    ${outputs
+      ? `<pre class="stage-modal-pre">${escapeHtml(outputs)}</pre>`
+      : `<p class="stage-modal-description">${job ? "No outputs are available on the GitHub job object." : "No outputs are available without matching job data."}</p>`
+    }
+  </section>
 `;
-details.hidden = false;
+
+const description = `${stageDescription} Status: ${status}. Conclusion: ${conclusion}.`;
+el("stageModal").setAttribute("aria-describedby","stageModalDescription");
+el("stageModalDescription").textContent = description;
+const overlay = el("stageModalOverlay");
+overlay.hidden = false;
+overlay.classList.remove("is-closing");
+document.body.style.overflow = "hidden";
+el("stageModalClose").focus();
+}
+
+function closeStageModal(restoreFocus = true){
+const overlay = el("stageModalOverlay");
+if(overlay.hidden){
+return;
+}
+
+clearTimeout(stageModalCloseTimer);
+overlay.classList.add("is-closing");
+document.body.style.overflow = "";
+const previousStage = activeStage;
+const previousStageName = activeStage?.dataset.stageName;
+stageModalCloseTimer = setTimeout(() => {
+overlay.hidden = true;
+overlay.classList.remove("is-closing");
+if(previousStage){
+previousStage.classList.remove("expanded");
+previousStage.setAttribute("aria-expanded","false");
+const indicator = previousStage.querySelector(".stage-indicator");
+if(indicator){
+indicator.textContent = "▼";
+}
+}
+if(restoreFocus){
+const focusTarget = previousStage?.isConnected
+? previousStage
+: [...el("stages").querySelectorAll(".stage.clickable")]
+  .find(stage => stage.dataset.stageName === previousStageName);
+focusTarget?.focus();
+}
+activeStage = null;
+activeStageJob = null;
+},180);
 }
 
 function addChatMessage(role, text){
@@ -937,72 +1280,85 @@ FORCE THE 12 STAGES TO ALWAYS EXIST
 const pipelineStages = [
 {
 id:"Stage 1 - PR Validation",
-label:"PR Validation"
+label:"PR Validation",
+description:"Validates the pull request and its required metadata before pipeline execution."
 },
 {
 id:"Stage 2 - Unit Tests",
-label:"Unit Tests"
+label:"Unit Tests",
+description:"Runs unit tests to check the correctness of individual components."
 },
 {
 id:"Stage 3 - Security Scanning",
-label:"Security Scan"
+label:"Security Scan",
+description:"Scans the codebase for known security risks and vulnerable dependencies."
 },
 {
 id:"Stage 4 - Build and Artifact Signing",
-label:"Build & Sign"
+label:"Build & Sign",
+description:"Builds the application artifact and signs it for downstream deployment."
 },
 {
 id:"Stage 5 - Deploy to Dev",
-label:"Deploy Dev"
+label:"Deploy Dev",
+description:"Deploys the build artifact to the development environment."
 },
 {
 id:"Stage 6 - Integration Tests",
-label:"Integration Tests"
+label:"Integration Tests",
+description:"Runs integration tests against the deployed development environment."
 },
 {
 id:"Stage 6b - DAST Security Scan",
-label:"DAST Security Scan"
+label:"DAST Security Scan",
+description:"Performs dynamic application security testing against the running application."
 },
 {
 id:"Stage 7 - Deploy to TEST/UAT",
-label:"Deploy UAT"
+label:"Deploy UAT",
+description:"Deploys the validated artifact to the test and user acceptance environment."
 },
 {
 id:"Stage 8 - Regression Testing",
-label:"Regression"
+label:"Regression",
+description:"Runs regression tests to detect changes that could break existing behavior."
 },
 {
 id:"Stage 9a - Deploy to PreProd",
-label:"PreProd"
+label:"PreProd",
+description:"Deploys the release candidate to pre-production for final verification."
 },
 {
 id:"Stage 9b - Deploy to Production",
-label:"Production"
+label:"Production",
+description:"Deploys the approved release to the production environment."
 },
 {
 id:"Stage 10 - Smoke Tests",
-label:"Smoke Tests"
+label:"Smoke Tests",
+description:"Checks critical production paths after deployment."
 },
 {
 id:"Stage 11 - Automated Rollback",
-label:"Rollback"
+label:"Rollback",
+description:"Runs the automated rollback workflow if a release needs to be reverted."
 },
 {
 id:"Stage 12 - Monitoring Active",
-label:"Monitoring"
+label:"Monitoring",
+description:"Confirms application monitoring and telemetry are active."
 }
 ];
 
 let passed = 0;
 
 const stageHtml =
-pipelineStages.map((stage, stageIndex) => {
+pipelineStages.map(stage => {
 
 const match =
 jobs.find(j =>
   j.name === stage.id
 );
-const detailsId = `stage-details-${stageIndex}`;
 
 let css = "";
 let status = "WAITING";
@@ -1040,8 +1396,9 @@ match.conclusion || "DONE";
 return `
 <div class="stage-item">
 <div class="stage ${css} clickable" role="button" tabindex="0"
-aria-expanded="false" aria-controls="${detailsId}"
+aria-expanded="false"
 data-stage-name="${escapeHtml(stage.label)}"
+data-stage-description="${escapeHtml(stage.description)}"
 data-job-name="${escapeHtml(match?.name || "")}"
 data-status="${escapeHtml(status)}"
 data-conclusion="${escapeHtml(match?.conclusion || "")}"
@@ -1051,7 +1408,6 @@ data-completed-at="${escapeHtml(match?.completed_at || "")}">
 <div class="stage-name">${escapeHtml(stage.label)}</div>
 <div class="stage-status">${escapeHtml(status)}</div>
 </div>
-<div class="stage-details" id="${detailsId}" hidden></div>
 </div>
 `;
 
@@ -1500,25 +1856,18 @@ if(!stage || !el("stages").contains(stage)){
 return;
 }
 
-const wasExpanded = stage.classList.contains("expanded");
 el("stages").querySelectorAll(".stage.expanded").forEach(openStage => {
 openStage.classList.remove("expanded");
 openStage.setAttribute("aria-expanded","false");
-openStage.querySelector(".stage-indicator").textContent = "▼";
-openStage.nextElementSibling.hidden = true;
 });
-
-if(wasExpanded){
-return;
-}
-
+activeStage = stage;
 stage.classList.add("expanded");
 stage.setAttribute("aria-expanded","true");
 stage.querySelector(".stage-indicator").textContent = "▲";
 const job = pipelineJobs.find(candidate =>
 candidate.name === stage.dataset.jobName
 );
-showStageDetails(job || null);
+showStageModal(job || null, stage);
 });
 
 el("stages").addEventListener("keydown", event => {
@@ -1533,6 +1882,99 @@ return;
 
 event.preventDefault();
 stage.click();
+});
+
+el("stageModalClose").addEventListener("click", () => closeStageModal());
+
+el("stageModalOverlay").addEventListener("click", event => {
+if(event.target === el("stageModalOverlay")){
+closeStageModal();
+}
+});
+
+document.addEventListener("keydown", event => {
+if(el("stageModalOverlay").hidden){
+return;
+}
+
+if(event.key === "Escape"){
+event.preventDefault();
+closeStageModal();
+return;
+}
+
+if(event.key === "Tab"){
+const focusable = [...el("stageModal").querySelectorAll(
+'button:not([disabled]), a[href]:not([aria-disabled="true"])'
+)].filter(item => !item.hidden);
+if(!focusable.length){
+return;
+}
+const first = focusable[0];
+const last = focusable[focusable.length - 1];
+if(event.shiftKey && document.activeElement === first){
+event.preventDefault();
+last.focus();
+}
+else if(!event.shiftKey && document.activeElement === last){
+event.preventDefault();
+first.focus();
+}
+}
+});
+
+el("stageModalCopy").addEventListener("click", async () => {
+if(!activeStage){
+return;
+}
+
+const job = activeStageJob;
+const status = activeStage.dataset.status || "WAITING";
+const conclusion = job?.conclusion || activeStage.dataset.conclusion || "—";
+const stepDetails = (job?.steps || []).map(step =>
+`- ${step.name}: ${step.conclusion || step.status || "pending"}`
+);
+const lines = [
+`Stage: ${activeStage.dataset.stageName}`,
+`Description: ${activeStage.dataset.stageDescription || ""}`,
+`Status: ${status}`,
+`Conclusion: ${conclusion}`,
+`Job: ${job?.name || activeStage.dataset.jobName || "—"}`,
+`Started: ${formatStageDate(job?.started_at)}`,
+`Completed: ${formatStageDate(job?.completed_at)}`,
+`Duration: ${formatStageDuration(job)}`,
+`Runner: ${job?.runner_name || "—"}`,
+...stepDetails
+];
+if(job?.outputs && Object.keys(job.outputs).length){
+lines.push(`Outputs: ${JSON.stringify(job.outputs)}`);
+}
+
+try{
+await navigator.clipboard.writeText(lines.join("\n"));
+el("stageModalFeedback").textContent = "Details copied.";
+}catch(error){
+console.error("Unable to copy stage details:", error);
+el("stageModalFeedback").textContent = "Unable to copy details.";
+}
+});
+
+el("stageModalAi").addEventListener("click", () => {
+if(!activeStage){
+return;
+}
+
+const stageName = activeStage.dataset.stageName;
+const status = activeStage.dataset.status || "WAITING";
+const conclusion = activeStageJob?.conclusion ||
+activeStage.dataset.conclusion || "—";
+el("chatInput").value =
+`Analyze failure in ${stageName}. Status: ${status}. Conclusion: ${conclusion}. Provide root cause analysis and remediation steps.`;
+closeStageModal(false);
+setTimeout(() => {
+el("chatInput").scrollIntoView({behavior:"smooth",block:"center"});
+el("chatInput").focus();
+},190);
 });
 
 refresh();
