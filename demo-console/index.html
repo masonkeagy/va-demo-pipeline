@@ -1414,7 +1414,7 @@ data-status="${escapeHtml(status)}"
 data-conclusion="${escapeHtml(match?.conclusion || "")}"
 data-started-at="${escapeHtml(match?.started_at || "")}"
 data-completed-at="${escapeHtml(match?.completed_at || "")}">
-<span class="stage-indicator" aria-hidden="true">▼</span>
+<span class="stage-indicator" aria-hidden="true"></span>
 <div class="stage-name">${escapeHtml(stage.label)}</div>
 <div class="stage-status">${escapeHtml(status)}</div>
 </div>
@@ -1875,7 +1875,7 @@ openStage.setAttribute("aria-expanded","false");
 activeStage = stage;
 stage.classList.add("expanded");
 stage.setAttribute("aria-expanded","true");
-stage.querySelector(".stage-indicator").textContent = "▲";
+stage.querySelector(".stage-indicator").textContent = "";
 const job = pipelineJobs.find(candidate =>
 candidate.name === stage.dataset.jobName
 );
