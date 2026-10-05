@@ -605,6 +605,54 @@ Describe a repository change in plain language. The secure backend reviews the r
 <div class="chat-message system">Ready. Ask for a change, test, or investigation.</div>
 </div>
 
+<div
+  id="chatModeContainer"
+  style="
+    display:flex;
+    gap:16px;
+    margin-bottom:12px;
+    align-items:center;
+  "
+>
+
+  <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+
+    <input
+      type="radio"
+      name="chatMode"
+      value="analysis"
+      checked
+    >
+
+    Ask Question
+
+  </label>
+
+  <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+
+    <input
+      type="radio"
+      name="chatMode"
+      value="modify_repository"
+    >
+
+    Create Pull Request
+
+  </label>
+
+</div>
+
+<div
+  id="chatModeDescription"
+  style="
+    font-size:12px;
+    color:var(--muted);
+    margin-bottom:12px;
+  "
+>
+Ask questions about the repository, workflows, tests, and deployments.
+</div>
+
 <form id="chatForm" class="chat-form">
 <textarea id="chatInput" aria-label="Describe a repository request" placeholder="For example: Add a validation step for the PCF control and open a pull request." required></textarea>
 <button id="sendChatBtn" type="submit">Send</button>
@@ -1016,6 +1064,7 @@ async function submitChatRequest(request){
       body: JSON.stringify({
         repository: REPO,
         request,
+        mode,
         conversationId: el("chatForm").dataset.conversationId || undefined
       })
     });
@@ -1050,6 +1099,10 @@ el("chatForm").addEventListener("submit", event => {
   event.preventDefault();
   const input = el("chatInput");
   const request = input.value.trim();
+  const mode =
+    document.querySelector(
+        'input[name="chatMode"]:checked'
+    ).value;
   if(!request) return;
   addChatMessage("user", request);
   input.value = "";
