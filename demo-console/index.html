@@ -800,6 +800,18 @@ Loading GitHub activity...
 
 <h2>Recent Pull Requests</h2>
 
+<section class="panel">
+
+  <h2>Pending Reviews</h2>
+
+  <div id="pendingReviews">
+
+    Loading review requests...
+
+  </div>
+
+</section>
+
 <div id="prs"></div>
 
 </div>
@@ -1108,6 +1120,116 @@ el("chatForm").addEventListener("submit", event => {
   input.value = "";
   submitChatRequest(request, mode);
 });
+
+async function loadPendingReviews() {
+
+  try {
+
+    const response = await fetch(
+      `${API}/pulls?state=open&per_page=20`
+    );
+
+    const prs =
+      await response.json();
+
+    const pending =
+      prs.filter(pr =>
+        !pr.draft
+      );
+
+    document.getElementById(
+      "pendingReviews"
+    ).innerHTML = pending.map(pr => `
+
+      <div class="pr-card">
+
+        <div style="font-weight:bold">
+          PR #${pr.number}
+        </div>
+
+        <div style="margin-top:6px">
+          ${pr.title}
+        </div>
+
+        <div
+          style="
+            color:var(--muted);
+            font-size:11px;
+            margin-top:6px;
+          "
+        >
+
+          Author:
+          ${pr.user.login}
+
+          <br>
+
+          Branch:
+          ${pr.head.ref}
+
+        </div>
+
+        <div
+          style="
+            margin-top:10px;
+            padding:10px;
+            background:var(--surface);
+            border-radius:6px;
+          "
+        >
+
+        AI Summary
+
+        <br><br>
+
+        Purpose:
+        Rollback enhancement
+
+        <br>
+
+        Risk:
+        Low
+
+        <br>
+
+        Review Required:
+        Yes
+
+        </div>
+
+        <div
+          style="
+            margin-top:10px;
+            display:flex;
+            gap:8px;
+          "
+        >
+
+          <a
+            class="button"
+            href         </a>
+
+          <a
+            class="button"
+            href/a>
+
+        </div>
+
+      </div>
+
+    `).join("");
+
+  }
+  catch {
+
+    document.getElementById(
+      "pendingReviews"
+    ).innerHTML =
+      "Unable to load pull requests.";
+
+  }
+
+}
 
 async function loadPRs(){
 console.log("PRS", prs);
@@ -1852,6 +1974,7 @@ async function refresh(){
 
     await Promise.all([
       loadPRs(),
+      loadPendingReviews(),
       loadPipeline(),
       loadRegressionResults()
       //loadActivityFeed()
