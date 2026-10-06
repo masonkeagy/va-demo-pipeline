@@ -1121,113 +1121,240 @@ el("chatForm").addEventListener("submit", event => {
   submitChatRequest(request, mode);
 });
 
+async function getPullRequestReviewStatus(
+    owner,
+    repo,
+    token,
+    pullNumber
+) {
+
+    const response =
+        await fetch(
+            `https://api.github.com/repos/${owner}/${repo}/pulls/${pullNumber}/reviews`,
+            {
+                headers: {
+                    Authorization:
+                        `Bearer ${token}`,
+                    Accept:
+                        "application/vnd.github+json"
+                }
+            }
+        );
+
+    if (!response.ok) {
+        return {
+            status: "Unknown"
+        };
+    }
+
+    const reviews =
+        await response.json();
+
+    if (
+        reviews.some(
+            review =>
+                review.state ===
+                "CHANGES_REQUESTED"
+        )
+    ) {
+
+        return {
+            status:
+                "Changes Requested"
+        };
+    }
+
+    if (
+        reviews.some(
+            review =>
+                review.state ===
+                "APPROVED"
+        )
+    ) {
+
+        return {
+            status:
+                "Approved"
+        };
+    }
+
+    return {
+        status:
+            "Pending Review"
+    };
+}
+
 async function loadPendingReviews() {
 
-  try {
+    try {
 
-    const response = await fetch(
-      `${API}/pulls?state=open&per_page=20`
-    );
+        const response = await fetch(
+            `${API}/pulls?state=open&per_page=20`
+        );
 
-    const prs =
-      await response.json();
+        const prs =
+            await response.json();
 
-    const pending =
-      prs.filter(pr =>
-        !pr.draft
-      );
+        const pending =
+            prs.filter(
+                pr => !pr.draft
+            );
 
-    document.getElementById(
-      "pendingReviews"
-    ).innerHTML = pending.map(pr => `
+        const cards =
+            await Promise.all(
 
-      <div class="pr-card">
+                pending.map(
+                    async (pr) => {
 
-        <div style="font-weight:bold">
-          PR #${pr.number}
-        </div>
+                        let reviewStatus = {
+                            status:
+                                "Pending Review"
+                        };
 
-        <div style="margin-top:6px">
-          ${pr.title}
-        </div>
+                        try {
 
-        <div
-          style="
+                            reviewStatus =
+                                await getPullRequestReviewStatus(
+                                    REPO.split("/")[0],
+                                    REPO.split("/")[1],
+                                    window.GITHUB_TOKEN || "",
+                                    pr.number
+                                );
+
+                        }
+                        catch {
+
+                            reviewStatus = {
+                                status:
+                                    "Pending Review"
+                            };
+
+                        }
+
+                        const statusColor =
+
+                            reviewStatus.status ===
+                            "Approved"
+
+                                ? "#66d69a"
+
+                                : reviewStatus.status ===
+                                  "Changes Requested"
+
+                                ? "#ff8580"
+
+                                : "#ffd166";
+
+                        return `
+
+<div class="pr-card">
+
+    <div style="font-weight:bold">
+        PR #${pr.number}
+    </div>
+
+    <div style="margin-top:6px">
+        ${pr.title}
+    </div>
+
+    <div
+        style="
             color:var(--muted);
             font-size:11px;
             margin-top:6px;
-          "
-        >
+        "
+    >
 
-          Author:
-          ${pr.user.login}
+        Author:
+        ${pr.user.login}
 
-          <br>
+        <br>
 
-          Branch:
-          ${pr.head.ref}
+        Branch:
+        ${pr.head.ref}
 
-        </div>
+    </div>
 
-        <div
-          style="
+    <div
+        style="
             margin-top:10px;
             padding:10px;
             background:var(--surface);
             border-radius:6px;
-          "
-        >
+        "
+    >
 
-        AI Summary
+        🤖 AI Summary
 
         <br><br>
 
         Purpose:
-        Rollback enhancement
+        ${pr.title}
 
-        <br>
+        <br><br>
 
         Risk:
         Low
 
-        <br>
+        <br><br>
 
-        Review Required:
-        Yes
+        <div
+            style="
+                margin-top:8px;
+                font-weight:bold;
+                color:${statusColor};
+            "
+        >
+
+            Review Status:
+            ${reviewStatus.status}
 
         </div>
 
-        <div
-          style="
+    </div>
+
+    <div
+        style="
             margin-top:10px;
             display:flex;
             gap:8px;
-          "
-        >
+            flex-wrap:wrap;
+        "
+    >
 
-          <a
-            class="button"
-            href         </a>
+        ${pr.html_url}/files
+            Review Diff
+        </a>
 
-          <a
-            class="button"
-            href/a>
+        ${pr.html_url}
+            Open PR
+        </a>
 
-        </div>
+    </div>
 
-      </div>
+</div>
 
-    `).join("");
+                        `;
+                    }
+                )
+            );
 
-  }
-  catch {
+        document.getElementById(
+            "pendingReviews"
+        ).innerHTML =
+            cards.join("");
 
-    document.getElementById(
-      "pendingReviews"
-    ).innerHTML =
-      "Unable to load pull requests.";
+    }
+    catch (error) {
 
-  }
+        console.error(error);
+
+        document.getElementById(
+            "pendingReviews"
+        ).innerHTML =
+            "Unable to load pull requests.";
+
+    }
 
 }
 
