@@ -1,70 +1,70 @@
 # VA Demo CI/CD Pipeline Scaffold
 
-This repository contains an initial **GitHub Actions CI/CD pipeline scaffold** based on the proposed enterprise DevSecOps workflow for a VA-focused application delivery model.
+This repository contains an initial **GitHub Actions CI/CD pipeline scaffold** based on the proposed enterprise DevSecOps workflow tailored for a VA-focused application delivery model.
 
-It is designed as a **starting structure** for the team to build on while application-specific details are still being defined.
+It serves as a **starting structure** for the team to build upon while application-specific details are still being defined.
 
 ---
 
 ## Purpose
 
-This scaffold was created to help move the initial workflow forward even without access yet to:
+This scaffold was created to advance the initial workflow despite lacking access to:
 
-- the current application codebase
-- framework/runtime details
-- real test suites
-- build tooling
-- deployment targets
+- The current application codebase
+- Framework/runtime details
+- Real test suites
+- Build tooling
+- Deployment targets
 - Azure environment configuration
-- security tooling configuration
-- monitoring instrumentation
+- Security tooling configuration
+- Monitoring instrumentation
 
-The goal was to create a pipeline foundation that already reflects the intended **delivery flow, security controls, testing stages, approval gates, deployment progression, rollback path, and observability checkpoints**.
+The goal is to establish a pipeline foundation that reflects the intended **delivery flow, security controls, testing stages, approval gates, deployment progression, rollback paths, and observability checkpoints**.
 
 ---
 
 ## Current Positioning
 
-## 1. Enterprise Application Factory (Positioned for future implementation)
-**(show speed)**
+1. **Enterprise Application Factory** (Positioned for future implementation)  
+   *(show speed)*
 
-## 2. Automated Compliance & Testing Pipeline (Most Fully Represented)
-**(show risk reduction)**
+2. **Automated Compliance & Testing Pipeline** (Most Fully Represented)  
+   *(show risk reduction)*
 
-## 3. Copilot Release Readiness Assistant (Positioned for future implementation)
-**(show innovation)**
+3. **Copilot Release Readiness Assistant** (Positioned for future implementation)  
+   *(show innovation)*
 
 ---
 
 ## Pipeline Flow Modeled
 
-The scaffold currently models this general flow:
+The scaffold currently models the following general flow:
 
-1. Pull Request Validation  
-2. Unit Testing  
-3. Security Scanning  
+1. Pull Request Validation
+2. Unit Testing
+3. Security Scanning
    - CodeQL
-   - dependency security scan
-   - secret detection
-   - IaC security scan
-4. Build and Artifact/Supply Chain Preparation  
-   - build
-   - package
+   - Dependency security scan
+   - Secret detection
+   - Infrastructure as Code (IaC) security scan
+4. Build and Artifact/Supply Chain Preparation
+   - Build
+   - Package
    - SBOM generation
-   - artifact upload
-5. Deploy to DEV  
-6. Integration / API / DAST / Performance Validation  
-7. Deploy to TEST/UAT  
-8. Regression Testing  
-9. Deploy to PreProd and Production  
-10. Smoke Testing and Automated Rollback  
-11. Monitoring / Observability Validation  
+   - Artifact upload
+5. Deploy to DEV
+6. Integration / API / DAST / Performance Validation
+7. Deploy to TEST/UAT
+8. Regression Testing
+9. Deploy to PreProd and Production
+10. Smoke Testing and Automated Rollback
+11. Monitoring / Observability Validation
 
 ---
 
 ## What Is Included
 
-The current scaffold includes:
+This scaffold currently includes:
 
 - GitHub Actions workflow structure
 - Stage ordering and dependencies
@@ -73,14 +73,14 @@ The current scaffold includes:
 - Code coverage placeholder
 - Security scanning structure with:
   - CodeQL
-  - dependency scan placeholder
-  - secret scan placeholder
+  - Dependency scan placeholder
+  - Secret scan placeholder
   - IaC scan placeholder
 - Build stage with:
-  - application build placeholder
-  - package placeholder
+  - Application build placeholder
+  - Package placeholder
   - SBOM generation placeholder
-  - artifact upload structure
+  - Artifact upload structure
 - Environment progression across:
   - DEV
   - UAT
@@ -103,43 +103,39 @@ The current scaffold includes:
 
 ## What Is Not Included Yet
 
-Because this is still a scaffold, the following are **not implemented yet**:
+As this is still a scaffold, the following are **not implemented yet**:
 
-- real application code
-- real unit/integration/regression/smoke tests
-- real build scripts
+- Real application code
+- Real unit/integration/regression/smoke tests
+- Real build scripts
 - Dockerfile or package-specific build logic
-- real dependency scanning tooling
-- real secret scanning tooling
-- real IaC scanning tooling
-- real SBOM generation tooling
-- real artifact signing
-- real Azure deployment scripts
-- actual Azure credentials / federated identity configuration
-- real DAST tooling
-- real performance/load scripts
-- real rollback implementation
-- real incident/ticketing integration
-- real Slack/Teams/PagerDuty notifications
-- real Application Insights instrumentation and metric publishing
+- Real dependency scanning tooling
+- Real secret scanning tooling
+- Real IaC scanning tooling
+- Real SBOM generation tooling
+- Real artifact signing
+- Real Azure deployment scripts
+- Actual Azure credentials / federated identity configuration
+- Real DAST tooling
+- Real performance/load scripts
+- Real rollback implementation
+- Real incident/ticketing integration
+- Real Slack/Teams/PagerDuty notifications
+- Real Application Insights instrumentation and metric publishing
 - Copilot-based release readiness logic
 - Application Factory provisioning/templates
 
-## GitHub Copilot change chat
+---
 
-The GitHub Pages console now provides a chat interface for repository change
-requests. The page is intentionally static and does not hold GitHub
-credentials. Connect it to a separately hosted GitHub App/API service by
-providing `window.VA_CHAT_API_URL`; the service contract and security
-requirements are documented in `docs/github-copilot-chat-api.md`.
+## GitHub Copilot Change Chat
 
-All accepted changes must be delivered through pull requests. The backend must
-authenticate users, authorize repository access, use the Copilot integration
-server-side, and never write directly to `main`.
+The GitHub Pages console now provides a chat interface for repository change requests. This page is intentionally static and does not hold GitHub credentials. Connect it to a separately hosted GitHub App/API service by providing `window.VA_CHAT_API_URL`; the service contract and security requirements are documented in `docs/github-copilot-chat-api.md`.
+
+All accepted changes must be delivered through pull requests. The backend must authenticate users, authorize repository access, use the Copilot integration server-side, and never write directly to `main`.
 
 ### Front-End Chat Application Features
 
-The front end of this web application now includes a fully working GitHub Copilot chat interface. This chat supports two distinct modes:
+The front end of this web application now includes a fully working GitHub Copilot chat interface supporting two distinct modes:
 
 - **Edit Mode:** Allows users to request and receive code modifications, enabling interactive repository change requests directly through the chat.
 
@@ -160,3 +156,4 @@ Users can seamlessly switch between these modes within the chat interface, enhan
 │   ├── rollback.sh
 │   └── smoke-test.sh
 └── README.md
+```
