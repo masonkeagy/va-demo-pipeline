@@ -1045,7 +1045,7 @@ function setChatBusy(isBusy){
   el("sendChatBtn").textContent = isBusy ? "Working..." : "Send";
 }
 
-async function submitChatRequest(request){
+async function submitChatRequest(request, mode){
   if(!CHAT_API_URL){
     addChatMessage("system", "Chat is not connected yet. Configure VA_CHAT_API_URL to point to the GitHub App API service.");
     return;
@@ -1106,7 +1106,7 @@ el("chatForm").addEventListener("submit", event => {
   if(!request) return;
   addChatMessage("user", request);
   input.value = "";
-  submitChatRequest(request);
+  submitChatRequest(request, mode);
 });
 
 async function loadPRs(){
