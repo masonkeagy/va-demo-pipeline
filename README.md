@@ -137,6 +137,16 @@ All accepted changes must be delivered through pull requests. The backend must
 authenticate users, authorize repository access, use the Copilot integration
 server-side, and never write directly to `main`.
 
+### Front-End Chat Application Features
+
+The front end of this web application now includes a fully working GitHub Copilot chat interface. This chat supports two distinct modes:
+
+- **Edit Mode:** Allows users to request and receive code modifications, enabling interactive repository change requests directly through the chat.
+
+- **Analysis Mode:** Enables users to ask questions and receive insights about the repository, facilitating understanding and review without making changes.
+
+Users can seamlessly switch between these modes within the chat interface, enhancing productivity and collaboration.
+
 ---
 
 ## Repository Structure
