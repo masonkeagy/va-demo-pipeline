@@ -58,9 +58,10 @@ The scaffold currently models the following general flow:
 6. Integration / API / DAST / Performance Validation
 7. Deploy to TEST/UAT
 8. Regression Testing
-9. Deploy to PreProd and Production
-10. Smoke Testing and Automated Rollback
-11. Monitoring / Observability Validation
+9. Quality Review
+10. Deploy to PreProd and Production
+11. Smoke Testing and Automated Rollback
+12. Monitoring / Observability Validation
 
 ---
 
@@ -94,6 +95,7 @@ This scaffold currently includes:
 - DAST placeholder
 - Performance testing placeholder
 - Regression test placeholder
+- Quality Review placeholder
 - Smoke test placeholder
 - Automated rollback placeholder
 - Incident creation placeholder
