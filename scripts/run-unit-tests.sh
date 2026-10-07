@@ -4,12 +4,12 @@
 # Unit Tests Script
 # ============================================
 # Purpose: Run C# Plugin and TypeScript WebResource tests
-# Usage: bash run-unit-tests.sh --min-coverage 80
+# Usage: bash run-unit-tests.sh --min-coverage 90
 # ============================================
 
 set -e
 
-MIN_COVERAGE=80
+MIN_COVERAGE=90
 TESTS_FAILED=0
 
 while [[ $# -gt 0 ]]; do
