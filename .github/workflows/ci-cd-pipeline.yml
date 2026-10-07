@@ -961,12 +961,51 @@ jobs:
           echo "Next Stage: Stage 9a - Deploy to PreProd"
           echo "============================================"
 
+# Stage 8a: Quality Review
+  quality_review:
+    name: "Stage 8a - Quality Review"
+    runs-on: ubuntu-latest
+    needs: regression_tests
+    env:
+      UAT_URL: "https://masonkeagy.github.io/va-demo-pipeline/"
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Run Quality Review Script
+        run: |
+          echo "Starting Quality Review..."
+          chmod +x scripts/run-quality-review.sh
+          bash scripts/run-quality-review.sh \
+            --uat-url "$UAT_URL"
+
+      - name: Upload Quality Review Artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: quality-review-results
+          path: quality-review-results/
+          retention-days: 30
+
+      - name: Quality Review Summary
+        if: always()
+        run: |
+          echo ""
+          echo "============================================"
+          echo "Stage 8a: Quality Review Complete"
+          echo "============================================"
+          echo ""
+          echo "Quality checks executed and artifacts uploaded."
+          echo ""
+          echo "Next Stage: Stage 9a - Deploy to PreProd"
+          echo "============================================"
+
 # Stage 9A: Deploy to PreProd
   deploy_preprod:
     name: "Stage 9a - Deploy to PreProd"
     runs-on: ubuntu-latest
     needs:
-      - regression_tests
+      - quality_review
       - build_and_sign
     environment:
       name: preprod
@@ -1790,19 +1829,19 @@ jobs:
           echo ""
           echo "📊 MONITORING TOOLS INTEGRATED"
           echo "================================"
-          echo "✅ Azure Application Insights"
+          echo "✓ Azure Application Insights"
           echo "   └─ Custom metrics sent"
           echo ""
-          echo "✅ Dynatrace"
+          echo "✓ Dynatrace"
           echo "   └─ Deployment event created"
           echo ""
-          echo "✅ Splunk"
+          echo "✓ Splunk"
           echo "   └─ Deployment event ingested"
           echo ""
-          echo "✅ JIRA"
+          echo "✓ JIRA"
           echo "   └─ Ticket ${{ steps.jira.outputs.jira_key }} updated"
           echo ""
-          echo "📈 PERFORMANCE METRICS"
+          echo "📊 PERFORMANCE METRICS"
           echo "======================"
           echo "• Availability:   99.98% (Target: 99.9%) ✅ PASS"
           echo "• Error Rate:     0.02% (Target: <1%)   ✅ PASS"
@@ -1832,6 +1871,7 @@ jobs:
       - dast_security_scan
       - deploy_uat
       - regression_tests
+      - quality_review
       - deploy_preprod
       - deploy_prod
       - smoke_tests
@@ -1898,6 +1938,7 @@ jobs:
           DAST_SECURITY_SCANNING: ${{ needs.dast_security_scan.result }}
           DEPLOY_UAT: ${{ needs.deploy_uat.result }}
           REGRESSION_TESTS: ${{ needs.regression_tests.result }}
+          QUALITY_REVIEW: ${{ needs.quality_review.result }}
           DEPLOY_PREPROD: ${{ needs.deploy_preprod.result }}
           DEPLOY_PROD: ${{ needs.deploy_prod.result }}
           SMOKE_TESTS: ${{ needs.smoke_tests.result }}
@@ -1958,6 +1999,7 @@ jobs:
             --arg integrationTests "$INTEGRATION_TESTS" \
             --arg deployUat "$DEPLOY_UAT" \
             --arg regressionTests "$REGRESSION_TESTS" \
+            --arg qualityReview "$QUALITY_REVIEW" \
             --arg deployPreprod "$DEPLOY_PREPROD" \
             --arg deployProd "$DEPLOY_PROD" \
             --arg smokeTests "$SMOKE_TESTS" \
@@ -2021,6 +2063,11 @@ jobs:
                   id: "regression_tests",
                   name: "Regression tests",
                   result: $regressionTests
+                },
+                {
+                  id: "quality_review",
+                  name: "Quality Review",
+                  result: $qualityReview
                 },
                 {
                   id: "deploy_preprod",
@@ -2098,6 +2145,3 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./dashboard
           force_orphan: true
-
-
-           
