@@ -1,5 +1,3 @@
-Pull request feature is working!
-
 # VA Demo CI/CD Pipeline Scaffold
 
 This repository contains an initial **GitHub Actions CI/CD pipeline scaffold** based on the proposed enterprise DevSecOps workflow tailored for a VA-focused application delivery model.
@@ -159,3 +157,18 @@ Users can seamlessly switch between these modes within the chat interface, enhan
 │   └── smoke-test.sh
 └── README.md
 ```
+
+---
+
+## Release Governance
+
+This repository and its associated CI/CD pipeline scaffold adhere to a release governance framework designed to ensure quality, security, and compliance throughout the software delivery lifecycle. Key aspects include:
+
+- **Change Control:** All changes must be introduced via pull requests with appropriate peer review and automated validation.
+- **Approval Gates:** Deployment to higher environments (UAT, PreProd, Production) requires explicit approval steps to enforce compliance and risk management.
+- **Security Compliance:** Integrated security scanning stages (CodeQL, dependency scanning, secret detection, IaC scanning) enforce security policies before promotion.
+- **Auditability:** Pipeline execution logs, artifact provenance, and deployment records are maintained to support traceability and auditing.
+- **Rollback Capability:** Automated rollback mechanisms are scaffolded to enable quick recovery from failed deployments or incidents.
+- **Monitoring and Observability:** Post-deployment validation and monitoring stages ensure operational readiness and support incident response.
+
+This governance framework is intended to evolve alongside the pipeline and application, incorporating additional controls and tooling as they become available.
