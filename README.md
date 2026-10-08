@@ -1,5 +1,3 @@
-Pull request feature is working!
-
 # VA Demo CI/CD Pipeline Scaffold
 
 This repository contains an initial **GitHub Actions CI/CD pipeline scaffold** based on the proposed enterprise DevSecOps workflow tailored for a VA-focused application delivery model.
@@ -159,3 +157,23 @@ Users can seamlessly switch between these modes within the chat interface, enhan
 │   └── smoke-test.sh
 └── README.md
 ```
+
+---
+
+## Testing Explanation
+
+The testing stages in this pipeline scaffold are designed to ensure code quality, security, and functionality at multiple levels throughout the delivery process:
+
+- **Pull Request Validation:** Automatically checks incoming code changes for basic correctness and adherence to standards before merging.
+
+- **Unit Testing:** Runs isolated tests on individual components or functions to verify that each part behaves as expected.
+
+- **Security Scanning:** Includes multiple scans such as CodeQL for static analysis, dependency scanning to identify vulnerable libraries, secret detection to prevent accidental exposure of sensitive information, and Infrastructure as Code (IaC) scanning to catch misconfigurations.
+
+- **Integration / API / DAST / Performance Validation:** Validates that integrated components work together correctly, APIs respond as intended, dynamic application security testing (DAST) identifies runtime vulnerabilities, and performance tests measure responsiveness and stability under load.
+
+- **Regression Testing:** Ensures that recent changes have not adversely affected existing functionality by rerunning comprehensive test suites.
+
+- **Smoke Testing:** Conducted after deployments to verify that critical functionalities are working in the target environment, serving as a quick health check.
+
+Each testing phase is represented as a placeholder in the scaffold, allowing teams to integrate real test suites and tools as they develop the application and pipeline further.
