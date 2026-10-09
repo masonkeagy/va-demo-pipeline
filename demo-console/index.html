@@ -1637,9 +1637,8 @@ function isAiActivity(actor, branch = ""){
     /^(ai[-/]|copilot[-/])/.test(ref);
 }
 
-function addActivityItem(items, icon, title, details, timestamp, actor){
+function addActivityItem(items, title, details, timestamp, actor){
   items.push({
-    icon,
     title,
     details,
     timestamp,
@@ -1882,9 +1881,9 @@ async function loadActivityFeed(jobs = []) {
     : ""}${activityItems.length
     ? activityItems.map(item => `
       <div style="padding:8px;margin-bottom:8px;border-bottom:1px solid #33495d;">
-        <div>${item.icon} <b>${escapeHtml(item.title)}</b></div>
-        <div style="padding:4px 0 2px 24px;">${item.details}</div>
-        <div style="padding-left:24px;font-size:11px;color:var(--muted);" title="${escapeHtml(item.timestamp || "")}">${escapeHtml(activityTimeAgo(item.timestamp))}${item.actor ? ` · ${escapeHtml(item.actor)}` : ""}</div>
+        <div><b>${escapeHtml(item.title)}</b></div>
+        <div style="padding:4px 0 2px;">${item.details}</div>
+        <div style="font-size:11px;color:var(--muted);" title="${escapeHtml(item.timestamp || "")}">${escapeHtml(activityTimeAgo(item.timestamp))}${item.actor ? ` · ${escapeHtml(item.actor)}` : ""}</div>
       </div>
     `).join("")
     : activityWarnings.length
