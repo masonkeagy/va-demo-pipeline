@@ -1112,7 +1112,6 @@ el("chatForm").addEventListener("submit", event => {
 
 
 async function loadPRs(){
-console.log("PRS", prs);
 try{
 
 const response =
@@ -1194,9 +1193,6 @@ async function loadPipeline(){
 
 try{
 
-
-const activityItems = [];
-
 const runsResponse =
 await fetch(
 `${API}/actions/runs?per_page=50`
@@ -1257,87 +1253,7 @@ console.log(
   }))
 );
 
-loadActivityFeed(jobs);
-
-const buildJob =
-jobs.find(j =>
-j.name.includes("Build")
-);
-
-if(buildJob &&
-buildJob.conclusion === "success"){
-
-activityItems.push({
-icon:"📦",
-message:"Build Artifact Created"
-});
-
-}
-
-const securityJob =
-jobs.find(j =>
-j.name.includes("Security")
-);
-
-if(securityJob &&
-securityJob.conclusion === "success"){
-
-activityItems.push({
-icon:"🛡️",
-message:"Security Scan Completed"
-});
-
-}
-
-
-const uatJob =
-jobs.find(j =>
-j.name.includes("UAT")
-);
-
-if(uatJob &&
-uatJob.conclusion === "success"){
-
-activityItems.push({
-icon:"✅",
-message:"Deployment Approved for UAT"
-});
-
-}
-
-
-const prodJob =
-jobs.find(j =>
-j.name.includes("Production")
-);
-
-if(prodJob &&
-prodJob.conclusion === "success"){
-
-activityItems.push({
-icon:"🚀",
-message:"Production Deployment Complete"
-});
-
-}
-``
-
-
-const monitoringJob =
-jobs.find(j =>
-j.name.includes("Monitoring")
-);
-
-if(monitoringJob &&
-monitoringJob.conclusion === "success"){
-
-activityItems.push({
-icon:"📈",
-message:"Application Monitoring Active"
-});
-
-}
-``
+await loadActivityFeed(jobs);
 
 /*
 FORCE THE 12 STAGES TO ALWAYS EXIST
@@ -1681,165 +1597,308 @@ async function loadRegressionResults() {
 
 
 
-function loadActivityFeed(jobs = []) {
+function activityTimeAgo(value){
+  if(!value){
+    return "Time unavailable";
+  }
+  const timestamp = new Date(value).getTime();
+  if(!Number.isFinite(timestamp)){
+    return "Time unavailable";
+  }
 
-  console.log("ACTIVITY FEED JOBS", jobs);
+  const seconds = Math.max(0, Math.floor((Date.now() - timestamp) / 1000));
+  if(seconds < 60){
+    return "Just now";
+  }
+  if(seconds < 3600){
+    const minutes = Math.floor(seconds / 60);
+    return `${minutes} minute${minutes === 1 ? "" : "s"} ago`;
+  }
+  if(seconds < 86400){
+    const hours = Math.floor(seconds / 3600);
+    return `${hours} hour${hours === 1 ? "" : "s"} ago`;
+  }
+  if(seconds < 604800){
+    const days = Math.floor(seconds / 86400);
+    return `${days} day${days === 1 ? "" : "s"} ago`;
+  }
+  return new Date(timestamp).toLocaleString([], {
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit"
+  });
+}
+
+function isAiActivity(actor, branch = ""){
+  const login = String(actor || "").toLowerCase();
+  const ref = String(branch || "").toLowerCase();
+  return /copilot|openai|claude|cursor|ai[-_ ]?(agent|bot)/.test(login) ||
+    /^(ai[-/]|copilot[-/])/.test(ref);
+}
+
+function addActivityItem(items, icon, title, details, timestamp, actor){
+  items.push({
+    icon,
+    title,
+    details,
+    timestamp,
+    actor
+  });
+}
+
+async function loadActivityFeed(jobs = []) {
   const activityItems = [];
+  const feed = el("activityFeed");
+  const activityWarnings = [];
+  let events = [];
+  let openPullRequests = [];
 
-  if (
-    jobs.find(j =>
-      j.name.includes("PR Validation") &&
-      j.conclusion === "success"
-    )
-  ) {
-    activityItems.push({
-      icon: "✅",
-      message: "Pull Request Validation Completed"
-    });
+  try{
+    const response = await fetch(`${API}/events?per_page=100`);
+    if(!response.ok){
+      throw new Error(`GitHub activity request failed (${response.status})`);
+    }
+    events = await response.json();
+    if(!Array.isArray(events)){
+      throw new Error("GitHub returned an invalid activity feed.");
+    }
+  }catch(error){
+    console.error("Unable to load repository activity:", error);
+    activityWarnings.push(error.message || "Repository activity is unavailable.");
   }
 
-  if (
-    jobs.find(j =>
-      j.name.includes("Unit Tests") &&
-      j.conclusion === "success"
-    )
-  ) {
-    activityItems.push({
-      icon: "🧪",
-      message: "Unit Testing Passed"
-    });
+  try{
+    const response = await fetch(`${API}/pulls?state=open&per_page=100`);
+    if(!response.ok){
+      throw new Error(`GitHub pull request request failed (${response.status})`);
+    }
+    const pullRequests = await response.json();
+    if(!Array.isArray(pullRequests)){
+      throw new Error("GitHub returned invalid pull request data.");
+    }
+    openPullRequests = pullRequests;
+  }catch(error){
+    console.error("Unable to load pending review requests:", error);
+    activityWarnings.push(error.message || "Pending review requests are unavailable.");
   }
 
-  if (
-    jobs.find(j =>
-      j.name.includes("Security") &&
-      j.conclusion === "success"
-    )
-  ) {
-    activityItems.push({
-      icon: "🛡️",
-      message: "CodeQL & Security Scans Passed"
-    });
-  }
+  const pushEventsWithoutCommits = events.filter(event =>
+    event.type === "PushEvent" &&
+    !event.payload?.commits?.length &&
+    event.payload?.head
+  ).slice(0, 5);
+  const fetchedPushCommits = new Map();
+  await Promise.all(pushEventsWithoutCommits.map(async event => {
+    try{
+      const response = await fetch(`${API}/commits/${encodeURIComponent(event.payload.head)}`);
+      if(!response.ok){
+        throw new Error(`GitHub commit request failed (${response.status})`);
+      }
+      fetchedPushCommits.set(event.id, await response.json());
+    }catch(error){
+      console.error("Unable to load pushed commit details:", error);
+      activityWarnings.push(error.message || "Some commit details are unavailable.");
+    }
+  }));
 
-  if (
-    jobs.find(j =>
-      j.name.includes("Build") &&
-      j.conclusion === "success"
-    )
-  ) {
-    activityItems.push({
-      icon: "📦",
-      message: "Build Artifact Created"
-    });
-  }
+  events.forEach(event => {
+      const payload = event.payload || {};
+      const actor = event.actor?.login || "Unknown";
+      const eventTime = event.created_at;
 
-  if (
-    jobs.find(j =>
-      j.name.includes("Deploy to Dev") &&
-      j.conclusion === "success"
-    )
-  ) {
-    activityItems.push({
-      icon: "🚀",
-      message: "Application Successfully Deployed To Dev"
-    });
-  }
+      if(event.type === "CreateEvent" && payload.ref_type === "branch" && payload.ref){
+        const branch = payload.ref;
+        const aiGenerated = isAiActivity(actor, branch);
+        addActivityItem(
+          activityItems,
+          aiGenerated ? "🤖" : "🌿",
+          aiGenerated ? "AI Generated Branch" : "Branch Created",
+          `<b>Branch:</b> ${escapeHtml(branch)}<br><b>Created by:</b> ${escapeHtml(actor)}`,
+          eventTime,
+          actor
+        );
+      }
 
-  if (
-    jobs.find(j =>
-      j.name.includes("Integration") &&
-      j.conclusion === "success"
-    )
-  ) {
-    activityItems.push({
-      icon: "🔗",
-      message: "Integration Testing Complete"
-    });
-  }
+      if(event.type === "PullRequestEvent"){
+        const pullRequest = payload.pull_request || {};
+        const number = pullRequest.number || payload.number;
+        const title = pullRequest.title || `#${number || "?"}`;
+        const branch = pullRequest.head?.ref || "";
 
-  if (
-    jobs.find(j =>
-      j.name.includes("DAST") &&
-      j.conclusion === "success"
-    )
-  ) {
-    activityItems.push({
-      icon: "🔍",
-      message: "DAST Security Scan Complete"
-    });
-  }
+        if(payload.action === "opened" && number){
+          const aiCreated = isAiActivity(actor, branch);
+          addActivityItem(
+            activityItems,
+            aiCreated ? "🤖" : "📝",
+            aiCreated ? "AI Created Pull Request" : `PR #${number} Created`,
+            aiCreated
+              ? `<b>PR #${escapeHtml(number)}:</b> ${escapeHtml(title)}<br><b>Created by:</b> ${escapeHtml(actor)}`
+              : `<b>Title:</b> ${escapeHtml(title)}<br><b>Author:</b> ${escapeHtml(pullRequest.user?.login || actor)}`,
+            eventTime,
+            actor
+          );
+        }else if(payload.action === "review_requested"){
+          const reviewer = payload.requested_reviewer?.login ||
+            payload.requested_team?.slug ||
+            "Reviewer unavailable";
+          addActivityItem(
+            activityItems,
+            "👀",
+            "PR Review Requested",
+            `<b>PR #${escapeHtml(number || "?")}:</b> ${escapeHtml(title)}<br><b>Reviewer:</b> ${escapeHtml(reviewer)}<br><b>Requested by:</b> ${escapeHtml(actor)}`,
+            eventTime,
+            actor
+          );
+        }
+      }
 
-  if (
-    jobs.find(j =>
-      j.name.includes("UAT") &&
-      j.conclusion === "success"
-    )
-  ) {
-    activityItems.push({
-      icon: "👀",
-      message: "Deployment Approved For UAT"
-    });
-  }
+      if(event.type === "PullRequestReviewEvent"){
+        const review = payload.review || {};
+        const state = String(review.state || "").toLowerCase();
+        if(state === "approved" || state === "changes_requested"){
+          const pullRequest = payload.pull_request || {};
+          const reviewer = review.user?.login || actor;
+          const number = pullRequest.number || payload.number || "?";
+          addActivityItem(
+            activityItems,
+            state === "approved" ? "✅" : "❌",
+            state === "approved" ? "PR Approved" : "Changes Requested",
+            `<b>PR #${escapeHtml(number)}:</b> ${escapeHtml(pullRequest.title || "")}<br><b>Reviewer:</b> ${escapeHtml(reviewer)}`,
+            eventTime,
+            reviewer
+          );
+        }
+      }
 
-  if (
-    jobs.find(j =>
-      j.name.includes("Regression") &&
-      j.conclusion === "success"
-    )
-  ) {
-    activityItems.push({
-      icon: "📋",
-      message: "Regression Testing Passed"
-    });
-  }
+      if(event.type === "PullRequestReviewCommentEvent"){
+        const comment = payload.comment || {};
+        const targetBranch = payload.pull_request?.head?.ref || "";
+        if(comment.path && isAiActivity(actor, targetBranch)){
+          addActivityItem(
+            activityItems,
+            "🤖",
+            "AI Suggested Change",
+            `<b>Target:</b> ${escapeHtml(comment.path)}<br><b>Suggested by:</b> ${escapeHtml(actor)}`,
+            eventTime,
+            actor
+          );
+        }
+      }
 
-  if (
-    jobs.find(j =>
-      j.name.includes("PreProd") &&
-      j.conclusion === "success"
-    )
-  ) {
-    activityItems.push({
-      icon: "✅",
-      message: "Release Candidate Approved For PreProd"
-    });
-  }
+      if(event.type === "PushEvent"){
+        const branch = String(payload.ref || "").replace(/^refs\/heads\//, "");
+        const pushedCommit = fetchedPushCommits.get(event.id);
+        const commits = payload.commits?.length
+          ? payload.commits
+          : pushedCommit
+            ? [{
+                message: pushedCommit.commit?.message,
+                author: pushedCommit.commit?.author,
+                date: pushedCommit.commit?.committer?.date || pushedCommit.commit?.author?.date
+              }]
+            : [];
+        commits.forEach(commit => {
+          const message = String(commit.message || "").split(/\r?\n/, 1)[0];
+          if(message){
+            addActivityItem(
+              activityItems,
+              "📦",
+              "Commit Created",
+              `<b>Message:</b> ${escapeHtml(message)}<br><b>Branch:</b> ${escapeHtml(branch || "Unknown")}<br><b>Author:</b> ${escapeHtml(commit.author?.name || actor)}`,
+              commit.date || eventTime,
+              actor
+            );
+          }
+        });
+      }
 
-  if (
-    jobs.find(j =>
-      j.name.includes("Production") &&
-      j.conclusion === "success"
-    )
-  ) {
-    activityItems.push({
-      icon: "🏆",
-      message: "Production Deployment Complete"
-    });
-  }
+      if(event.type === "DeploymentReviewEvent"){
+        const review = payload.review || {};
+        const environment = payload.deployment?.environment ||
+          payload.environment ||
+          "";
+        const normalizedEnvironment = String(environment).toLowerCase();
+        const label = normalizedEnvironment === "uat"
+          ? "UAT"
+          : normalizedEnvironment === "preprod"
+            ? "PreProd"
+            : "";
+        const state = String(review.state || payload.action || "").toLowerCase();
+        const isRequested = ["requested", "review_requested", "pending"].includes(state);
+        if(label && (isRequested || state === "approved")){
+          const approved = state === "approved";
+          const reviewer = review.user?.login || actor;
+          addActivityItem(
+            activityItems,
+            approved ? "✅" : "🚀",
+            `${label} ${approved ? "Approved" : "Approval Requested"}`,
+            `<b>Environment:</b> ${escapeHtml(label)}${approved ? `<br><b>Reviewer:</b> ${escapeHtml(reviewer)}` : ""}`,
+            eventTime,
+            actor
+          );
+        }
+      }
+  });
 
-  if (
-    jobs.find(j =>
-      j.name.includes("Monitoring") &&
-      j.conclusion === "success"
-    )
-  ) {
-    activityItems.push({
-      icon: "📈",
-      message: "Monitoring & Telemetry Activated"
+  openPullRequests.forEach(pullRequest => {
+    const requestedReviewers = [
+      ...(pullRequest.requested_reviewers || []).map(reviewer => reviewer.login),
+      ...(pullRequest.requested_teams || []).map(team => team.slug)
+    ].filter(Boolean);
+    requestedReviewers.forEach(reviewer => {
+      const number = escapeHtml(pullRequest.number || "?");
+      if(activityItems.some(item =>
+        item.title === "PR Review Requested" &&
+        item.details.includes(`PR #${number}:`) &&
+        item.details.includes(`<b>Reviewer:</b> ${escapeHtml(reviewer)}`)
+      )){
+        return;
+      }
+      addActivityItem(
+        activityItems,
+        "👀",
+        "PR Review Requested",
+        `<b>PR #${number}:</b> ${escapeHtml(pullRequest.title || "")}<br><b>Reviewer:</b> ${escapeHtml(reviewer)}<br><b>Status:</b> Awaiting review`,
+        pullRequest.updated_at || pullRequest.created_at,
+        ""
+      );
     });
-  }
+  });
 
-  document.getElementById("activityFeed").innerHTML =
-    activityItems.map(item => `
-      <div style="
-        padding:8px;
-        margin-bottom:8px;
-        border-bottom:1px solid #33495d;
-      ">
-        ${item.icon} ${item.message}
+  jobs.filter(job =>
+    ["failure", "timed_out", "action_required"].includes(String(job.conclusion || "").toLowerCase())
+  ).forEach(job => {
+    const failedStep = (job.steps || []).find(step =>
+      ["failure", "timed_out"].includes(String(step.conclusion || "").toLowerCase())
+    );
+    addActivityItem(
+      activityItems,
+      "❌",
+      "Workflow Failure",
+      `<b>Stage:</b> ${escapeHtml(job.name || "Unknown stage")}<br><b>Reason:</b> ${escapeHtml(failedStep?.name || job.name || "Review the job logs")}`,
+      job.completed_at || job.started_at,
+      ""
+    );
+  });
+
+  activityItems.sort((first, second) =>
+    (Date.parse(second.timestamp || "") || 0) - (Date.parse(first.timestamp || "") || 0)
+  );
+
+  feed.innerHTML = `${activityWarnings.length
+    ? `<div style="padding:8px;color:var(--muted);">${activityWarnings.map(warning => escapeHtml(warning)).join("<br>")}</div>`
+    : ""}${activityItems.length
+    ? activityItems.map(item => `
+      <div style="padding:8px;margin-bottom:8px;border-bottom:1px solid #33495d;">
+        <div>${item.icon} <b>${escapeHtml(item.title)}</b></div>
+        <div style="padding:4px 0 2px 24px;">${item.details}</div>
+        <div style="padding-left:24px;font-size:11px;color:var(--muted);" title="${escapeHtml(item.timestamp || "")}">${escapeHtml(activityTimeAgo(item.timestamp))}${item.actor ? ` · ${escapeHtml(item.actor)}` : ""}</div>
       </div>
-    `).join("");
+    `).join("")
+    : activityWarnings.length
+      ? ""
+      : `<div style="padding:8px;color:var(--muted);">No repository activity to show.</div>`}`;
 }
 
 async function refresh(){
