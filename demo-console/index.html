@@ -1637,9 +1637,8 @@ function isAiActivity(actor, branch = ""){
     /^(ai[-/]|copilot[-/])/.test(ref);
 }
 
-function addActivityItem(items, icon, title, details, timestamp, actor){
+function addActivityItem(items, title, details, timestamp, actor){
   items.push({
-    icon,
     title,
     details,
     timestamp,
@@ -1712,7 +1711,6 @@ async function loadActivityFeed(jobs = []) {
         const aiGenerated = isAiActivity(actor, branch);
         addActivityItem(
           activityItems,
-          aiGenerated ? "🤖" : "🌿",
           aiGenerated ? "AI Generated Branch" : "Branch Created",
           `<b>Branch:</b> ${escapeHtml(branch)}<br><b>Created by:</b> ${escapeHtml(actor)}`,
           eventTime,
@@ -1730,7 +1728,6 @@ async function loadActivityFeed(jobs = []) {
           const aiCreated = isAiActivity(actor, branch);
           addActivityItem(
             activityItems,
-            aiCreated ? "🤖" : "📝",
             aiCreated ? "AI Created Pull Request" : `PR #${number} Created`,
             aiCreated
               ? `<b>PR #${escapeHtml(number)}:</b> ${escapeHtml(title)}<br><b>Created by:</b> ${escapeHtml(actor)}`
@@ -1744,7 +1741,6 @@ async function loadActivityFeed(jobs = []) {
             "Reviewer unavailable";
           addActivityItem(
             activityItems,
-            "👀",
             "PR Review Requested",
             `<b>PR #${escapeHtml(number || "?")}:</b> ${escapeHtml(title)}<br><b>Reviewer:</b> ${escapeHtml(reviewer)}<br><b>Requested by:</b> ${escapeHtml(actor)}`,
             eventTime,
@@ -1762,7 +1758,6 @@ async function loadActivityFeed(jobs = []) {
           const number = pullRequest.number || payload.number || "?";
           addActivityItem(
             activityItems,
-            state === "approved" ? "✅" : "❌",
             state === "approved" ? "PR Approved" : "Changes Requested",
             `<b>PR #${escapeHtml(number)}:</b> ${escapeHtml(pullRequest.title || "")}<br><b>Reviewer:</b> ${escapeHtml(reviewer)}`,
             eventTime,
@@ -1777,7 +1772,6 @@ async function loadActivityFeed(jobs = []) {
         if(comment.path && isAiActivity(actor, targetBranch)){
           addActivityItem(
             activityItems,
-            "🤖",
             "AI Suggested Change",
             `<b>Target:</b> ${escapeHtml(comment.path)}<br><b>Suggested by:</b> ${escapeHtml(actor)}`,
             eventTime,
@@ -1803,7 +1797,6 @@ async function loadActivityFeed(jobs = []) {
           if(message){
             addActivityItem(
               activityItems,
-              "📦",
               "Commit Created",
               `<b>Message:</b> ${escapeHtml(message)}<br><b>Branch:</b> ${escapeHtml(branch || "Unknown")}<br><b>Author:</b> ${escapeHtml(commit.author?.name || actor)}`,
               commit.date || eventTime,
@@ -1831,7 +1824,6 @@ async function loadActivityFeed(jobs = []) {
           const reviewer = review.user?.login || actor;
           addActivityItem(
             activityItems,
-            approved ? "✅" : "🚀",
             `${label} ${approved ? "Approved" : "Approval Requested"}`,
             `<b>Environment:</b> ${escapeHtml(label)}${approved ? `<br><b>Reviewer:</b> ${escapeHtml(reviewer)}` : ""}`,
             eventTime,
@@ -1857,7 +1849,6 @@ async function loadActivityFeed(jobs = []) {
       }
       addActivityItem(
         activityItems,
-        "👀",
         "PR Review Requested",
         `<b>PR #${number}:</b> ${escapeHtml(pullRequest.title || "")}<br><b>Reviewer:</b> ${escapeHtml(reviewer)}<br><b>Status:</b> Awaiting review`,
         pullRequest.updated_at || pullRequest.created_at,
@@ -1874,7 +1865,6 @@ async function loadActivityFeed(jobs = []) {
     );
     addActivityItem(
       activityItems,
-      "❌",
       "Workflow Failure",
       `<b>Stage:</b> ${escapeHtml(job.name || "Unknown stage")}<br><b>Reason:</b> ${escapeHtml(failedStep?.name || job.name || "Review the job logs")}`,
       job.completed_at || job.started_at,
@@ -1891,9 +1881,9 @@ async function loadActivityFeed(jobs = []) {
     : ""}${activityItems.length
     ? activityItems.map(item => `
       <div style="padding:8px;margin-bottom:8px;border-bottom:1px solid #33495d;">
-        <div>${item.icon} <b>${escapeHtml(item.title)}</b></div>
-        <div style="padding:4px 0 2px 24px;">${item.details}</div>
-        <div style="padding-left:24px;font-size:11px;color:var(--muted);" title="${escapeHtml(item.timestamp || "")}">${escapeHtml(activityTimeAgo(item.timestamp))}${item.actor ? ` · ${escapeHtml(item.actor)}` : ""}</div>
+        <div><b>${escapeHtml(item.title)}</b></div>
+        <div style="padding:4px 0 2px;">${item.details}</div>
+        <div style="font-size:11px;color:var(--muted);" title="${escapeHtml(item.timestamp || "")}">${escapeHtml(activityTimeAgo(item.timestamp))}${item.actor ? ` · ${escapeHtml(item.actor)}` : ""}</div>
       </div>
     `).join("")
     : activityWarnings.length
