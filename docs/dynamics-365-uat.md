@@ -1,15 +1,21 @@
 # Dynamics 365 UAT deployment and regression checks
 
 The `uat` GitHub Actions environment targets
-`https://org9bc0cd2d.crm.dynamics.com`. Pull requests do not deploy. A push to
-`main` or a manually started workflow builds the Dataverse solution, imports it
-with Power Platform CLI, and runs the Web Resource Jest tests plus authenticated
-Dataverse smoke checks.
+`https://org9bc0cd2d.crm.dynamics.com`. Pull requests now run through the full
+stage chain. After build, integration, and DAST checks, the workflow pauses at
+the `uat` environment for reviewer approval before importing the solution.
+After approval, the deployment job imports the solution and runs authenticated
+Dataverse smoke checks under the same protected environment. The next stage
+runs the Web Resource Jest tests without a second UAT approval. Pushes to `main`
+and manually started workflows use the same approval gate.
 
 ## GitHub setup
 
-1. In **Settings → Environments**, create an environment named `uat` and add
-   required reviewers if deployments should wait for approval.
+1. In **Settings → Environments**, create an environment named `uat` and
+   configure required reviewers. The workflow cannot send an approval request
+   unless this protection rule is enabled. This repository already has a UAT
+   reviewer configured. Review the pending `uat` deployment from the GitHub
+   Actions run page when GitHub sends the approval notification.
 2. Add these secrets to the `uat` environment (or repository secrets):
    - `AZURE_TENANT_ID`: Microsoft Entra tenant ID.
    - `AZURE_CLIENT_ID`: application (client) ID for the deployment app
@@ -25,9 +31,10 @@ Dataverse smoke checks.
    and that its application user belongs to this environment. No Azure
    subscription, Azure login, or client secret should be added to source.
 
-Do not create `ENABLE_PLACEHOLDER_RELEASE_STAGES`. The preproduction and
-production workflow jobs are still scaffold simulations; UAT regression
-success must not promote to them.
+The preproduction and production jobs still generate simulated deployment
+records; they are not real environment deployments. They run after successful
+UAT regression to preserve the end-to-end demo stage flow. Do not treat their
+success as a release to actual preproduction or production systems.
 
 ## Local commands
 
@@ -64,6 +71,6 @@ coverage requires adding the actual solution components and test cases.
   user is missing from this environment, or its security role lacks access.
 - A failed solution import should be checked for missing solution dependencies
   and publisher/environment configuration before retrying.
-- The regression job intentionally fails if credentials are absent or the
-  solution is not installed; it never converts missing tests or API failures
-  into a successful placeholder report.
+- The authenticated UAT smoke-test step intentionally fails if credentials
+  are absent or the solution is not installed; it never converts missing
+  tests or API failures into a successful placeholder report.
