@@ -620,12 +620,12 @@ jobs:
       - dast_security_scan
     environment:
       name: uat
-      url: https://masonkeagy.github.io/va-demo-pipeline/
+      url: org9bc0cd2d.crm.dynamics.com
     permissions:
       contents: read
       id-token: write
     env:
-      UAT_URL: "https://masonkeagy.github.io/va-demo-pipeline/"
+      UAT_URL: "https://org9bc0cd2d.crm.dynamics.com"
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -839,7 +839,7 @@ jobs:
       - deploy_uat
       - build_and_sign
     env:
-      UAT_URL: "https://masonkeagy.github.io/va-demo-pipeline/"
+      UAT_URL: "org9bc0cd2d.crm.dynamics.com"
       APP_TYPE: ${{ vars.APP_TYPE }}
     steps:
       - name: Checkout Code
