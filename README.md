@@ -108,7 +108,8 @@ This scaffold currently includes:
 As this is still a scaffold, the following are **not implemented yet**:
 
 - Real application code
-- Real unit/integration/regression/smoke tests
+- Full application-level regression and end-to-end tests (the current UAT
+  smoke checks are documented below)
 - Real build scripts
 - Dockerfile or package-specific build logic
 - Real dependency scanning tooling
@@ -116,7 +117,7 @@ As this is still a scaffold, the following are **not implemented yet**:
 - Real IaC scanning tooling
 - Real SBOM generation tooling
 - Real artifact signing
-- Real Azure deployment scripts
+- Deployments to environments other than the configured Dataverse UAT target
 - Actual Azure credentials / federated identity configuration
 - Real DAST tooling
 - Real performance/load scripts
@@ -126,6 +127,16 @@ As this is still a scaffold, the following are **not implemented yet**:
 - Real Application Insights instrumentation and metric publishing
 - Copilot-based release readiness logic
 - Application Factory provisioning/templates
+
+## Dynamics 365 UAT
+
+The Dataverse UAT deployment and authenticated smoke-test setup for
+`https://org9bc0cd2d.crm.dynamics.com` is documented in
+[`docs/dynamics-365-uat.md`](docs/dynamics-365-uat.md). The workflow requires
+an app registration, a Dataverse application user, and the three UAT GitHub
+secrets documented there. The current solution contains no root components,
+so regression coverage is limited to solution presence, Dataverse
+connectivity, and the existing Web Resource tests.
 
 ---
 

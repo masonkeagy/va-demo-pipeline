@@ -4,19 +4,21 @@
 
 .DESCRIPTION
     Reads environment-specific configuration from /config/{env}.json
-    and imports the solution via Power Platform CLI. Applies
-    environment variable and connection reference settings post-import.
+    and imports the solution via Power Platform CLI. Applies configured
+    Dataverse environment variables after import.
 
 .EXAMPLE
-    ./scripts/deploy.ps1 -Environment dev
+    ./scripts/deploy.ps1 -Environment uat
 #>
 
 param(
     [Parameter(Mandatory = $true)]
-    [ValidateSet("dev", "test", "prod")]
+    [ValidateSet("dev", "test", "uat", "prod")]
     [string]$Environment,
 
-    [string]$PackagePath = "./dist"
+    [string]$PackagePath = "./dist",
+
+    [switch]$AllowMock
 )
 
 $ErrorActionPreference = "Stop"
@@ -26,9 +28,10 @@ Write-Host "Deploy: Environment = $Environment" -ForegroundColor Cyan
 Write-Host "============================================" -ForegroundColor Cyan
 
 # ------------------------------------------------
-# Step 1: Load environment configuration
+# Step 1: Load configuration and locate the solution package
 # ------------------------------------------------
-$configPath = "./config/$Environment.json"
+$repositoryRoot = Split-Path -Parent $PSScriptRoot
+$configPath = Join-Path $repositoryRoot "config/$Environment.json"
 
 if (-not (Test-Path $configPath)) {
     throw "Configuration file not found: $configPath"
@@ -38,6 +41,14 @@ $config = Get-Content $configPath -Raw | ConvertFrom-Json
 Write-Host "`n[1/4] Loaded config for '$($config.environment)'" -ForegroundColor Yellow
 Write-Host "  Environment URL: $($config.environmentUrl)"
 Write-Host "  Solution: $($config.solutionName) v$($config.solutionVersion)"
+
+$packageDirectory = Resolve-Path $PackagePath -ErrorAction Stop
+$solutionZip = Get-ChildItem -Path $packageDirectory -Filter "$($config.solutionName)*.zip" |
+    Select-Object -First 1
+
+if (-not $solutionZip) {
+    throw "No solution package found matching '$($config.solutionName)*.zip' in $packageDirectory"
+}
 
 # ------------------------------------------------
 # Step 2: Authenticate to Dataverse
@@ -49,9 +60,11 @@ $clientId = [System.Environment]::GetEnvironmentVariable($config.authentication.
 $clientSecret = [System.Environment]::GetEnvironmentVariable($config.authentication.clientSecretSecretName)
 
 if (-not $tenantId -or -not $clientId -or -not $clientSecret) {
-    Write-Warning "Authentication secrets not found in environment variables."
-    Write-Warning "Expected: $($config.authentication.tenantIdSecretName), $($config.authentication.clientIdSecretName), $($config.authentication.clientSecretSecretName)"
-    Write-Warning "Skipping live authentication - running in DEMO/MOCK mode."
+    if (-not $AllowMock) {
+        throw "Missing Dataverse credentials. Set environment variables: $($config.authentication.tenantIdSecretName), $($config.authentication.clientIdSecretName), $($config.authentication.clientSecretSecretName). Use -AllowMock only for an explicit local dry run."
+    }
+
+    Write-Warning "Credentials are missing; explicit mock mode is enabled. No live deployment will occur."
     $mockMode = $true
 } else {
     $mockMode = $false
@@ -73,25 +86,26 @@ if (-not $tenantId -or -not $clientId -or -not $clientSecret) {
 # ------------------------------------------------
 Write-Host "`n[3/4] Importing solution package..." -ForegroundColor Yellow
 
-$solutionZip = Get-ChildItem -Path $PackagePath -Filter "$($config.solutionName)*.zip" | Select-Object -First 1
-
 if ($mockMode) {
-    Write-Host "  [MOCK MODE] Would import solution zip: $($config.solutionName)-*.zip" -ForegroundColor DarkYellow
+    Write-Host "  [MOCK MODE] Would import solution zip: $($solutionZip.Name)" -ForegroundColor DarkYellow
     Write-Host "  [MOCK MODE] Target environment: $($config.environmentUrl)" -ForegroundColor DarkYellow
     Write-Host "  [MOCK MODE] Publish after import: $($config.deploymentSettings.publishAfterImport)" -ForegroundColor DarkYellow
     Write-Host "  [MOCK MODE] Holding solution: $($config.deploymentSettings.holdingSolution)" -ForegroundColor DarkYellow
-    Write-Host "✓ [MOCK MODE] Simulated import complete" -ForegroundColor Green
-}
-elseif (-not $solutionZip) {
-    throw "No solution package found matching '$($config.solutionName)*.zip' in $PackagePath"
+    Write-Host "✓ [MOCK MODE] Dry run complete; no changes were made" -ForegroundColor Green
 }
 else {
-    pac solution import `
-        --path $solutionZip.FullName `
-        --publish-changes $config.deploymentSettings.publishAfterImport `
-        --force-overwrite $config.deploymentSettings.overwriteUnmanagedCustomizations `
-        --skip-dependency-check $config.deploymentSettings.skipProductUpdateDependencies `
-        --async
+    $importArguments = @("solution", "import", "--path", $solutionZip.FullName)
+    if ($config.deploymentSettings.publishAfterImport) {
+        $importArguments += "--publish-changes"
+    }
+    if ($config.deploymentSettings.overwriteUnmanagedCustomizations) {
+        $importArguments += "--force-overwrite"
+    }
+    if ($config.deploymentSettings.skipProductUpdateDependencies) {
+        $importArguments += "--skip-dependency-check"
+    }
+
+    pac @importArguments
 
     if ($LASTEXITCODE -ne 0) {
         throw "Solution import failed with exit code $LASTEXITCODE"
@@ -119,7 +133,7 @@ if ($mockMode) {
             --value $value
 
         if ($LASTEXITCODE -ne 0) {
-            Write-Warning "Failed to set environment variable '$key' (continuing)"
+            throw "Failed to set environment variable '$key' (exit code $LASTEXITCODE)"
         } else {
             Write-Host "  ✓ Set '$key' = '$value'" -ForegroundColor Green
         }

@@ -1,0 +1,20 @@
+{
+  "environment": "uat",
+  "environmentUrl": "https://org9bc0cd2d.crm.dynamics.com",
+  "solutionName": "CustomerServiceDemo",
+  "solutionVersion": "1.0.0.0",
+  "authentication": {
+    "method": "ClientSecret",
+    "tenantIdSecretName": "AZURE_TENANT_ID",
+    "clientIdSecretName": "AZURE_CLIENT_ID",
+    "clientSecretSecretName": "AZURE_CLIENT_SECRET"
+  },
+  "deploymentSettings": {
+    "publishAfterImport": true,
+    "overwriteUnmanagedCustomizations": true,
+    "skipProductUpdateDependencies": false,
+    "holdingSolution": false
+  },
+  "environmentVariables": {},
+  "connectionReferences": {}
+}
