@@ -620,7 +620,7 @@ jobs:
       - dast_security_scan
     environment:
       name: uat
-      url: org9bc0cd2d.crm.dynamics.com
+      url: https://org9bc0cd2d.crm.dynamics.com
     permissions:
       contents: read
       id-token: write
@@ -659,6 +659,40 @@ jobs:
 
           # Export for next step
           echo "PACKAGE_FILE=$PACKAGE" >> $GITHUB_ENV
+
+      - name: Install Power Platform CLI
+        run: |
+          dotnet tool install --global Microsoft.PowerApps.CLI.Tool
+
+      - name: Add PAC CLI to PATH
+        run: |
+          echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
+
+      - name: Authenticate to Dataverse
+        run: |
+          pac auth create \
+            --tenant ${{ secrets.AZURE_TENANT_ID }} \
+            --applicationId ${{ secrets.AZURE_CLIENT_ID }} \
+            --clientSecret ${{ secrets.AZURE_CLIENT_SECRET }} \
+            --environment $UAT_URL
+
+      - name: Verify Connection
+        run: |
+          pac org who
+
+      - name: Verify Solution Package
+        run: |
+          find dist -type f
+
+      - name: Import Solution
+        run: |
+          pac solution import \
+          --path ./dist/CustomerServiceDemo.zip \
+          --async
+
+      - name: Publish Customizations
+        run: |
+          pac solution publish
       
       # ============================================
       # Extract Artifact
@@ -677,88 +711,6 @@ jobs:
           fi
           echo "Package extracted successfully"
           find extracted -type f
-      
-      # ============================================
-      # Azure Login
-      # ============================================
-      - name: Azure Login
-        uses: azure/login@v2
-        with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-        continue-on-error: true
-      
-      - name: Validate Azure Context
-        run: |
-          echo "============================================"
-          echo "Azure Environment Validation"
-          echo "============================================"
-          az account show || echo "Azure login not configured yet"
-          echo ""
-          echo "Resource Group: rg-uat-placeholder"
-          echo "Cluster: aks-uat-placeholder"
-          echo "Namespace: uat"
-      
-      # ============================================
-      # Generate Deployment Manifest
-      # ============================================
-      - name: Create Kubernetes Manifest
-        run: |
-          mkdir -p k8s
-          cat > k8s/deployment.yaml << EOF
-          apiVersion: apps/v1
-          kind: Deployment
-          metadata:
-            name: va-demo-pipeline
-            namespace: uat
-          spec:
-            replicas: 2
-            selector:
-              matchLabels:
-                app: va-demo-pipeline
-            template:
-              metadata:
-                labels:
-                  app: va-demo-pipeline
-              spec:
-                containers:
-                - name: va-demo-pipeline
-                  image: placeholder.azurecr.io/va-demo:${{ github.sha }}
-                  ports:
-                  - containerPort: 8080
-                  env:
-                  - name: ENVIRONMENT
-                    value: "uat"
-                  - name: LOG_LEVEL
-                    value: "INFO"
-          EOF
-          echo "Generated deployment manifest:"
-          cat k8s/deployment.yaml
-      
-      # ============================================
-      # Deploy Application
-      # ============================================
-      - name: Deploy to UAT
-        run: |
-          echo "============================================"
-          echo "Deploying Application to UAT"
-          echo "============================================"
-          mkdir -p deployment-logs
-          cat > deployment-logs/uat-deployment.log << EOF
-          [INFO] Deployment started
-          [INFO] Environment: UAT
-          [INFO] Replica count: 2
-          [INFO] Applying Kubernetes manifests
-          [INFO] Pulling application image
-          [INFO] Starting rolling update
-          [INFO] Pod va-demo-pipeline-001 ready
-          [INFO] Pod va-demo-pipeline-002 ready
-          [INFO] Service endpoint available
-          [INFO] Deployment successful
-          [INFO] Timestamp: $(date -u +'%Y-%m-%dT%H:%M:%SZ')
-          EOF
-          cat deployment-logs/uat-deployment.log
       
       # ============================================
       # Post-Deployment Health Validation
@@ -839,7 +791,7 @@ jobs:
       - deploy_uat
       - build_and_sign
     env:
-      UAT_URL: "org9bc0cd2d.crm.dynamics.com"
+      UAT_URL: "https://org9bc0cd2d.crm.dynamics.com"
       APP_TYPE: ${{ vars.APP_TYPE }}
     steps:
       - name: Checkout Code
@@ -1022,7 +974,7 @@ jobs:
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          client-secret: ${{ secrets.AZURE_CLIENT_SECRET }}
         continue-on-error: true
 
       # ============================================
@@ -1240,7 +1192,7 @@ jobs:
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          client-secret: ${{ secrets.AZURE_CLIENT_SECRET }}
         continue-on-error: true
 
       # ============================================
@@ -1577,7 +1529,7 @@ jobs:
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          client-secret: ${{ secrets.AZURE_CLIENT_SECRET }}
         continue-on-error: true
 
       # ============================================
