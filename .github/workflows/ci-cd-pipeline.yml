@@ -620,12 +620,12 @@ jobs:
       - dast_security_scan
     environment:
       name: uat
-      url: https://org9bc0cd2d.crm.dynamics.com
+      url: https://org1e092ca1.crm.dynamics.com/
     permissions:
       contents: read
       id-token: write
     env:
-      UAT_URL: "https://org9bc0cd2d.crm.dynamics.com"
+      UAT_URL: "https://org1e092ca1.crm.dynamics.com/"
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -791,7 +791,7 @@ jobs:
       - deploy_uat
       - build_and_sign
     env:
-      UAT_URL: "https://org9bc0cd2d.crm.dynamics.com"
+      UAT_URL: "https://org1e092ca1.crm.dynamics.com/"
       APP_TYPE: ${{ vars.APP_TYPE }}
     steps:
       - name: Checkout Code
@@ -974,7 +974,6 @@ jobs:
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          client-secret: ${{ secrets.AZURE_CLIENT_SECRET }}
         continue-on-error: true
 
       # ============================================
@@ -1192,7 +1191,6 @@ jobs:
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          client-secret: ${{ secrets.AZURE_CLIENT_SECRET }}
         continue-on-error: true
 
       # ============================================
@@ -1529,7 +1527,6 @@ jobs:
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          client-secret: ${{ secrets.AZURE_CLIENT_SECRET }}
         continue-on-error: true
 
       # ============================================
