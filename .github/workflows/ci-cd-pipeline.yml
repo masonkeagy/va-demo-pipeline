@@ -687,7 +687,7 @@ jobs:
       - name: Import Solution
         run: |
           pac solution import \
-          --path ./dist/CustomerServiceDemo.zip \
+          --path ./dist/CustomerServiceDemo-Unmanaged.zip \
           --async
 
       - name: Publish Customizations
