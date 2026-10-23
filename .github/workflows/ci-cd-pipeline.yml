@@ -373,8 +373,11 @@ jobs:
     name: "Stage 6 - Integration Tests"
     runs-on: ubuntu-latest
     needs: deploy_dev
+    environment:
+      name: dev
+      url: ${{ vars.DEV_URL }}
     env:
-      DEV_URL: "https://dev.placeholder.com"
+      DEV_URL: "${{ vars.DEV_URL }}"
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -441,8 +444,12 @@ jobs:
     runs-on: ubuntu-latest
     needs: deploy_dev
 
+    environment:
+      name: dev
+      url: ${{ vars.DEV_URL }}
+
     env:
-      DEV_URL: "https://dev.placeholder.com"
+      DEV_URL: ${{ vars.DEV_URL }}
 
     steps:
 
