@@ -1,6 +1,6 @@
 /**
  * ============================================
- * caseForm.test.js 2
+ * caseForm.test.js
  * ============================================
  * Jest unit tests for caseForm.js
  * Mocks the Xrm.FormContext API since these tests
