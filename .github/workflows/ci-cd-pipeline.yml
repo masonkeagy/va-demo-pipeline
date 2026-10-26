@@ -387,6 +387,30 @@ jobs:
         with:
           python-version: '3.11'
           cache: 'pip'
+
+      - name: Install Power Platform CLI
+        run: |
+          dotnet tool install --global Microsoft.PowerApps.CLI.Tool
+
+      - name: Add PAC CLI To PATH
+        run: |
+          echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
+
+      - name: Authenticate To Dev Environment
+        run: |
+          pac auth create \
+            --tenant ${{ secrets.AZURE_TENANT_ID }} \
+            --applicationId ${{ secrets.AZURE_CLIENT_ID }} \
+            --clientSecret ${{ secrets.AZURE_CLIENT_SECRET }} \
+            --environment $DEV_URL
+
+      - name: Verify Dataverse Connection
+        run: |
+          pac org who
+
+      - name: Verify Solution Installed
+        run: |
+          pac solution list
       
       # ============================================
       # Run Integration Tests Script
@@ -398,7 +422,11 @@ jobs:
           chmod +x scripts/run-integration-tests.sh
           bash scripts/run-integration-tests.sh \
             --url "$DEV_URL"
-      
+
+      - name: Verify Solution Installed
+        run: |
+          pac solution list
+
       # ============================================
       # Upload Reports
       # ============================================
