@@ -62,10 +62,6 @@ describe("caseForm.js", () => {
                 "INFO",
                 "vip_priority_notification"
             );
-
-            test("Demo failure for Copilot walkthrough", () => {
-                expect(true).toBe(false)
-            });
         });
 
         test("Non-VIP customer should NOT have priority overridden", () => {
@@ -93,4 +89,6 @@ describe("caseForm.js", () => {
             expect(formContext.ui.clearFormNotification).toHaveBeenCalledWith("vip_priority_notification");
         });
     });
+
+    // Removed the failing demo test that was nested incorrectly
 });
