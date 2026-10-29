@@ -1244,6 +1244,42 @@ const jobs =
 jobsData.jobs || [];
 pipelineJobs = jobs;
 
+// Dynamic polling based on pipeline activity
+
+const pipelineRunning =
+    jobs.some(
+        j => j.status === "in_progress"
+    );
+
+clearInterval(refreshTimer);
+
+if (pipelineRunning) {
+
+    console.log(
+        "Pipeline active: polling every 60 seconds"
+    );
+
+    refreshTimer =
+        setInterval(
+            refresh,
+            60000
+        );
+
+}
+else {
+
+    console.log(
+        "Pipeline idle: polling every 5 minutes"
+    );
+
+    refreshTimer =
+        setInterval(
+            refresh,
+            300000
+        );
+
+}
+
 console.log(
   "JOBS:",
   jobs.map(j => ({
@@ -2096,13 +2132,6 @@ el("chatInput").focus();
 refresh();
 
 let refreshTimer;
-
-function startPolling(){
-    clearInterval(refreshTimer);
-    refreshTimer = setInterval(refresh,60000);
-}
-
-startPolling();
 
 </script>
 
