@@ -64,11 +64,13 @@ describe("caseForm.js", () => {
             );
 
         
-        test("Demo failure for Copilot walkthrough", () => {
-                expect(true).toBe(false)
-            });
-
+        
         });
+
+        test("Demo failure for Copilot walkthrough", () => {
+            expect(true).toBe(false)
+        });
+
 
         test("Non-VIP customer should NOT have priority overridden", () => {
             const executionContext = createMockExecutionContext({ customerType: "Standard" });
