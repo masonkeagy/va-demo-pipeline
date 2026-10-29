@@ -2,7 +2,7 @@
  * ============================================
  * caseForm.test.js
  * ============================================
- * Jest unit tests for caseForm.js 87
+ * Jest unit tests for caseForm.js 8
  * Mocks the Xrm.FormContext API since these tests
  * run outside an actual D365 form runtime.
  * ============================================
@@ -63,7 +63,6 @@ describe("caseForm.js", () => {
                 "vip_priority_notification"
             );
 
-            
         });
 
         test("Non-VIP customer should NOT have priority overridden", () => {
