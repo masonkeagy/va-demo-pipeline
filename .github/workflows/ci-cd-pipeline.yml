@@ -320,17 +320,17 @@ jobs:
         run: |
           echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
 
-      - name: Authenticate To Dev Environment
-        run: |
-          pac auth create \
-            --tenant ${{ secrets.AZURE_TENANT_ID }} \
-            --applicationId ${{ secrets.AZURE_CLIENT_ID }} \
-            --clientSecret ${{ secrets.AZURE_CLIENT_SECRET }} \
-            --environment $DEV_URL
+      #- name: Authenticate To Dev Environment
+       # run: |
+        #  pac auth create \
+         #   --tenant ${{ secrets.AZURE_TENANT_ID }} \
+          #  --applicationId ${{ secrets.AZURE_CLIENT_ID }} \
+         #   --clientSecret ${{ secrets.AZURE_CLIENT_SECRET }} \
+         #   --environment $DEV_URL
 
-      - name: Verify Connection
-        run: |
-          pac org who
+     # - name: Verify Connection
+       # run: |
+        #  pac org who
 
       - name: Locate Solution Package
         run: |
@@ -344,19 +344,19 @@ jobs:
           echo "PACKAGE=$PACKAGE" >> $GITHUB_ENV
           echo "Using package: $PACKAGE"
 
-      - name: Import Solution
-        run: |
-          pac solution import \
-            --path "$PACKAGE" \
-            --async
+     # - name: Import Solution
+      #  run: |
+       #   pac solution import \
+        #    --path "$PACKAGE" \
+         #   --async
 
-      - name: Publish Customizations
-        run: |
-          pac solution publish
+      #- name: Publish Customizations
+       # run: |
+        #  pac solution publish
 
-      - name: Verify Environment
-        run: |
-          pac org who
+      #- name: Verify Environment
+       # run: |
+        #  pac org who
 
       - name: Dev Deployment Summary
         run: |
