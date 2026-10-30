@@ -63,11 +63,13 @@ describe("caseForm.js", () => {
                 "vip_priority_notification"
             );
 
-        
+            
         
         });
 
-        
+        test("Demo failure for Copilot walkthrough", () => {
+            expect(true).toBe(false)
+        });
 
 
         test("Non-VIP customer should NOT have priority overridden", () => {
