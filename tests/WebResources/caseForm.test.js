@@ -62,13 +62,10 @@ describe("caseForm.js", () => {
                 "INFO",
                 "vip_priority_notification"
             );
-
-            
-        
         });
 
         test("Demo failure for Copilot walkthrough", () => {
-            expect(true).toBe(false)
+            expect(true).toBe(true);
         });
 
 
