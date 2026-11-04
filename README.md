@@ -1,161 +1,355 @@
-Pull request feature is working!
+# VA AI Platform Engineering Demo
 
-# VA Demo CI/CD Pipeline Scaffold
+An end-to-end demonstration of an AI-assisted CI/CD platform that combines GitHub, GitHub Actions, Azure Functions, automated testing, Dynamics 365 deployments, and human governance into a single software delivery workflow.
 
-This repository contains an initial **GitHub Actions CI/CD pipeline scaffold** based on the proposed enterprise DevSecOps workflow tailored for a VA-focused application delivery model.
-
-It serves as a **starting structure** for the team to build upon while application-specific details are still being defined.
+This repository showcases how AI can accelerate software delivery while maintaining security, compliance, traceability, and approval controls throughout the application lifecycle.
 
 ---
 
-## Purpose
+# Overview
 
-This scaffold was created to advance the initial workflow despite lacking access to:
+The platform demonstrates a modern software engineering workflow where:
 
-- The current application codebase
-- Framework/runtime details
-- Real test suites
-- Build tooling
-- Deployment targets
-- Azure environment configuration
-- Security tooling configuration
-- Monitoring instrumentation
+1. Developers or stakeholders interact with an AI assistant using natural language.
+2. The AI assistant analyzes repository content and pipeline definitions.
+3. The AI assistant can create code changes and generate pull requests.
+4. GitHub Actions validates the change through automated testing and security gates.
+5. A single deployment artifact is promoted through multiple environments.
+6. Human approvals remain in place at critical governance checkpoints.
+7. Production releases are monitored and protected through automated validation and rollback capabilities.
 
-The goal is to establish a pipeline foundation that reflects the intended **delivery flow, security controls, testing stages, approval gates, deployment progression, rollback paths, and observability checkpoints**.
-
----
-
-## Current Positioning
-
-1. **Enterprise Application Factory** (Positioned for future implementation)  
-   *(show speed)*
-
-2. **Automated Compliance & Testing Pipeline** (Most Fully Represented)  
-   *(show risk reduction)*
-
-3. **Copilot Release Readiness Assistant** (Positioned for future implementation)  
-   *(show innovation)*
+The goal is not to replace engineers, but to reduce manual effort, accelerate investigation and remediation, and improve delivery consistency.
 
 ---
 
-## Pipeline Flow Modeled
+# Architecture
 
-The scaffold currently models the following general flow:
+## Core Components
 
-1. Pull Request Validation
-2. Unit Testing
-3. Security Scanning
-   - CodeQL
-   - Dependency security scan
-   - Secret detection
-   - Infrastructure as Code (IaC) security scan
-4. Build and Artifact/Supply Chain Preparation
-   - Build
-   - Package
-   - SBOM generation
-   - Artifact upload
-5. Deploy to DEV
-6. Integration / API / DAST / Performance Validation
-7. Deploy to TEST/UAT
-8. Regression Testing
-9. Deploy to PreProd and Production
-10. Smoke Testing and Automated Rollback
-11. Monitoring / Observability Validation
+### GitHub Repository
+
+The repository serves as the system of record and contains:
+
+- Application source code
+- CI/CD pipeline definitions
+- Automated tests
+- Security controls
+- Deployment configurations
+- Documentation
 
 ---
 
-## What Is Included
+### GitHub Actions
 
-This scaffold currently includes:
+GitHub Actions orchestrates the end-to-end CI/CD workflow.
 
-- GitHub Actions workflow structure
-- Stage ordering and dependencies
-- Pull request validation stage
-- Unit testing stage placeholder
-- Code coverage placeholder
-- Security scanning structure with:
-  - CodeQL
-  - Dependency scan placeholder
-  - Secret scan placeholder
-  - IaC scan placeholder
-- Build stage with:
-  - Application build placeholder
-  - Package placeholder
-  - SBOM generation placeholder
-  - Artifact upload structure
-- Environment progression across:
-  - DEV
-  - UAT
-  - PreProd
-  - Production
-- Approval gate structure for higher environments
-- Azure login/OIDC structure for deployment stages
-- Integration and API validation placeholders
-- DAST placeholder
-- Performance testing placeholder
-- Regression test placeholder
-- Smoke test placeholder
-- Automated rollback placeholder
-- Incident creation placeholder
-- Operations notification placeholder
-- Monitoring and observability validation placeholders
-- Deployment metrics publishing placeholder
+Responsibilities include:
+
+- Pull Request validation
+- Unit testing
+- Security scanning
+- Artifact generation
+- Environment deployment
+- Regression testing
+- Approval workflows
+- Production release
 
 ---
 
-## What Is Not Included Yet
+### AI Assistant
 
-As this is still a scaffold, the following are **not implemented yet**:
+The AI assistant is powered by:
 
-- Real application code
-- Real unit/integration/regression/smoke tests
-- Real build scripts
-- Dockerfile or package-specific build logic
-- Real dependency scanning tooling
-- Real secret scanning tooling
-- Real IaC scanning tooling
-- Real SBOM generation tooling
-- Real artifact signing
-- Real Azure deployment scripts
-- Actual Azure credentials / federated identity configuration
-- Real DAST tooling
-- Real performance/load scripts
-- Real rollback implementation
-- Real incident/ticketing integration
-- Real Slack/Teams/PagerDuty notifications
-- Real Application Insights instrumentation and metric publishing
-- Copilot-based release readiness logic
-- Application Factory provisioning/templates
+- Azure OpenAI
+- Azure Functions
+- GitHub REST APIs
+
+The assistant can:
+
+- Analyze repository content
+- Explain pipeline stages
+- Investigate failures
+- Identify failing tests
+- Generate code updates
+- Create pull requests
+
+All AI-generated changes follow the same governance and review process as human-created changes.
 
 ---
 
-## GitHub Copilot Change Chat
+### Dynamics 365 Environments
 
-The GitHub Pages console now provides a chat interface for repository change requests. This page is intentionally static and does not hold GitHub credentials. Connect it to a separately hosted GitHub App/API service by providing `window.VA_CHAT_API_URL`; the service contract and security requirements are documented in `docs/github-copilot-chat-api.md`.
+Deployments are promoted through multiple environments:
 
-All accepted changes must be delivered through pull requests. The backend must authenticate users, authorize repository access, use the Copilot integration server-side, and never write directly to `main`.
+1. Development
+2. User Acceptance Testing (UAT)
+3. Pre-Production
+4. Production
 
-### Front-End Chat Application Features
-
-The front end of this web application now includes a fully working GitHub Copilot chat interface supporting two distinct modes:
-
-- **Edit Mode:** Allows users to request and receive code modifications, enabling interactive repository change requests directly through the chat.
-
-- **Analysis Mode:** Enables users to ask questions and receive insights about the repository, facilitating understanding and review without making changes.
-
-Users can seamlessly switch between these modes within the chat interface, enhancing productivity and collaboration.
+This progressive deployment model increases confidence before production release.
 
 ---
 
-## Repository Structure
+# AI Capabilities
 
-```text
-.
-├── .github
-│   └── workflows
-│       └── ci-cd-pipeline.yml
-├── scripts
-│   ├── rollback.sh
-│   └── smoke-test.sh
-└── README.md
-```
+## Analysis Mode
+
+Analysis Mode provides repository intelligence and operational awareness.
+
+Example use cases:
+
+- Explain the CI/CD pipeline
+- Identify failing stages
+- Summarize pull requests
+- Investigate test failures
+- Review deployment results
+- Explain repository structure
+
+The assistant analyzes repository files directly rather than relying solely on user-provided context.
+
+---
+
+## Edit Mode
+
+Edit Mode allows the assistant to propose repository changes.
+
+Example tasks:
+
+- Fix failing unit tests
+- Update documentation
+- Modify pipeline steps
+- Create configuration updates
+- Generate pull requests
+
+Changes are committed to a separate branch and submitted through a standard pull request workflow.
+
+---
+
+# CI/CD Pipeline
+
+The pipeline follows a shift-left approach that introduces quality, security, and governance controls as early as possible.
+
+---
+
+## Continuous Integration
+
+### Stage 1 – Pull Request Validation
+
+Validates:
+
+- Branch naming
+- Required metadata
+- Pull request requirements
+- Repository standards
+
+---
+
+### Stage 2 – Unit Testing
+
+Validates application components in isolation.
+
+Goals:
+
+- Detect defects early
+- Prevent regressions
+- Reduce remediation cost
+
+---
+
+### Stage 3 – Security Scanning
+
+Performs automated security validation.
+
+Examples include:
+
+- Dependency analysis
+- Static code analysis
+- Vulnerability detection
+
+---
+
+### Stage 4 – Build and Artifact Signing
+
+Produces a deployment artifact.
+
+The same signed artifact is promoted through every downstream environment to prevent configuration drift.
+
+---
+
+# Continuous Delivery
+
+### Stage 5 – Deploy to Development
+
+Deploys the validated artifact into a development environment.
+
+This is the first deployment validation checkpoint.
+
+---
+
+### Stage 6 – Integration Testing
+
+Verifies interactions between components.
+
+Examples include:
+
+- API communication
+- Data exchange
+- Service integration
+
+---
+
+### Stage 6b – Dynamic Security Testing (DAST)
+
+Tests a running application for security weaknesses.
+
+Examples include:
+
+- Authentication issues
+- API vulnerabilities
+- Configuration weaknesses
+
+---
+
+### Stage 7 – Deploy to UAT
+
+Promotes the artifact to the User Acceptance Testing environment.
+
+Business stakeholders validate:
+
+- Functionality
+- Business requirements
+- User expectations
+
+---
+
+### Stage 8 – Regression Testing
+
+Validates that new changes have not introduced unintended side effects.
+
+Includes:
+
+- Functional testing
+- Accessibility validation
+- Performance testing
+
+---
+
+# Governance and Production Readiness
+
+### Stage 9a – Pre-Production
+
+Final production rehearsal.
+
+This environment mirrors production as closely as possible.
+
+---
+
+### Stage 9b – Production Deployment
+
+Requires approval before release.
+
+Production deployments occur only after all prior validation stages have completed successfully.
+
+---
+
+# Operational Validation
+
+### Stage 10 – Smoke Testing
+
+Executes immediately after deployment.
+
+Validates critical functionality such as:
+
+- User authentication
+- Core workflows
+- API health
+
+---
+
+### Stage 11 – Automated Rollback
+
+If production validation fails, the pipeline can automatically restore a known healthy version.
+
+---
+
+### Stage 12 – Monitoring
+
+Provides ongoing operational visibility.
+
+Examples include:
+
+- Availability monitoring
+- Error tracking
+- Performance monitoring
+- Security event monitoring
+
+---
+
+# Human-in-the-Loop Governance
+
+Although the platform incorporates AI and automation, human oversight remains a requirement throughout the delivery process.
+
+Examples include:
+
+- Pull request reviews
+- UAT approvals
+- Production approvals
+- Release decisions
+- Governance checkpoints
+
+This approach balances automation with accountability.
+
+---
+
+# Demonstration Scenario
+
+The primary demonstration workflow intentionally introduces a failing unit test.
+
+The demonstration shows how:
+
+1. The pipeline detects the failure.
+2. The AI assistant identifies the root cause.
+3. The AI assistant proposes a fix.
+4. A pull request is created.
+5. The pipeline re-runs.
+6. The change progresses through deployment stages.
+
+This scenario highlights how AI can accelerate engineering workflows while remaining within established governance controls.
+
+---
+
+# Business Value
+
+The platform delivers:
+
+- Faster software delivery
+- Earlier defect detection
+- Continuous security validation
+- Reduced manual effort
+- Improved developer productivity
+- Complete auditability
+- Deployment consistency
+- Automated rollback capabilities
+- AI-assisted remediation
+- Human governance and oversight
+
+---
+
+# Key Principles
+
+- Security by Design
+- Shift-Left Testing
+- Continuous Validation
+- Single Artifact Promotion
+- AI-Assisted Engineering
+- Human Accountability
+- End-to-End Traceability
+- Automated Governance
+
+---
+
+# Disclaimer
+
+This repository is intended for demonstration and educational purposes.
+
+The implementation illustrates patterns for AI-assisted software delivery, automated testing, governance, and deployment workflows and may be adapted to meet organization-specific requirements.
